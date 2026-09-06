@@ -1,218 +1,162 @@
-# OUTSCAN - plan
+# OUTSCAN — plan
 
-Этот файл является рабочим планом разработки. Выполненные пункты не удалять: отмечать `[x]`. Новые риски и задачи добавлять по мере обнаружения.
+## Phase 0 — Baseline
 
-## Phase 0 - Foundation
+- [x] Product concept/three layers.
+- [x] Guest boundary.
+- [x] TI/Risk/Change Intelligence/Agency direction.
+- [x] Living docs.
+- [x] Previous synchronized MD package applied to working tree.
 
-- [x] Зафиксировать продуктовую концепцию OUTSCAN.
-- [x] Зафиксировать три слоя: Public / Workspace / Platform Admin.
-- [x] Зафиксировать guest scanning boundary.
-- [x] Зафиксировать V1 scanner stack.
-- [x] Зафиксировать Threat Intelligence и Risk Engine принципы.
-- [x] Зафиксировать стратегию масштабирования.
-- [x] Провести конкурентный анализ и зафиксировать product differentiation.
-- [x] Зафиксировать Change Intelligence как first-class capability.
-- [x] Зафиксировать Agency/MSP delegated-tenancy model.
-- [x] Создать living documentation для Codex.
-- [ ] Создать source scaffold.
-- [ ] Выбрать и зафиксировать ADR для ORM/data-access слоя.
-- [ ] Подключить Graphify после появления содержательной source-структуры.
-- [ ] Добавить CI с lint, typecheck, tests, build, secret scan и dependency review.
+## Phase 0A — Consistency closure
 
-## Phase 1 - Public Guest Scan
+### ADR
 
-### Public UI
+- [x] Draft ADR-0009…ADR-0014.
+- [x] Expand 0009 with pinned connect + challenge/revalidation lifecycle.
+- [x] Expand 0010 with complete entity matrix + PLATFORM_GRANT.
+- [x] Expand 0011 with job/attempt FSM + exact idempotency/result semantics.
+- [x] Harden Guest idempotency with server-authenticated Guest-session scope, canonical token serialization and separate terminal-replay branch.
+- [x] Expand 0012 with capability matrix, budgets and machine policy schema.
+- [x] Expand 0013 with FindingOccurrence + SufficientBaselineV1.
+- [x] Synchronize 0014 with explicit Asset creation and terminology.
+- [x] Owner accepted ADR-0009…ADR-0014.
 
-- [ ] Landing/hero с domain input.
-- [ ] Scan progress state.
-- [ ] Guest result page.
-- [ ] Блок базовых Network & Domain Posture параметров.
-- [ ] Блок `N потенциальных рисков` без раскрытия чувствительных деталей.
-- [ ] CTA регистрации/подтверждения домена.
-- [ ] Не использовать A-F grade как основной signal.
-- [ ] UX performance budget и измерение scan duration; не обещать фиксированное время без production metrics.
+### Evidence / cleanup
 
-### Guest scan API
+- [x] Create `docs/CLAIM_INVENTORY.md`.
+- [x] Create `docs/UX_ACCEPTANCE.md`.
+- [x] Keep `public/maket.png` temporarily as reference-only first-screen material; it is not accepted Gate A evidence.
+- [ ] Before Gate B1/public deployment, move/exclude `public/maket.png` from served runtime assets if still present.
+- [x] Old `PRE_SCAFFOLD_CORRECTIONS*` confirmed absent by latest read-only review.
+- [x] Latest review confirms old correction drafts are absent; `docs/PRE_SCAFFOLD_GATE.md` is the canonical active gate.
+- [x] Owner decision for `agent.md` recorded/resolved; `AGENTS.md` remains canonical.
+- [x] Post-application `git diff --check` passed for the currently applied revision.
+- [x] Current v3 `git diff --check` PASS confirmed by latest review.
+- [x] Current package/security/content consistency review PASS.
+- [x] Re-run `git diff --check` after ADR-0009…ADR-0014 status changes.
+- [x] Run final Gate A read-only consistency review after ADR acceptance.
+- [x] Gate A = PASS.
 
-- [ ] Нормализация domain input.
-- [ ] IDN/punycode handling.
-- [ ] Public DNS resolve.
-- [ ] SSRF destination validation IPv4/IPv6.
-- [ ] Redirect revalidation.
-- [ ] Rate limiting по IP и domain.
-- [ ] Request/response size/time budgets.
-- [ ] Abuse/CAPTCHA hook.
+### ORM
 
-### Guest posture checks
+- [ ] Choose data-access ADR only after Gate A data rules accepted.
 
-- [ ] A / AAAA / NS / SOA / TTL / CNAME / PTR.
-- [ ] MX / SPF / DMARC.
-- [ ] CAA / DNSSEC.
-- [ ] MTA-STS / TLS-RPT.
-- [ ] RDAP registrar / creation / expiry / status.
-- [ ] HTTPS redirect.
-- [ ] TLS version / certificate issuer / validity / SAN summary.
-- [ ] HSTS / CSP / X-Content-Type-Options / X-Frame-Options / Referrer-Policy / Permissions-Policy.
-- [ ] Cookie flags для доступного public response.
-- [ ] HTTP protocol / ALPN / HTTP2 / HTTP3 indicators.
-- [ ] CDN/WAF / server / technology fingerprint без раскрытия опасных деталей.
-- [ ] IPv4 / IPv6 / ASN / provider / BGP prefix / RPKI.
-- [ ] Connection timings.
-- [ ] Certificate Transparency aggregate count; не раскрывать discovered subdomains гостю.
-- [ ] `security.txt` presence.
-- [ ] Baseline posture evaluator, отдельный от Security Score.
+## Phase 0B — Scaffold after Gate A PASS
 
-### Acceptance gate Phase 1
+- [x] Minimal source scaffold for web, admin and API boundaries.
+- [x] CI/test harness with format, lint, typecheck, unit-test, build and line-count stages.
+- [x] Add typed code-first ProductCapability registry and strict validation.
+- [x] Add fail-closed safe public capability projection.
+- [x] Add anonymous read-only `GET /v1/public/capabilities` contract and implementation.
+- [x] Remove the homepage's second capability array and render only canonical projection data.
+- [x] Add negative tests proving registry visibility cannot grant scanner execution.
+- [ ] Activate public capabilities only after claim approval and valid production evidence.
+- [ ] Add engine bindings only as production adapters become real.
+- [ ] Add read-only Platform Admin capability view later; runtime rollout persistence remains deferred.
+- [x] Accept ADR-0015 as a post-Gate-A Notifications & Communications decision.
+- [x] Add pure notification catalog/event/recipient/idempotency/FSM/content/adapter contracts and Telegram security primitives.
+- [x] Keep notification routes, persistence, provider SDKs, credentials and external delivery absent from the foundation.
+- [x] Full local `npm run verify` completed after scaffold creation.
+- [x] Public preview browser smoke test completed for desktop and mobile layouts.
+- [ ] Graphify.
+- [x] trusted Guest supervisor orchestration over an approved launch port, bounded IPC, canonical output and authenticated ResultEnvelope signing.
+- [x] trusted supervisor pre-launch ExecutionEnvelope/approval authorization boundary.
+- [x] machine scanner-policy validator.
+- [x] pure ScanJob/ScanAttempt FSM and result commit/replay decision boundary.
+- [ ] job FSM/idempotency persistence.
 
-- [ ] Guest scan не способен обратиться к private/link-local/metadata address даже через redirect/DNS rebind path.
-- [ ] Guest scan не запускает active vulnerability/network scan.
-- [ ] Public result не раскрывает CVE/evidence/subdomain list/endpoints.
-- [ ] Abuse limits покрыты integration tests.
-- [ ] Guest result дает самостоятельную полезность, а не пустой teaser.
+## Phase 1 — Guest / B1
 
-## Phase 2 - Identity, Organizations, Verification
+- [x] strict Guest-session Set-Cookie issuance and Cookie-header authentication primitives.
+- [ ] wire the Guest-session bootstrap route after remaining B1 controls pass.
+- [x] Guest-session cookie MAC codec and authenticated scope derivation primitives.
+- [x] pure Guest idempotency decision scoped by authenticated session digest, never IP/fingerprint.
+- [ ] transactional Guest idempotency persistence with unique-key winner reread.
+- [x] canonical ADR-0011 Guest result-token derivation/test vectors.
+- [x] strict hostname parser + IDNA/Punycode canonicalization with negative tests.
+- [x] full-set A/AAAA normalization, deduplication and fail-closed destination classification.
+- [x] injectable A/AAAA resolver orchestration with strict response/TTL/error handling.
+- [x] bounded runtime `node:dns` Resolver factory with explicit servers/timeouts/tries and restricted facade.
+- [x] TTL-bound pinned HTTP/TLS request options preserving Host/SNI/certificate validation.
+- [x] bounded pinned HTTP/TLS dispatch with synthetic socket-address evidence.
+- [ ] live socket/TLS integration evidence against an owned test target.
+- [x] retry/same-host redirect re-resolution, revalidation and pinning tests.
+- [ ] GuestScan/GuestScanAttempt.
+- [x] Guest result bearer-token authorization with 30m/no-store/no-referrer boundary.
+- [ ] wire persisted Guest result lookup and sanitized result route.
+- [ ] Guest retention 24h max.
+- [ ] abuse limits.
+- [x] GUEST_SAFE capability policy and budgets enforced before launch and through output handling.
+- [x] bounded Guest scanner-output JSON projection with strict schema and disclosure minimization.
+- [x] authenticated ResultEnvelope header/MAC/digest/size validation.
+- [x] canonical GUEST_SAFE ScannerResultEnvelope producer with evidence redaction and digest.
+- [x] bounded single-result scanner IPC framing/reader with deadline and cancellation.
+- [x] injected supervisor launch/pipe/exit/cancellation orchestration and supervisor-side ResultEnvelope HMAC signing.
+- [ ] production process/container launcher, secret-manager signing-key provider, queue/CAS state wiring and bounded persistence.
+- [ ] full Guest posture.
+- [ ] coverage states.
+- [ ] WCAG runtime evidence.
+- [ ] Gate B1 PASS before exposure.
 
-- [ ] Registration/login/logout/recovery.
-- [ ] Secure httpOnly session cookies.
-- [ ] CSRF/session hardening для выбранной auth architecture.
-- [ ] Organization creation.
-- [ ] Roles: Owner/Admin/Analyst/Viewer.
-- [ ] Central server-side authorization helpers.
-- [ ] Cross-tenant negative test matrix.
-- [ ] Domain add flow.
-- [ ] DNS TXT verification.
-- [ ] Verification expiry/recheck policy.
-- [ ] Audit events для privileged actions.
+## Phase 2 — Workspace foundation
 
-## Phase 3 - Assets and Verified Baseline
+- [x] Add provider-neutral External Asset Source/candidate/provenance contracts.
+- [x] Add closed Yandex Metrika foundation: `metrika:read` OAuth state/PKCE request, bounded counter pagination/parser, public-host normalization and deterministic deduplication.
+- [ ] auth/session/recovery/CSRF.
+- [ ] Organization.
+- [ ] Add exact host/Create Asset.
+- [ ] tenant API/composite FK/RLS.
+- [ ] cross-tenant tests.
+- [ ] Tenant/Platform audit split.
+- [ ] Add encrypted integration-token storage and one-time OAuth transaction persistence after auth/RLS prerequisites.
+- [ ] Add organization-scoped Metrika routes, sync/import transactions, lock/scheduler, audit events and Workspace UI.
+- [ ] Wire QUICK_SCAN only through current `GUEST_SAFE` policy plus independent ScanAuthorization; no import-derived verification.
+- [ ] Add account/user notification endpoint, event/delivery and transactional outbox persistence.
+- [ ] Select transactional email provider through ADR; implement verification/recovery delivery and authenticated webhooks.
+- [ ] Add bounce/complaint/suppression handling without coupling marketing unsubscribe to mandatory account mail.
 
-- [ ] `Asset` + `AssetRelation` model.
-- [ ] Relation provenance/confidence/attribution reason.
-- [ ] Domain/subdomain/IP/web-app/service types V1.
-- [ ] Subfinder discovery.
-- [ ] httpx enrichment.
-- [ ] Safe Naabu profile только для verified domain scope.
-- [ ] Katana controlled crawl.
-- [ ] Technology observations with provenance/confidence.
-- [ ] First/last seen history.
-- [ ] Newly discovered asset event.
-- [ ] Пользователь сам включает discovered asset в billable monitoring.
-- [ ] API способен объяснить, почему discovered asset связан с организацией.
+## Phase 3 — Verification / baseline
 
-## Phase 4 - Vulnerability Detection
+- [ ] TXT exact format.
+- [ ] challenge FSM/24h.
+- [ ] TXT revalidation 7d.
+- [ ] Controlled Deep >24h revalidation.
+- [ ] 30d hard scope expiry without successful revalidation.
+- [ ] EXACT_HOST.
+- [ ] execution ScanAuthorization.
+- [ ] Verified Baseline SAFE.
+- [ ] FindingOccurrence/Coverage.
+- [ ] SufficientBaselineV1.
+- [ ] Asset Security Score only when sufficient.
+- [ ] Gate B2 PASS before Workspace exposure.
 
-- [ ] Isolated scanner worker contract.
-- [ ] Queue/job leases, timeout, retry, idempotency.
-- [ ] Nuclei SAFE template profile.
-- [ ] CONTROLLED/ACTIVE/DISABLED policy enforcement.
-- [ ] Finding normalization.
-- [ ] Finding evidence minimization/redaction.
-- [ ] Status lifecycle NEW/ACTIVE/ACKNOWLEDGED/FIXED/ACCEPTED_RISK/FALSE_POSITIVE/REOPENED.
-- [ ] Recheck flow.
+## Phase 4 — TI/Risk/Monitoring
 
-## Phase 5 - Threat Intelligence and Risk Engine
+- [ ] NVD/KEV/EPSS.
+- [ ] recurrence-aware Risk Engine.
+- [ ] targeted CVE via same authorization.
+- [ ] explicit MonitoringEnrollment.
+- [ ] Organization Security Score monitored set.
+- [ ] posture snapshots.
+- [ ] Customer technical email/Telegram preferences, delivery history and secure endpoint lifecycle.
+- [ ] Separate platform Ops Telegram delivery for worker/queue/scanner/TI/notification health.
 
-- [ ] NVD incremental ingest.
-- [ ] CISA KEV ingest.
-- [ ] EPSS daily ingest.
-- [ ] Provenance, timestamps, schema validation.
-- [ ] Technology/CPE/CVE matching strategy.
-- [ ] Targeted CVE scan job.
-- [ ] Risk Engine V1.
-- [ ] `Potential / Probable / Confirmed` confidence model.
-- [ ] Security Score V1 for verified workspace.
-- [ ] Calibration dataset and false-positive review.
-- [ ] Business-summary explanation of each High/Critical priority.
+## V1.5
 
-## Phase 6 - Change Intelligence + Workspace Core
-
-- [ ] Versioned/snapshotted posture storage.
-- [ ] Diff engine for IP/ASN/NS/MX/CA/CDN/TLS/DMARC/RPKI.
-- [ ] New/disappeared asset events.
-- [ ] Technology change events.
-- [ ] Finding fixed/reopened events.
-- [ ] Change significance model/version.
-- [ ] Monitoring timeline `before -> after -> when -> why it matters`.
-- [ ] Dashboard.
-- [ ] Assets list/detail.
-- [ ] Findings list/detail.
-- [ ] Vulnerabilities view.
-- [ ] Infrastructure/domain/mail/certificate posture.
-- [ ] Business summary + technical drill-down.
-- [ ] Recheck action.
-- [ ] Report generation.
-- [ ] Email notifications.
-
-## Phase 7 - Attack Surface / EASM + Asset Graph Basics
-
-- [ ] Expanded passive discovery.
-- [ ] Unknown/shadow asset workflow.
-- [ ] Richer relation types.
-- [ ] Relation attribution/provenance UX/API.
-- [ ] Attack surface summary/trends.
-- [ ] Graph-ready endpoints/data model.
-- [ ] Do not require full visual graph before relationship data is useful.
-
-## Phase 8 - Platform Admin + Commercial MVP
-
-### Platform Admin
-
-- [ ] Separate admin authentication/policy boundary.
-- [ ] Overview metrics.
-- [ ] Organizations/users/assets statistics.
-- [ ] Scan jobs / queues / workers.
-- [ ] Threat Intelligence freshness.
-- [ ] Scanner/template versions.
-- [ ] Abuse / blocklist.
-- [ ] Audit log.
-- [ ] Support access grants / break-glass design.
-- [ ] Admin negative authorization tests.
-
-### Commercial
-
-- [ ] Subscription/entitlements model.
-- [ ] Free / Starter / Business / Agency plan definitions.
-- [ ] Asset limits.
-- [ ] Billing provider ADR before implementation.
-- [ ] Usage metering without scan-credit model.
-- [ ] Annual plan policy.
-- [ ] Price validation against current SMB/scanner/agency competitors before launch.
-- [ ] Security badge language review.
-- [ ] Legal review of SaaS positioning in РФ before commercial launch.
-
-## Phase 9 - Agency / MSP + API
-
-- [ ] Partner/delegation data model.
-- [ ] Each client remains isolated Organization tenant.
-- [ ] Delegated access authorization matrix.
-- [ ] Multi-client partner workspace.
-- [ ] Bulk actions authorize every client organization.
-- [ ] White Label reports.
-- [ ] Partner billing.
-- [ ] Platform API.
-- [ ] Webhooks.
+- [ ] Change Intelligence diff/significance/timeline/alerts.
 
 ## Later
 
-- [ ] AppSec / authenticated DAST / ZAP.
-- [ ] API Security / OpenAPI / GraphQL.
-- [ ] GitHub/GitLab / OSV / SBOM / secrets / SCA.
-- [ ] Cloud connectors.
-- [ ] Private scanner.
-- [ ] Full Asset Graph UI.
-- [ ] Attack Paths.
-- [ ] Mobile APK/IPA / MobSF.
-- [ ] Exposure Management / CTEM workflows.
-- [ ] Managed Security service.
+Marketing consent/campaign email, EASM/Asset Graph, Agency/API, dedicated IP/CIDR ADR before network scan, AppSec/API, Supply Chain, Cloud/private scanner, Attack Paths, CTEM, Enterprise/Managed.
 
-## Known risks / open decisions
+## Gate C
 
-- [ ] Юридически проверить границу SaaS и лицензируемых услуг по контролю защищенности/мониторингу ИБ в РФ.
-- [ ] Зафиксировать exact authentication implementation после threat model review.
-- [ ] Зафиксировать data retention policy для scan evidence и posture snapshots.
-- [ ] Зафиксировать data residency/hosting strategy.
-- [ ] Определить billing provider только после требований по юрлицу и рынку.
-- [ ] Определить production container/orchestrator после load model.
-- [ ] Определить storage/query strategy для Change Intelligence после первых load estimates.
-- [ ] Не допустить размывания differentiation: DNS/TLS/headers сами по себе не являются продуктовым moat.
-- [ ] Graphify не установлен на стадии docs-only; установить сразу после source scaffold.
+- [ ] security suites/build.
+- [ ] retention/export/delete/residency.
+- [ ] backup+restore.
+- [ ] runbooks.
+- [ ] Admin MFA/step-up.
+- [ ] disclosure contact.
+- [ ] privacy/terms/РФ legal review.
+- [ ] production claim inventory approval.

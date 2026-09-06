@@ -1,0 +1,28 @@
+{
+  "name": "@outscan/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "predev": "pnpm --filter @outscan/capabilities build",
+    "dev": "next dev",
+    "prebuild": "pnpm --filter @outscan/capabilities build",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "pretest": "pnpm --filter @outscan/capabilities build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@outscan/capabilities": "workspace:*",
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "26.4.1",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "vitest": "4.1.11"
+  }
+}

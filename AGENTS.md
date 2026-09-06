@@ -1,257 +1,88 @@
-# AGENTS.md - правила Codex для OUTSCAN
+# AGENTS.md — OUTSCAN repository contract
 
-Этот файл является главным repository-level контрактом для AI-агентов и разработчиков.
+## Start
 
-## 1. Перед началом любой задачи
+Read README, PRE_SCAFFOLD_GATE, plan, CHANGELOG, relevant ADR/docs and latest audit. Inspect repository state and preserve unrelated user changes.
 
-Обязательно прочитать:
+## Gates
 
-1. `README.md`.
-2. `plan.md`.
-3. `CHANGELOG.md`.
-4. Соответствующие файлы `/docs`.
-5. Последний `docs/audit-YYYY-MM-DD.md`, если задача затрагивает архитектуру, безопасность, БД, сканирование или deployment.
+- A PASS before substantive source scaffold.
+- B1 PASS before Guest exposure.
+- B2 PASS before Workspace.
+- C PASS before production.
+  Never self-declare PASS without evidence.
 
-Сначала изучить существующую реализацию. Не заменять текущие решения шаблонными только потому, что другое решение привычнее агенту.
+## V1 target
 
-## 2. Основной принцип разработки
+Hostname/domain only.
+Normalize IDNA/Punycode/lowercase/trailing dot.
+Reject URL/path/port/userinfo/IP literals.
 
-OUTSCAN - security-sensitive internet-facing SaaS. Любое изменение оценивается по двум критериям одновременно:
+Resolve full A/AAAA set and fail closed if any candidate is forbidden/ambiguous.
+Pin actual connection to validated IP preserving Host/SNI/certificate validation.
+Revalidate retries/redirects.
 
-- выполняет ли оно продуктовую задачу;
-- не нарушает ли security invariants.
+VerifiedScope = EXACT_HOST only.
+IP/CIDR/Naabu/raw TCP/ACTIVE disabled.
 
-Security является release gate, а не финальной проверкой.
+## Verification
 
-## 3. Обязательные архитектурные правила
+TXT format/lifecycle/revalidation per ADR 0009.
+Verification and ScanAuthorization are separate.
+Every verified execution recomputes authorization.
 
-- Базовая доменная сущность: `Asset`, не `Website`.
-- Результаты любых scanners нормализуются в единый `Finding`.
-- Scanner integration реализуется через узкий `ScannerAdapter`/contract, а не через вызовы CLI из route/controller.
-- UI, API, domain logic, persistence, integrations и transformations разделяются.
-- Route/controller/page файлы только оркестрируют, детальная логика выносится в модули.
-- Не создавать generic `utils.ts` для несвязанных функций.
-- Не вводить микросервис без доказанной необходимости.
-- Сначала модульный монолит + отдельно изолированные scanner workers.
-- Не создавать циклические зависимости между modules/packages.
+## Data
 
-## 4. Лимит размера файлов
+Use ADR 0010 entity matrix.
+TENANT rows organization-keyed + composite FK + RLS.
+Guest separate.
+Partner grant ≠ Support grant.
+No ambiguous generic AuditLog.
 
-Авторские source-файлы должны быть не более **400 физических строк**.
+## Jobs
 
-Исключения: generated files, lockfiles, vendored content и атомарные migrations.
+Separate ScanRequest/ScanJob/ScanAttempt.
+Use ADR 0011 FSM/idempotency.
+Guest idempotency is scoped by a server-authenticated high-entropy Guest-session cookie, never IP/NAT/browser fingerprint.
+Same Guest session + same key/hash within 30m returns the same replay-stable HMAC-derived result token without extending expiry.
+Same Guest session + same key + different hash = conflict.
+Result-token HMAC uses the versioned domain-separated binary encoding from ADR 0011; no ad-hoc string concatenation.
+CAS lease + monotonic fence.
+Primary commit requires RUNNING state + current fence + unexpired lease/deadline.
+Terminal same-digest replay is a separate no-write acknowledgement branch; different digest conflicts/audits.
+ResultEnvelope contains ScannerResultEnvelope payload.
 
-Если безопасное разделение невозможно в текущей задаче, нарушение фиксируется в `plan.md` с путем файла и предложенной границей разделения.
+## Scanner
 
-Не сокращать форматирование и комментарии искусственно ради лимита.
+Supervisor owns Redis/result credentials.
+Third-party scanner owns none.
+Machine capability policy from ADR 0012.
+Unknown capability DENY.
+HEADLESS_BROWSER DENY in all V1 profiles.
+Hostile output bounded/validated/redacted.
 
-## 5. Product differentiation guardrails
+## Findings / score
 
-При реализации не сводить OUTSCAN к `scanner + dashboard`.
+FindingOccurrence records positive detections.
+FindingEvent only transitions.
+Coverage separate.
+Automatic RESOLVED disabled until compatible coverage tests.
+Asset Security Score only when SufficientBaselineV1 true.
+Monitoring explicit.
 
-Обязательные направления:
+## Files
 
-- полезный Guest Network & Domain Posture;
-- Change Intelligence как first-class capability;
-- Asset Relations с provenance/confidence для будущего Asset Graph;
-- собственный Risk Engine поверх scanner + Threat Intelligence;
-- business summary + technical drill-down;
-- Agency/MSP только через delegated access между отдельными Organization tenants;
-- monitored-asset billing без credits за обычные повторные scans.
+Authored source <=400 physical lines. Do not game the limit.
 
-Перед существенным product/UI/data изменением читать `docs/COMPETITIVE_ANALYSIS.md`.
+## UI / claims
 
-Не копировать A-F grade как основной security model и не делать scanner-selection центральным пользовательским workflow.
+Follow CLAIM_INVENTORY and UX_ACCEPTANCE.
+No blocked claims/customer logos.
+No decorative globe/radar/glow/shield.
+WCAG 2.2 AA target.
 
-## 6. Security invariants
+## Completion
 
-### Tenant isolation
-
-Organization A не может читать, перечислять, изменять или удалять данные Organization B.
-
-Для защищенных объектов проверять:
-
-- authenticated user;
-- organization membership;
-- role;
-- object ownership / tenant id;
-- entitlement при необходимости.
-
-### Guest scan
-
-До подтверждения владения разрешены только safe/passive checks из `docs/SCANNING_POLICY.md`.
-
-Запрещено в guest mode:
-
-- port scanning;
-- Naabu;
-- Nuclei active vulnerability templates;
-- Katana deep crawl;
-- ZAP active scan;
-- fuzzing;
-- brute force;
-- exploitation;
-- authenticated scan;
-- intrusive API testing.
-
-### Target validation / SSRF
-
-Любой user-controlled target:
-
-- canonicalize;
-- resolve DNS;
-- reject localhost/private/link-local/metadata ranges;
-- re-resolve/re-check после каждого redirect;
-- применять timeout, redirect limit, response-size limit и request budget;
-- fail closed при неоднозначной destination validation.
-
-### Scanner workers
-
-Worker не получает:
-
-- production DB credentials;
-- unrestricted Redis/admin credentials;
-- internal API master token;
-- cloud metadata access;
-- доступ к private application network.
-
-Worker должен быть disposable, resource-limited и иметь минимальный job payload.
-
-### Admin
-
-Admin authorization только server-side. Platform routes должны иметь отдельный policy boundary. Любой support/break-glass access журналируется.
-
-### Secrets
-
-Никогда не:
-
-- коммитить реальные `.env` значения;
-- печатать tokens/keys/passwords в логи;
-- помещать секреты в changelog/audit;
-- возвращать secrets в client bundle;
-- сохранять лишние scanner credentials в evidence.
-
-## 7. Scanning policy
-
-Перед изменением scanner pipeline прочитать `docs/SCANNING_POLICY.md`.
-
-Категории checks:
-
-- `SAFE` - разрешено автоматически в соответствующем контексте;
-- `CONTROLLED` - только verified assets;
-- `ACTIVE` - verified asset + явный opt-in;
-- `DISABLED` - не запускать в SaaS.
-
-Не считать severity Nuclei финальным OUTSCAN risk. Все результаты проходят normalization + Risk Engine.
-
-## 8. Threat Intelligence
-
-Источники внешних данных считаются недоверенными input.
-
-- Валидировать schema.
-- Хранить source/provenance и timestamps.
-- Поддерживать incremental sync.
-- Не обновлять production scanners/templates напрямую из runtime job.
-- Новые versions/templates: staging -> tests -> canary -> approve -> production.
-
-## 9. Tests обязательны
-
-Для security-sensitive feature happy path недостаточен.
-
-Минимальные negative tests при релевантности:
-
-- anonymous access rejected;
-- user A cannot access user B / tenant B object;
-- non-admin admin action rejected;
-- unverified domain cannot request active scan;
-- private/link-local/metadata target rejected;
-- redirect to forbidden address rejected;
-- malformed/oversized input rejected;
-- duplicate/replayed request preserves idempotency;
-- secrets absent from responses/logs;
-- scanner timeout/resource limit handled safely.
-
-## 10. Проверки перед завершением задачи
-
-Запустить доступные проверки в таком порядке:
-
-1. Targeted tests.
-2. Lint/format.
-3. Typecheck.
-4. Unit/integration tests.
-5. Security negative tests.
-6. Production build.
-7. Source file line-count check.
-8. Diff review: secrets, debug code, accidental dependencies, stale docs.
-
-Нельзя писать `готово`, если обязательная проверка не запускалась. Нужно явно указать, что не было проверено и почему.
-
-## 11. Living documentation
-
-В том же change:
-
-- обновить `CHANGELOG.md`;
-- обновить `plan.md`;
-- обновить durable docs;
-- создать/обновить `docs/audit-YYYY-MM-DD.md` при существенной работе.
-
-Changelog не должен содержать эксплуатационные инструкции или секреты.
-
-## 12. Dependency policy
-
-Перед добавлением dependency:
-
-- объяснить необходимость;
-- предпочитать maintained package;
-- не добавлять библиотеку ради нескольких строк security-sensitive logic;
-- проверить permissions/execution surface;
-- проверить lockfile delta;
-- фиксировать значимые dependency changes в changelog.
-
-## 13. UI правила
-
-OUTSCAN использует строгий минимализм:
-
-- без decorative cyber imagery;
-- без glassmorphism;
-- без необязательных gradients/glows;
-- минимум cardization;
-- акцент на typography, whitespace, lines, tables, status;
-- статусный цвет только по смыслу;
-- не копировать внешний вид типового SaaS dashboard kit.
-
-Основные UI primitives: `TEXT + NUMBER + STATUS + LINE + TABLE`.
-
-## 14. Запрещенные заявления продукта
-
-Не писать в UI/маркетинге:
-
-- `100% secure`;
-- `сайт безопасен`;
-- `защищено от взлома`;
-- `гарантированная защита`;
-- `полный автоматический пентест`.
-
-Использовать: `обнаружен риск`, `требует внимания`, `потенциальный риск`, `подтвержденный риск`, `мониторинг активен`.
-
-## 15. Git и scope
-
-- Не менять несвязанные файлы.
-- Не делать broad rewrite без необходимости.
-- Маленькие законченные изменения предпочтительнее больших пачек.
-- Не force-push и не удалять историю без явного указания владельца.
-- Не выполнять production deploy без отдельного запроса.
-
-## 16. Definition of Done
-
-Задача завершена только если:
-
-- поведение реализовано;
-- security invariants сохранены;
-- есть релевантные tests;
-- проверки выполнены;
-- docs синхронизированы;
-- changelog обновлен;
-- plan обновлен;
-- аудит обновлен при существенном изменении;
-- remaining risks явно записаны.
+Run relevant tests/lint/typecheck/build/security negative suites/`git diff --check`.
+Update docs/plan/changelog/audit.
+Never claim a check ran if it did not.

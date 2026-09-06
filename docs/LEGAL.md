@@ -2,50 +2,52 @@
 
 ## Status
 
-This document is a project risk register, not legal advice.
+Project risk register, not legal advice.
 
 ## Russian market
 
-Before commercial launch in РФ, obtain professional legal review of the exact service model, contract language and functionality.
+Before commercial launch in РФ, obtain professional review of actual features/contracts/service model.
 
-Material question:
+Distinguish customer self-service SaaS from professional security monitoring/protectedness assessment/pentest or other regulated activity.
 
-- software/SaaS for customer self-service diagnostics and monitoring;
-- versus professional security monitoring, protectedness assessment, pentest or related services that can create licensing/regulatory obligations.
+## Scanning terminology
 
-Do not assume naming a service `SaaS` automatically removes regulatory requirements.
+Guest mode is **safe/non-intrusive**, not purely passive.
 
-## Product language
+DNS, TLS and HTTP checks send network requests.
+RDAP, CT and some external intelligence can be passive relative to the target.
 
-Avoid contractual/marketing claims:
+Do not call target network requests passive merely because they are low-risk.
 
-- absolute protection;
-- guaranteed vulnerability absence;
-- guaranteed prevention of compromise;
-- certification/compliance without applicable assessment process.
+## Authorization
 
-## Authorization to scan
+V1:
 
-Guest mode remains safe/passive.
+- Guest safe/non-intrusive only.
+- DNS verification creates EXACT_HOST only.
+- ScanAuthorization recalculated at execution.
+- Controlled Deep requires per-run consent.
+- Active/IP/CIDR/Naabu/raw TCP disabled.
 
-Active/deep scanning requires:
+Before authenticated DAST, intrusive testing, IP/CIDR scanning or private scanner, repeat legal/contract review.
 
-- verified asset scope;
-- customer authorization in terms/product flow;
-- explicit opt-in where scanning mode carries additional operational risk.
+## Verification / monitoring
 
-Before introducing authenticated DAST, intrusive testing or internal scanner, review legal/contractual scope again.
+Verification does not automatically create paid monitoring.
+MonitoringEnrollment is explicit.
 
-## Data protection
+## Claims
 
-Before production define:
+Follow CLAIM_INVENTORY.
 
-- privacy policy;
-- personal-data processing basis;
-- data retention;
-- storage region/data residency;
-- subprocessors;
-- customer deletion/export;
-- incident process.
+Do not publish absolute protection, guaranteed absence/prevention, unmeasured SLA/performance, unsupported scanner/source counts, customer logos without permission or compliance/certification claims without process.
 
-Scan evidence must follow minimization principles because technical responses can contain personal or confidential data.
+## Data
+
+Before production define privacy basis, retention, Guest deletion, residency, subprocessors, export/delete, incident process and support-access rules.
+
+Evidence may contain personal/confidential data and must be minimized.
+
+## Production
+
+Legal/privacy review and claim approval are Gate C requirements.

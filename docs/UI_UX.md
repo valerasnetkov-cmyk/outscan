@@ -1,165 +1,128 @@
 # UI / UX direction
 
+Canonical design evidence:
+
+- `UX_ACCEPTANCE.md`
+- `CLAIM_INVENTORY.md`
+- ADR 0014
+
 ## Art direction
 
-OUTSCAN - спокойный, строгий, data-first security product.
+Calm, strict, data-first:
+`TEXT + NUMBER + STATUS + LINE + TABLE`.
 
-Основной язык интерфейса:
+Dark hero + light lower content.
 
-```text
-TEXT + NUMBER + STATUS + LINE + TABLE
-```
+Do not use globe/radar/glow/neon/shield/lock/hacker decoration, excessive cards or fear marketing.
 
-## Не использовать
+## Public input
 
-- decorative shields/locks/hackers;
-- neon cyberpunk;
-- random gradients/glows;
-- glassmorphism;
-- bento ради bento;
-- каждую строку данных в отдельной card;
-- emoji как product icons;
-- marketing fear language.
+Permanent label: `Домен`.
+Helper: `Введите домен без https://, пути и порта.`
 
-## Public first screen
+States:
 
-Минимум элементов:
+- normal;
+- invalid;
+- blocked/unavailable;
+- submitting/progress;
+- visible keyboard focus.
 
-- OUTSCAN;
-- короткое позиционирование;
-- domain input;
-- `Проверить`;
-- `Без регистрации`;
-- вход для существующих пользователей.
+Placeholder never replaces label.
 
-## Guest result
+## Public capabilities
 
-Приоритет:
+`Возможности OUTSCAN` is rendered only from the safe Product Capability Registry projection. The page has no second capability array.
 
-1. target/domain;
-2. `Базовая проверка завершена`;
-3. основные posture sections;
-4. `N дополнительных потенциальных рисков`;
-5. CTA verification.
+Each visible item presents outcome-first copy and a textual access label distinguishing Guest-safe, verified, controlled and system capabilities. Visibility never implies that a Guest can execute verified-only checks or that a particular asset has coverage.
 
-Suggested sections:
+If registry validation fails or no claim/evidence-approved production capabilities exist, hide the block while keeping the Guest flow usable. Do not fall back to unrelated hardcoded content.
 
-### Инфраструктура
+## Guest Result
 
-- IP;
-- ASN/provider;
-- BGP/RPKI;
-- IPv6;
-- HTTP protocol;
-- TLS;
-- CDN/WAF.
+Dedicated page:
 
-### Домен
+1. target/completion;
+2. Infrastructure;
+3. Domain;
+4. Mail;
+5. Certificate;
+6. coverage;
+7. potential-risk aggregate;
+8. registration/verification CTA.
 
-- registrar;
-- created;
-- expires;
-- nameservers;
-- DNSSEC;
-- CAA.
+Statuses:
 
-### Почта
+- Норма;
+- Требует внимания;
+- Не проверено;
+- Не определено;
+- Неприменимо.
 
-- MX/provider;
-- SPF;
-- DMARC;
-- MTA-STS;
-- TLS-RPT.
+No subdomain list/CVE/endpoints/vulnerable versions/raw evidence.
 
-### Сертификат
+## Onboarding
 
-- issuer;
-- expires;
-- key summary;
-- HSTS;
-- CT aggregate.
+`Guest → Registration → Organization → Add exact host/Create Asset → DNS Verification → Verified Baseline → Asset Security Score → optional MonitoringEnrollment`.
 
-Do not expose discovered subdomains before verification.
+Verification does not start monitoring/billing.
 
-Не использовать A-F grade как основной продуктовый signal. Guest использует `Baseline posture`, verified workspace использует `OUTSCAN Security Score`.
+## Scan copy
 
-## Two-layer information model
+Guest Safe = safe/non-intrusive.
+Use `passive` only for truly passive sources.
+Controlled Deep requires per-run consent.
+Active/IP/CIDR/raw TCP disabled.
 
-Конкурентный анализ подтверждает необходимость разделять presentation для бизнеса и технические детали.
+## Score UI
 
-### Business summary
+Do not show Asset Security Score until SufficientBaselineV1.
 
-Показывает:
+If insufficient:
 
-- что произошло;
-- насколько это важно;
-- что сделать;
-- изменилось ли состояние;
-- подтвержден ли риск.
+- show missing/failed detector groups;
+- no fake score;
+- zero findings ≠ safety.
 
-### Technical drill-down
+Organization Security Score is explicitly monitored-asset scope.
 
-Показывает по запросу:
+## Findings
 
-- source/scanner;
-- CVE/CVSS/EPSS/KEV;
-- affected asset;
-- sanitized evidence;
-- technical remediation context.
+Condition, occurrence, transition and disposition are distinct.
+Technical drill-down may show recurrence/coverage when it changes priority.
 
-Не заставлять нетехнического пользователя читать scanner output, чтобы понять priority.
+## Change Intelligence
 
-## Change Intelligence UI
+V1.5:
+`before → after → when → why it matters → action`.
 
-Изменения являются отдельным пользовательским сценарием, а не второстепенным audit log.
+Before V1.5, hero diff label:
+`Концепт будущей возможности V1.5`.
 
-Примеры:
+## Claims
 
-- `IP изменился`;
-- `DMARC: reject -> none`;
-- `CDN/WAF больше не обнаруживается`;
-- `обнаружен новый asset`;
-- `certificate issuer изменился`;
-- `finding reopened`.
+Follow CLAIM_INVENTORY.
+Existing public/maket.png is reference-only and must not be treated as Gate A evidence. It may inform first-screen layout, but blocked claims/nonconforming motifs must not be copied; remove/exclude it before Gate B1/public deployment if it would be served.
 
-Для каждого значимого изменения показывать: `что было -> что стало -> когда -> почему важно`.
+## Brand
 
-## Workspace dashboard
-
-Пользователь за несколько секунд должен понять:
-
-- Security Score;
-- Critical/High count;
-- что требует внимания;
-- какие assets изменились;
-- что появилось с прошлого scan;
-- что исправить первым.
-
-## Navigation V1
-
-- Обзор
-- Активы
-- Риски / Findings
-- Уязвимости
-- Мониторинг
-- Отчеты
-- Организация
-- Тариф
-- Настройки
-
-Проверить на этапе UI прототипа, нужны ли одновременно `Риски` и `Уязвимости`; не допускать дублирования mental model.
-
-## Platform Admin
-
-Admin UI может быть плотнее customer workspace, но сохраняет ту же typographic system.
-
-Не смешивать client navigation и platform operations.
+Separate mark/wordmark/lockups.
+Tagline normally HTML.
+Use outscan.ru consistently.
+No stale 2024.
 
 ## Accessibility
 
-- keyboard navigation;
+Target WCAG 2.2 AA.
+
+Gate A design evidence:
+
+- intended ≥4.5:1 text contrast where applicable;
 - visible focus;
-- semantic tables/headings;
-- severity никогда не передавать только цветом;
-- sufficient contrast;
-- status text всегда присутствует рядом с color indicator.
+- keyboard reachability;
+- semantic label/error plan;
+- non-color-only status;
+- live-region plan;
+- 320px reflow.
+
+Gate B1/B2 prove actual CSS/DOM/keyboard/screen-reader behavior.

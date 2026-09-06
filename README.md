@@ -1,205 +1,132 @@
 # OUTSCAN
 
-**OUTSCAN** - SaaS-платформа мониторинга внешних киберрисков и цифрового периметра организации.
+**OUTSCAN** — SaaS-платформа мониторинга внешних киберрисков и цифрового периметра организации.
 
-Домен продукта: `outscan.ru`  
-Репозиторий: `https://github.com/valerasnetkov-cmyk/outscan.git`  
-Слоган: **Внешние риски под контролем.**
+Domain: `outscan.ru`
+Repository: `https://github.com/valerasnetkov-cmyk/outscan.git`
+Slogan: **Внешние риски под контролем.**
 
-## 1. Цель продукта
+## Product flow
 
-OUTSCAN должен отвечать пользователю на четыре вопроса:
+`Guest Scan → Registration → Organization → Add exact host/Create Asset → DNS Verification → Verified Baseline → Asset Security Score → optional MonitoringEnrollment`.
 
-1. Какие цифровые активы организации доступны извне?
-2. Какие риски и небезопасные конфигурации обнаружены?
-3. Что действительно важно исправить в первую очередь?
-4. Что изменилось после предыдущей проверки?
+Guest is safe/non-intrusive, not purely passive.
 
-OUTSCAN не обещает абсолютную безопасность и не называет ресурс безопасным только потому, что автоматическая проверка не нашла проблем.
+## V1 scope
 
-## 2. Три уровня продукта
+Input: hostname/domain only.
+VerifiedScope: EXACT_HOST only.
 
-### Public / Guest Scan
+Disabled:
 
-Без регистрации и без подтверждения владения доменом.
+- DOMAIN_SUBTREE;
+- IP/CIDR;
+- Naabu/raw TCP;
+- ACTIVE;
+- authenticated scanning.
 
-Разрешены только пассивные и безопасные проверки общедоступных параметров: DNS, RDAP, TLS, сертификаты, HTTP security headers, почтовые политики, ASN/BGP/RPKI, CDN/WAF, базовый technology fingerprint и агрегированные CT-данные.
+DNS verification requires persistent TXT and revalidation per ADR 0009.
 
-Гостю показываются базовые результаты и количество дополнительных **потенциальных рисков**. Детальные findings, CVE, поддомены, endpoints, версии потенциально уязвимых компонентов и доказательства не раскрываются.
+## Guest idempotency boundary
 
-### Customer Workspace
+Anonymous scan replay is scoped by a server-issued, Secure/HttpOnly host-only Guest-session cookie. IP/NAT/User-Agent/browser fingerprint are abuse signals only, not authorization/idempotency ownership.
 
-После регистрации и подтверждения владения активом доступны расширенные проверки, полноценный Security Score, Attack Surface, Findings, Vulnerabilities, Monitoring и Reports.
+Result-token derivation and replay semantics are defined in ADR 0011.
 
-### Platform Admin
-
-Отдельный административный контур владельца OUTSCAN: организации, пользователи, scan jobs, workers, очереди, Threat Intelligence, подписки, abuse, audit logs и состояние платформы.
-
-## 3. Базовый технический стек
-
-Точный набор версий определяется при scaffold и фиксируется lock-файлами. Не использовать плавающие версии в production.
-
-- TypeScript.
-- `pnpm` workspaces.
-- Next.js для `apps/web` и `apps/admin`.
-- Fastify для `apps/api`.
-- PostgreSQL как основная БД.
-- Drizzle ORM или другой SQL-first слой только после фиксации ADR; предпочтение SQL-прозрачному подходу.
-- Redis + BullMQ для очередей scan jobs.
-- Docker/OCI containers для изолированных scanner workers.
-- Zod или эквивалент для runtime validation на trust boundaries.
-- Собственный UI без зависимости от шаблонного SaaS-kit; CSS должен оставаться модульным и контролируемым.
-
-Security engines V1:
-
-- Subfinder - discovery.
-- DNS/dnsx - DNS-проверки.
-- httpx - HTTP/TLS probing и technology fingerprint.
-- Naabu - network discovery только для подтвержденных активов.
-- Katana - crawling только в разрешенном режиме.
-- Nuclei - основной vulnerability detection engine.
-
-Threat Intelligence V1:
-
-- NVD.
-- CISA KEV.
-- FIRST EPSS.
-- Nuclei Templates.
-
-Позже: OSV, OWASP ZAP, MobSF, GitHub/GitLab, cloud connectors и private scanner.
-
-## 4. Архитектурный принцип
-
-MVP строится как **модульная система с небольшим числом deployable-компонентов**, а не как набор преждевременных микросервисов.
+## Security architecture
 
 ```text
-Internet
-   |
-   v
-apps/web --------> apps/api --------> PostgreSQL
-                       |
-                       +-----------> Redis / Queue
-                                       |
-                                       v
-                               isolated scanner worker
-                                       |
-                                       v
-                                 External Internet
-
-apps/admin -------> apps/api (separate admin authz boundary)
+Web/Admin
+  ↓
+API
+  ↓
+PostgreSQL / BullMQ
+                 ↓
+         trusted supervisor
+                 ↓
+        disposable scanner
+                 ↓
+       controlled Internet
 ```
 
-Основные доменные модули:
+Outbound probes pin actual connection to validated IP while preserving Host/SNI/certificate hostname verification.
 
-- Identity / Auth.
-- Organizations / Membership.
-- Assets / Asset Relations.
-- Verification.
-- Scans / Scan Jobs.
-- Findings / Evidence.
-- Vulnerabilities / Threat Intelligence.
-- Risk Engine.
-- Monitoring / Events.
-- Notifications.
-- Reports.
-- Billing / Entitlements.
-- Platform Admin / Audit.
+Scanner gets no DB/Redis/Result-Ingress credential.
 
-## 5. Ключевые сущности
+## Core concepts
 
-Базовая сущность - `Asset`, а не `Website`.
+- ProductCapability registry for public/product metadata only;
+- Asset / AssetRelation;
+- DomainVerification / VerifiedScope;
+- ScanRequest / ScanJob / ScanAttempt;
+- ExecutionEnvelope;
+- ResultEnvelope with ScannerResultEnvelope payload;
+- Finding / FindingOccurrence / FindingEvent / FindingDisposition / FindingCoverage;
+- AssetPostureSnapshot;
+- Asset Security Score / Organization Security Score;
+- MonitoringEnrollment;
+- Notifications & Communications event/delivery boundary;
+- PartnerDelegation / SupportAccessGrant.
 
-Планируемые типы:
+Public capability surfaces are generated from the Product Capability Registry. Scanner execution remains independently controlled by `ScanAuthorization` and the ADR-0012 scanner policy.
 
-- DOMAIN
-- SUBDOMAIN
-- IP
-- WEB_APP
-- API
-- SERVICE
-- REPOSITORY
-- MOBILE_APP
-- CLOUD_RESOURCE
+The first External Asset Sources foundation supports bounded Yandex Metrika counter parsing, hostname normalization and candidate provenance without exposing routes or credentials. Metrika discovery never establishes verification or scan authority; the full Workspace delivery remains gated by Organization authz, RLS, audit and encrypted secret storage. See `docs/YANDEX_METRIKA_ASSET_IMPORT.md`.
 
-Все scanner adapters возвращают единый нормализованный `Finding`.
+Notifications use a closed event → future transactional outbox → server-side policy/preferences → isolated channel-adapter design. The current foundation contains pure contracts and Telegram security primitives only; no route, provider SDK, credential or external delivery exists. See `docs/NOTIFICATIONS_COMMUNICATIONS.md` and ADR 0015.
 
-Это обязательное условие будущего Asset Graph, Attack Paths и Exposure Management.
+The current Guest supervisor foundation composes approved execution state, a frozen non-secret launch plan, bounded local IPC, canonical target-bound output and supervisor-only ResultEnvelope HMAC signing. Its process launcher and signing-key provider are injected test boundaries; no production child process, secret manager, queue, persistence, outbound scan or Guest route exists yet.
 
-## 6. Продуктовая дифференциация
+## Scores
 
-После анализа прямых website-scanner, vulnerability-scanner и EASM конкурентов зафиксированы обязательные отличия OUTSCAN:
+Asset Security Score exists only when `SufficientBaselineV1=true`.
+Organization Security Score includes explicitly monitored assets only.
 
-- Guest Scan должен давать полезный Network & Domain Posture, а не пустой teaser.
-- Базовые DNS/TLS/headers проверки не считаются самостоятельным moat.
-- `Change Intelligence` является first-class capability: важно не только текущее состояние, но и security-relevant diff во времени.
-- Asset Relations и provenance собираются рано, чтобы постепенно строить Asset Graph.
-- Risk Engine объясняет приоритет, а не копирует scanner severity.
-- UI имеет business summary и technical drill-down.
-- Agency/MSP проектируется как delegated access между отдельными tenant Organizations.
-- Billing строится вокруг monitored assets, а не scan credits.
+## Change Intelligence
 
-Подробности: [docs/COMPETITIVE_ANALYSIS.md](docs/COMPETITIVE_ANALYSIS.md).
+V1 stores snapshots/provenance.
+V1.5 adds full diff/significance/timeline/alerts.
 
-## 7. Security invariants
+## Claims / design
 
-Нельзя нарушать ни при каких feature-изменениях:
+Public copy follows `docs/CLAIM_INVENTORY.md`.
+Design/accessibility contract: `docs/UX_ACCEPTANCE.md`.
+`public/maket.png` is retained temporarily as a reference for the first-screen build. It is not accepted Gate A evidence and must not drive blocked claims or nonconforming visual decisions; before Gate B1/public deployment it must be moved/excluded if it would be served.
 
-1. Anonymous scan не выполняет активное vulnerability scanning.
-2. Активные расширенные проверки требуют подтвержденного владения и соответствующего режима сканирования.
-3. Пользователь одной организации не может читать, изменять, удалять или перечислять данные другой организации.
-4. Authorization проверяется server-side на каждом защищенном действии.
-5. Scanner worker не имеет прямого доступа к production DB, внутренней сети, cloud metadata и master secrets.
-6. User-controlled target не может использовать OUTSCAN как SSRF-proxy к localhost, private/link-local сетям или metadata endpoints.
-7. Каждый redirect и повторный DNS resolve проходят повторную проверку destination IP.
-8. Platform Admin физически и логически отделен от клиентского workspace; скрытая кнопка не является защитой.
-9. Привилегированные действия журналируются.
-10. Секреты не попадают в repository, client bundle, scan evidence, changelog и audit notes.
-11. Nuclei templates и scanner binaries обновляются только через контролируемый release pipeline.
-12. Наличие зеленого scanner result не является доказательством отсутствия уязвимостей.
+## Gate
 
-Подробности: [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md).
+See `docs/PRE_SCAFFOLD_GATE.md`.
 
-## 8. Документация как часть Definition of Done
+Current: package/security/content consistency PASS; ADR-0009…ADR-0014 are Accepted; post-acceptance checks passed; Gate A PASS. Minimal source scaffold and CI/test harness are in place; Gate B1 work is in progress.
 
-Каждое существенное изменение должно обновлять:
+Capability Registry integration does not reopen Gate A. Its public API and homepage block remain non-deployed until applicable Gate B1 and claim/evidence requirements pass.
 
-- `README.md`, если изменились setup, архитектура или продуктовые правила;
-- `CHANGELOG.md`, если завершен значимый этап;
-- `plan.md`, если изменились выполненные или будущие задачи;
-- соответствующий файл в `/docs`;
-- `docs/audit-YYYY-MM-DD.md` в каждый активный день разработки, когда были существенные изменения, аудит, миграция или security review.
+The Yandex Metrika foundation also leaves Gate A unchanged. It is not publicly exposed and does not make Gate B2 PASS.
 
-Feature считается незавершенной, если документация противоречит коду.
+ADR-0015 is an accepted post-Gate-A decision. Its notification foundation does not reopen Gate A/B1 and does not make Gate B2 PASS.
 
-## 9. Codex
+## Development
 
-Перед любой работой Codex обязан прочитать:
+Read:
 
-1. `AGENTS.md`.
-2. `README.md`.
-3. `plan.md`.
-4. `CHANGELOG.md`.
-5. Документы из `/docs`, относящиеся к задаче.
+1. `AGENTS.md`;
+2. `docs/PRE_SCAFFOLD_GATE.md`;
+3. `plan.md`;
+4. `CHANGELOG.md`;
+5. relevant docs/ADR;
+6. latest audit.
 
-Полный workflow: [docs/CODEX_WORKFLOW.md](docs/CODEX_WORKFLOW.md).
+Graphify only after Gate A PASS and meaningful source scaffold.
 
-## 10. Graphify
+### Local commands
 
-Graphify должен быть подключен после появления первого содержательного source scaffold.
+Requirements: Node.js 24+ and pnpm 11.19.0.
 
-Рекомендуемый порядок:
-
-```bash
-uv tool install graphifyy
-graphify install --project --platform codex
-graphify .
+```text
+pnpm install
+pnpm dev:web
+pnpm dev:api
+pnpm dev:admin
+pnpm verify
 ```
 
-Не запускать `graphify .` только по документационному scaffold. После существенных изменений архитектуры или module boundaries граф должен быть регенерирован и проверен на отсутствие чувствительных данных.
-
-## 11. Текущий статус
-
-Проект находится на стадии архитектурной фиксации и подготовки к scaffold. Production release запрещен до прохождения базового security/release gate.
-
-Текущие задачи: [plan.md](plan.md).  
-Текущий аудит: [docs/audit-2026-09-02.md](docs/audit-2026-09-02.md).
+The public scan control is intentionally disabled. No Guest Scan endpoint or outbound scanner is exposed before Gate B1.

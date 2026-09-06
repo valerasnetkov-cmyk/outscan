@@ -1,141 +1,64 @@
 # Roadmap
 
-## Strategic direction
+## Pre-Scaffold
 
-```text
-External Monitoring
- -> Change Intelligence
- -> EASM / Attack Surface + Asset Graph basics
- -> Agency / MSP / API
- -> AppSec / API Security
- -> Supply Chain
- -> Cloud / Internal Exposure
- -> Attack Paths
- -> Exposure Management / CTEM
- -> Enterprise / Managed Security
-```
+Completed:
 
-## V1 - Domain + External Monitoring
+- ADR-0009…0014 accepted;
+- old correction drafts removed;
+- `public/maket.png` classified as reference-only and scheduled for removal/exclusion before Gate B1/public deployment if it would be served;
+- claim inventory + UX evidence accepted;
+- final consistency review completed;
+- Gate A PASS.
 
-Commercially useful core:
+## V1 — Guest + Exact-Host Baseline
 
-- public Guest Scan;
-- verified domain monitoring;
-- Network & Domain Posture;
-- initial asset inventory;
-- Nuclei detection;
-- NVD / KEV / EPSS enrichment;
-- Risk Engine;
-- workspace/reporting;
-- email alerts.
+- Guest safe/non-intrusive Network & Domain Posture;
+- pinned validated outbound connections;
+- DNS TXT exact-host verification/revalidation;
+- deterministic job/attempt protocol;
+- SAFE capability policy;
+- verified baseline;
+- FindingOccurrence + coverage;
+- SufficientBaselineV1;
+- Asset Security Score;
+- explicit MonitoringEnrollment;
+- TI/Risk;
+- snapshots/provenance;
+- reports/email when implemented.
 
-V1 must already store history needed by Change Intelligence even if UI initially shows only selected diffs.
+Implementation sequencing inside the current plan:
 
-## V1.5 - Change Intelligence
+- Phase 2 Workspace foundation adds transactional account email persistence/provider delivery required by verification/recovery;
+- Phase 4 TI/Risk/Monitoring adds customer technical email/Telegram and platform Ops alerts;
+- marketing consent/campaign delivery remains Later/Commercial.
 
-Priority before broad AppSec expansion:
+Excluded V1:
 
-- posture snapshots/history;
-- IP/ASN/NS/MX/CA/CDN/TLS/DMARC/RPKI diffs;
-- new/disappeared asset events;
-- technology change events;
-- finding reopened/fixed events;
-- change significance;
-- alerting on meaningful security regressions;
-- user-facing `что изменилось и почему это важно` timeline.
+- implicit DOMAIN_SUBTREE;
+- IP/CIDR scope;
+- Naabu/raw TCP;
+- ACTIVE;
+- authenticated requests.
 
-## V2 - Attack Surface / EASM + Asset Graph basics
+## V1.5 — Change Intelligence
 
-- expanded asset discovery;
-- public IP/services;
-- unknown/shadow assets;
-- richer Asset Relations;
-- attribution reason/provenance/confidence;
-- first/last seen;
-- attack surface trends;
-- external infrastructure monitoring;
-- initial graph-ready API/data model.
+Diff engine, significance, timeline, alerts, asset/finding changes.
 
-Full graph visualization is optional at this stage. Relationship data is mandatory.
+## V2 — EASM / Asset Graph basics
 
-## V2.5 - Agency / MSP + Platform API
+Expanded passive discovery, unknown assets, relations/provenance and external trends.
 
-Prioritized early because market evidence shows clear reseller/managed-monitoring demand.
+Raw network scanning still requires dedicated ownership/scope ADR.
 
-- partner account model;
-- each client remains a separate Organization tenant;
-- delegated access grants;
-- customer spaces;
-- White Label reports;
-- bulk monitoring views;
-- partner billing;
-- API/webhooks;
-- branded reports.
+## V2.5 — Agency/MSP/API
 
-## V3 - Application + API Security
+PartnerDelegation, separate client Organizations, White Label, authorized bulk views, API/webhooks.
 
-- authenticated DAST;
-- OWASP ZAP;
-- deeper SPA crawling;
-- OpenAPI/Swagger;
-- GraphQL;
-- endpoint inventory;
-- auth/rate-limit/misconfiguration checks.
+## V3+
 
-## V4 - Supply Chain
+AppSec/API → Supply Chain → Cloud/Private Scanner → Attack Paths → CTEM → Enterprise/Managed.
 
-- GitHub/GitLab;
-- OSV;
-- dependencies;
-- SBOM;
-- secrets;
-- containers;
-- CI/CD/IaC posture.
+## Sequencing
 
-## V5 - Cloud + Private Scanner
-
-- read-only cloud connectors;
-- public exposure correlation;
-- internal scanner agent/container;
-- enterprise data residency options.
-
-## V6 - Attack Paths
-
-Correlate:
-
-```text
-Asset -> Technology -> Vulnerability -> Exposure -> Business Asset -> Attack Path
-```
-
-Prioritize realistic paths rather than raw vulnerability count.
-
-## V7 - Exposure Management / CTEM
-
-Lifecycle:
-
-- Discover
-- Assess
-- Prioritize
-- Validate
-- Remediate
-- Verify
-- Monitor
-
-## V8 - Enterprise / Managed
-
-- SSO/SCIM;
-- advanced RBAC;
-- SIEM/SOAR integrations;
-- SLA;
-- managed analyst service;
-- enterprise reporting/compliance;
-- private/regional scanner pools.
-
-## Sequencing rule
-
-Do not start the next major scanner class because it is technically interesting. Advance based on at least one of:
-
-- repeated customer demand;
-- revenue/retention evidence;
-- security coverage gap that blocks current customers;
-- operational evidence that the current module has reached stable maturity.
+Advance scanner classes only with demand/revenue/coverage/operational evidence and required security/legal decisions.

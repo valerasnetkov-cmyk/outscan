@@ -1,39 +1,38 @@
 # Security Policy
 
-## Scope
+## Canonical documents
 
-Этот документ описывает правила безопасной разработки и будущий канал disclosure для OUTSCAN.
-
-Пока проект не опубликован как production service, vulnerability disclosure channel считается не настроенным. До публичного запуска необходимо добавить актуальный security contact.
-
-## Development security
-
-Основные требования находятся в:
-
-- `AGENTS.md`
+- `docs/PRE_SCAFFOLD_GATE.md`
 - `docs/SECURITY_MODEL.md`
 - `docs/SCANNING_POLICY.md`
 - `docs/TESTING.md`
 
-## Reporting vulnerabilities
+## Gates
 
-До настройки официального канала не публиковать в issue tracker:
+- Gate A before source scaffold.
+- Gate B1 before Guest exposure.
+- Gate B2 before Workspace.
+- Gate C before production.
 
-- реальные credentials;
-- session tokens;
-- private keys;
-- данные клиентов;
-- подробные exploitation steps против production.
+## Production blockers
 
-После запуска создать отдельный security contact и при необходимости `/.well-known/security.txt` для самого OUTSCAN.
+- unresolved Critical/High;
+- tenant/RLS failure;
+- outbound connection not pinned to validated IP;
+- mixed A/AAAA fail-open;
+- verification/scope/consent bypass;
+- scanner has DB/Redis/result credential/private network/metadata;
+- Guest idempotency/token disclosure across anonymous sessions;
+- job/lease/fence/digest primary-commit or terminal-replay integrity failure;
+- unsafe scanner output;
+- Admin MFA/step-up missing;
+- failing security tests/build;
+- uncontained secret.
 
-## Release policy
+## Reporting
 
-Production release блокируется при:
+Until official channel exists, do not place real secrets/customer data/exploitation details in public issues.
 
-- unresolved Critical/High security issue;
-- непроверенной tenant authorization;
-- SSRF path из user-controlled target;
-- secret exposure без rotation/containment;
-- failing security-sensitive tests;
-- scanner worker с недопустимым доступом к application infrastructure.
+Before production configure security contact and response ownership.
+
+A clean scan never proves absence of vulnerabilities.

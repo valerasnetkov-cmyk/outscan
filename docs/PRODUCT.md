@@ -2,130 +2,128 @@
 
 ## Positioning
 
-**OUTSCAN - платформа мониторинга внешних киберрисков.**
+**OUTSCAN — платформа мониторинга внешних киберрисков.**
 
-OUTSCAN показывает, какие цифровые активы организации доступны из интернета, какие риски с ними связаны, что требует внимания и что изменилось со временем.
+OUTSCAN shows external digital posture, meaningful risks and changes without promising absolute security.
 
-Главный принцип: не запугивать и не обещать абсолютную безопасность.
-
-## User journey
+## Canonical user journey
 
 ```text
 OUTSCAN.ru
-  -> domain input
-  -> guest safe scan
-  -> baseline public posture + N potential risks
-  -> registration
-  -> domain verification
-  -> verified baseline scan
-  -> Security Score / Assets / Findings
-  -> continuous monitoring
-  -> alerts / reports / remediation / recheck
+→ domain input
+→ Guest Safe Scan
+→ Network & Domain Posture + N potential risks
+→ Registration
+→ Organization
+→ Add exact host / Create Asset
+→ DNS TXT Verification
+→ VerifiedScope(EXACT_HOST)
+→ Verified Baseline
+→ SufficientBaselineV1?
+→ Asset Security Score / Findings
+→ optional MonitoringEnrollment
+→ next comparable snapshot
+→ Organization monitoring / Change Intelligence
 ```
 
-## Layer 1 - Public
+Asset creation explicitly precedes verification because verification is an Asset subresource.
 
-Не требует registration/verification.
+## Public
 
-Цель:
+No registration/verification.
+Guest checks are **safe/non-intrusive**.
 
-- дать полезный baseline;
-- показать ценность продукта;
-- не превратить OUTSCAN в reconnaissance proxy по чужой инфраструктуре.
+They may use direct DNS/TLS/HTTP requests and genuinely passive/public sources such as RDAP/CT/intelligence.
 
-Показываем:
+Do not call the entire Guest flow passive.
 
-- публичные DNS/domain/network/TLS/mail/HTTP posture параметры;
-- статусы `Норма / Требует внимания / Не определено`;
-- количество дополнительных потенциальных рисков;
-- распределение по high/medium/low только если оно рассчитано из safe signals.
+Guest shows Infrastructure, Domain, Mail, Certificate posture, honest coverage states and potential-risk aggregate.
 
-Не показываем:
+Guest hides discovered subdomains, CVE details, endpoints, vulnerable versions and raw evidence.
 
-- список discovered subdomains;
-- CVE details;
-- vulnerable version details;
-- endpoints;
-- exploit evidence;
-- intrusive scanner output.
+Guest uses Baseline posture, not Security Score.
 
-## Layer 2 - Workspace
+## Product Capability Registry
 
-После verification:
+One code-first `ProductCapability` catalog supplies public capability surfaces and later Workspace, report and tariff presentation. It represents supported OUTSCAN behavior, not the raw feature list of an upstream scanner.
 
-- Security Score;
-- Assets;
-- Asset Relations;
-- Findings;
-- Vulnerabilities;
-- Infrastructure posture;
-- Monitoring changes;
-- Reports;
-- Notifications;
-- Recheck/remediation lifecycle.
+A public capability is a product claim and requires an active rollout, approved copy and valid production evidence. Availability does not prove asset-specific coverage and cannot authorize execution; `VerifiedScope`, `ScanAuthorization`, entitlement, consent and ADR-0012 scanner policy remain separate.
 
-## Layer 3 - Platform Admin
+## Workspace
 
-Назначение:
+After registration:
 
-- состояние SaaS;
-- organizations/users/subscriptions;
-- scanner fleet/queue;
-- Threat Intelligence freshness;
-- abuse;
-- audit;
-- support access governance.
+1. create Organization;
+2. add exact host Asset;
+3. DNS TXT verification;
+4. Verified Baseline;
+5. Asset Security Score only if SufficientBaselineV1.
 
-Platform Admin не должен иметь неограниченное молчаливое чтение клиентских findings. Детальный support access проектируется как отдельное audited действие.
+Monitoring is separate explicit enrollment.
 
-## Confidence terminology
+### Scan modes
 
-- `Potential` - сигнал возможной проблемы без достаточного подтверждения.
-- `Probable` - несколько согласованных признаков, но нет прямого подтверждения.
-- `Confirmed` - техническая проверка подтверждает finding.
+- Guest Safe: safe/non-intrusive.
+- Verified Baseline: EXACT_HOST + approved SAFE capabilities.
+- Controlled Deep: EXACT_HOST + per-run consent.
+- Active: disabled.
+- IP/CIDR/Naabu/raw TCP: disabled V1.
 
-## Competitive product guardrails
+## Platform Admin
 
-OUTSCAN не должен превращаться в простой website checker или thin wrapper над Nuclei.
+Separate privileged surface. Support detail access requires SupportAccessGrant.
 
-Обязательные продуктовые способности:
+## Findings
 
-- Guest Network & Domain Posture без регистрации;
-- verified active scanning;
-- Change Intelligence и история security-relevant изменений;
-- Asset Inventory + relation provenance;
-- Threat Intelligence + собственный Risk Engine;
+Condition: OPEN|RESOLVED.
+Events: OPENED|RESOLVED|REOPENED.
+Occurrences: each accepted positive comparable detection.
+Disposition: NONE|ACKNOWLEDGED|ACCEPTED_RISK|FALSE_POSITIVE.
+Coverage independent.
+
+Automatic RESOLVED disabled until compatible-coverage rules exist.
+
+## Scores
+
+Asset Security Score: sufficient verified baseline only.
+Organization Security Score: explicitly monitored asset set only.
+
+## Monitoring / Change Intelligence
+
+V1 stores versioned snapshots/provenance.
+V1.5 provides diff/significance/timeline/alerts.
+
+Any pre-V1.5 hero diff is labelled `Концепт будущей возможности V1.5` and must not imply that enabling monitoring unlocks it today.
+
+## Claims
+
+Canonical public claims: CLAIM_INVENTORY.md.
+Blocked claims/customer logos must not appear in accepted runtime design.
+
+## Differentiation
+
+- useful Guest posture;
+- explainable exact-host trust model;
+- recurrence-aware Risk Engine;
+- Change Intelligence;
+- Asset relations/provenance;
 - business summary + technical drill-down;
-- Agency/MSP delegated access как раннее направление.
+- Agency delegated tenancy;
+- monitored-asset billing.
 
-Guest `Baseline posture` не заменяется A-F grade. Полный Security Score существует только в verified workspace.
+## Communication
 
-Подробности конкурентного среза: [COMPETITIVE_ANALYSIS.md](COMPETITIVE_ANALYSIS.md).
+Allowed:
 
-## Finding lifecycle
-
-- NEW
-- ACTIVE
-- ACKNOWLEDGED
-- FIXED
-- ACCEPTED_RISK
-- FALSE_POSITIVE
-- REOPENED
-
-## Communication language
-
-Разрешено:
-
-- `Обнаружен новый риск`;
-- `Требует внимания`;
+- `Обнаружен риск`;
 - `Потенциальный риск`;
+- `Требует внимания`;
 - `Проверка завершена`;
-- `Мониторинг активен`;
-- `Риск больше не подтверждается`.
+- `Мониторинг активен`.
 
-Не разрешено:
+Forbidden:
 
 - `100% безопасно`;
 - `защищено от взлома`;
-- `гарантированная защита`;
-- `полный автоматический пентест`.
+- guaranteed protection;
+- full automatic pentest claim.

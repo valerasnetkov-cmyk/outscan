@@ -1,89 +1,53 @@
 # Codex workflow
 
-## Start of task
+## Start
 
-1. Read `AGENTS.md`.
-2. Read `README.md`, `plan.md`, `CHANGELOG.md`.
-3. Read relevant docs/ADR.
-4. If task changes product behavior, UX, monetization, Asset/Monitoring model or roadmap, read `docs/COMPETITIVE_ANALYSIS.md`.
-5. Inspect current repository structure and existing patterns.
-6. State the smallest coherent implementation slice.
-7. Identify security invariants touched.
-8. Identify verification commands before coding.
+1. Read AGENTS.
+2. Read README/PRE_SCAFFOLD_GATE/plan/CHANGELOG.
+3. Read relevant ADR/docs.
+4. Read latest audit.
+5. Inspect repo state.
 
-## During implementation
+## Before scaffold
 
-- keep files <= 400 authored lines;
-- keep controllers/routes/pages orchestration-focused;
-- centralize validation/authz;
-- use explicit module boundaries;
-- preserve unrelated changes;
-- add negative tests alongside security-sensitive behavior;
-- do not silently change product terminology or scan policy.
+Gate A must be PASS.
 
-## Before declaring complete
+Gate A evidence includes:
 
-1. Run targeted tests.
-2. Run lint/format.
-3. Run typecheck.
-4. Run relevant full tests.
-5. Run production build.
-6. Run relevant negative/security tests.
-7. Check source file line counts.
-8. Review diff for secrets/debug/dependency drift.
-9. Update docs.
-10. Update `CHANGELOG.md`.
-11. Update `plan.md`.
-12. Update/create `docs/audit-YYYY-MM-DD.md` for substantial work.
+- accepted ADR 0009–0014;
+- one active gate file;
+- old corrections removed;
+- claim inventory;
+- UX acceptance;
+- public/maket.png, if retained pre-scaffold as reference-only, is not treated as Gate A evidence and is scheduled for removal/exclusion before Gate B1/public deployment;
+- consistency review;
+- `git diff --check`.
 
-## Daily audit rule
+If FAIL, work only on docs/ADR/threat model/test plans/design evidence.
 
-On each active day with meaningful implementation/security/architecture changes create one file:
+## Implementation
 
-`docs/audit-YYYY-MM-DD.md`
+- <=400 authored source lines/file;
+- centralized authz/validation;
+- pinned outbound destinations;
+- tenant/RLS invariants;
+- server-authenticated Guest-session idempotency boundary;
+- deterministic job/fence plus separate primary-commit/terminal-replay semantics;
+- supervisor/scanner credential boundary;
+- machine policy enforcement;
+- negative tests alongside security behavior.
 
-Update the same file throughout the day rather than creating multiple daily notes.
+## Documentation sync
 
-Audit must record:
+Normative decision belongs in ADR + canonical spec.
+Gate file is only matrix.
+Update plan/changelog/audit.
 
-- scope;
-- what changed;
-- affected invariants;
-- verification actually run;
-- findings by severity;
-- unresolved risks;
-- next actions;
-- release decision for reviewed scope.
+## Before complete
 
-Never claim a check passed if it was not executed.
-
-## Changelog rule
-
-`CHANGELOG.md` is chronological and high-level.
-
-Record:
-
-- user-visible behavior;
-- architecture changes;
-- data/schema changes;
-- security behavior;
-- dependency/platform changes;
-- deployment changes.
-
-Do not paste operational exploit instructions or secrets.
-
-## Plan rule
-
-`plan.md` is actionable. Do not remove completed history. Mark `[x]` and append newly discovered work/risks.
+Run targeted tests, lint/format, typecheck, relevant full tests, security negatives, build, line counts and `git diff --check`.
+List anything not run.
 
 ## Graphify
 
-After source scaffold:
-
-```bash
-uv tool install graphifyy
-graphify install --project --platform codex
-graphify .
-```
-
-Regenerate after significant architecture/schema/module changes. Inspect generated output before committing.
+Only after Gate A PASS + meaningful source scaffold.

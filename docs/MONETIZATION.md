@@ -2,98 +2,46 @@
 
 ## Principle
 
-OUTSCAN monetizes **continuous monitoring of protected assets**, not credits per ordinary scan.
+Billing is based on **explicitly enrolled monitored assets**, not ordinary scan credits.
 
-Billing unit: monitored/protected asset.
+Verification does not bill.
+Discovery does not bill.
+Asset creation does not bill.
+MonitoringEnrollment is explicit.
 
-Automatically discovered asset does not become billable without customer action.
+## Flow
 
-## Competitive benchmark 2026-09-02
+`Create Asset → Verification → Verified Baseline → Asset Security Score → explicit MonitoringEnrollment`.
 
-Публичный рынок подтверждает две полезные модели:
+Organization Security Score covers monitored assets only.
 
-- бесплатный/no-signup scan как acquisition channel;
-- paid monitoring по targets/sites/assets с повторными scans без отдельной оплаты за каждый обычный scan.
+## Free
 
-У Agency-конкурентов White Label, bulk monitoring, team/client workspaces и API появляются как отдельная коммерческая ценность. Это подтверждает ранний приоритет Agency/MSP, но не фиксирует конкретную цену OUTSCAN.
+Guest safe/non-intrusive posture and potential-risk aggregate.
+No full Security Score.
+No continuous monitoring.
 
-Точные цены конкурентов являются изменяемыми внешними данными. Перед запуском тарифов провести отдельный price validation.
+## Paid hypotheses
 
-## Initial hypotheses
+Starter/Business/Agency price points remain market hypotheses.
 
-These prices are product hypotheses and require market validation.
+Paid value may include verified baseline, monitored assets, history, reports, notifications, team/API/White Label by plan.
 
-### Free
+## Agency
 
-- 0 RUB;
-- guest quick scan;
-- baseline public posture;
-- potential risk count;
-- no continuous monitoring.
+Each client is a separate Organization.
+PartnerDelegation grants access, not ownership.
 
-### Starter
+## Claims
 
-- approximately 1,490 RUB/month;
-- up to 3 primary domains / approximately 15 monitored assets;
-- verified scans;
-- Security Score;
-- CVE/findings;
-- history/reports;
-- weekly monitoring hypothesis.
+Pricing pages follow CLAIM_INVENTORY.
+No unmeasured 24/7/instant/scanner-count/customer-logo claims.
 
-### Business
+## Badge
 
-- approximately 4,990 RUB/month;
-- up to 10 domains / approximately 50 assets;
-- daily monitoring hypothesis;
-- team;
-- API/webhook capability;
-- extended reports.
+Only when monitoring is active:
 
-### Agency
+- `Security monitoring active`;
+- `Monitored by OUTSCAN`.
 
-- approximately 14,900 RUB/month;
-- up to 50 domains / approximately 250 assets;
-- client spaces;
-- White Label;
-- partner API;
-- branded reports;
-- delegated access to separate client Organizations, never a shared cross-client tenant.
-
-### Enterprise
-
-Custom pricing after product maturity.
-
-Potential features:
-
-- SSO/SCIM;
-- 1000+ assets;
-- private scanner;
-- SLA;
-- SIEM integrations;
-- data residency.
-
-## Commercial priorities
-
-Agency/MSP is intentionally earlier than Mobile Security because reseller economics may validate revenue earlier.
-
-## Add-ons later
-
-Potential, not committed pricing:
-
-- authenticated web scan;
-- API Security;
-- repository/SCA;
-- mobile analysis;
-- additional asset packs;
-- White Label;
-- extended API.
-
-## Do not
-
-- charge per ordinary scan credit;
-- auto-bill discovered subdomains;
-- promise absolute security;
-- call Security Badge proof that site is secure.
-
-Badge language: `Security monitoring active` / `Monitored by OUTSCAN`.
+Never use badge as proof of safety.

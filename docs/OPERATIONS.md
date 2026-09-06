@@ -2,109 +2,79 @@
 
 ## Environments
 
-Minimum:
+local, test/CI, staging, production.
 
-- local;
-- test/CI;
-- staging;
-- production.
+Scanner/template promotion:
+`staging → tests → owned canary → approval → production`.
 
-Scanner template/binary promotion must pass through staging/canary before production.
+## Runtime V1
 
-## Runtime components
+web, admin, API, PostgreSQL, Redis/BullMQ, trusted supervisor, disposable scanners, TI jobs.
 
-V1 expected:
+Future notification runtime adds an outbox dispatcher, delivery queue, email adapter, customer Telegram adapter, Ops Telegram adapter and authenticated provider-webhook handlers. The current foundation defines ports only and performs no delivery.
 
-- web;
-- admin;
-- API;
-- PostgreSQL;
-- Redis/queue;
-- scanner workers;
-- scheduled Threat Intelligence jobs.
+## Supervisor/scanner
+
+Supervisor owns queue/result identity, policy and budgets.
+Scanner has no DB/Redis/result credential, private network, metadata, privileged container, host network or Docker socket.
+
+Outbound connections use validated-IP pinning with canonical Host/SNI/certificate validation.
+
+Current implementation includes pre-launch authorization and a Guest orchestration layer over an injected process port: frozen non-secret launch input, one overall deadline, cancellation, exact exit validation, bounded one-result IPC, canonical output and supervisor HMAC signing. Failed/unknown process state requests TERM then KILL after a bounded grace. Queue consumption, CAS state transitions, the production process/container adapter, OS isolation, egress enforcement, secret-manager provisioning and result submission remain pending.
 
 ## Observability
 
-Collect:
+API: rates/errors/auth/tenant denials/Guest limits.
+Jobs: states, lease-expired commit rejects, fence conflicts, digest conflicts, replay rejects, duration/profile, resource kills.
+Verification: challenge/revalidation/stale/expired counts.
+Guest: token expiry/abuse/deletion.
+Scanner: capability/policy/egress denials.
+TI: freshness/schema errors.
+Product: sufficient/insufficient baselines, enrollment, monitored assets.
+Capability registry: validation/projection errors, duplicate or unknown slugs and stale claim/evidence state.
+External asset integrations (when runtime delivery exists): sync success/failure/duration, fetched/rejected record counts, candidate counts, 401/429 totals and lock contention. Never label metrics with tokens, raw URLs, owner login or unbounded provider values.
+Notifications (when runtime delivery exists): outbox/queue age, attempts/success/failure, unknown outcomes, dead letters, bounce/complaint/suppression, Telegram rate limits, webhook-auth failures and binding failures. Never label or log addresses, chat IDs, tokens, message bodies or unbounded provider values.
 
-### API
+Only the safe public projection may use public/CDN caching. Product visibility is not the scanner kill switch; scanner disable/rollback remains under the independent scanner policy and release process.
 
-- request rate/latency/errors;
-- auth failures;
-- tenant authorization denials;
-- quick scan rate limits;
-- queue publish failures.
+## Guest retention
 
-### Scanner
-
-- jobs queued/running/failed/timed-out;
-- duration by profile;
-- worker saturation;
-- resource limit kills;
-- scanner version/profile;
-- egress/destination policy denials.
-
-### Threat Intelligence
-
-- last successful sync per source;
-- records ingested/updated;
-- schema/parse failures;
-- source staleness.
-
-### Product
-
-- guest scans;
-- verification conversion;
-- verified assets;
-- monitored assets;
-- findings by band/confidence;
-- notification delivery.
+Token TTL 30m.
+Guest aggregate max 24h.
+Deletion job has metrics/alert and verification test.
 
 ## Backups
 
-Before production define and test:
+Before production: encrypted backups, retention, RPO/RTO, report/evidence requirements, restore drill.
+Backup without restore evidence is unverified.
 
-- PostgreSQL automated backup;
-- retention;
-- encrypted storage;
-- restore drill;
-- report/evidence storage backup requirements;
-- RPO/RTO.
+## Admin
 
-A backup without tested restore is not considered verified.
+Before production: MFA, step-up, PlatformAuditLog, SupportAccessGrant reason/scope/expiry.
 
-## Deployment
+## Incidents
 
-Do not deploy directly from an AI agent unless user explicitly requests deployment and project deployment procedure exists.
+Runbooks:
 
-Production deployment gate:
+- secrets;
+- tenant isolation;
+- scanner/SSRF/pinning;
+- result digest conflict;
+- queue runaway;
+- abuse;
+- TI corruption;
+- admin compromise;
+- Guest deletion failure.
+- email provider outage/key exposure;
+- customer/Ops Telegram credential or webhook-secret exposure;
+- notification storm or unknown provider outcome backlog;
+- wrong-recipient/cross-tenant notification;
+- marketing consent/suppression failure.
 
-- lint/typecheck/tests/build pass;
-- relevant security negative tests pass;
-- migrations reviewed;
-- no secret/config leak in diff;
-- scanner versions pinned;
-- current audit/release decision updated.
+## Claims
 
-## Scanner worker operations
+Availability/latency/notification claims require production metrics and claim-inventory approval.
 
-- immutable/pinned image;
-- resource limits;
-- no host networking;
-- no privileged container;
-- restricted filesystem;
-- no Docker socket inside worker;
-- outbound network policy where infrastructure permits;
-- disposable job state.
+## Disclosure
 
-## Incident readiness
-
-Before public launch create runbooks for:
-
-- suspected secret exposure;
-- tenant data access incident;
-- scanner abuse;
-- scanner escape/SSRF suspicion;
-- Threat Intelligence source corruption;
-- queue runaway/cost spike;
-- account/admin compromise.
+Configure official security contact and consider `/.well-known/security.txt` before public production.

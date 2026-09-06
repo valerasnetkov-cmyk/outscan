@@ -2,108 +2,97 @@
 
 ## Objective
 
-OUTSCAN Risk должен отвечать на вопрос **«насколько важно исправить это для данного актива сейчас?»**, а не копировать severity внешнего scanner.
+OUTSCAN Risk answers: **how important is this risk for this asset now?** It does not copy scanner severity.
 
-## Inputs V1
+## Inputs
 
-- scanner/finding base severity;
-- CVSS when applicable;
+- base severity/CVSS;
 - EPSS;
-- CISA KEV;
-- confidence: Potential / Probable / Confirmed;
-- internet exposure;
-- asset business criticality;
-- recency/recurrence context;
-- change context when a finding or exposure is new, reopened, or associated with a meaningful posture regression.
+- KEV;
+- confidence;
+- Internet exposure;
+- asset criticality;
+- recency;
+- recurrence from FindingOccurrence;
+- reopen history;
+- security-relevant change context;
+- coverage/reference quality.
 
-## Initial model
+## Recurrence
 
-Не фиксировать формулу как неизменяемую бизнес-истину. Она должна иметь `model_version` и проходить калибровку.
+Do not infer recurrence only from first_seen/last_seen.
 
-Первый heuristic может использовать нормализованные компоненты:
+Use FindingOccurrence:
 
-```text
-base severity      0..100
-exploitability     0..100
-threat context     0..100
-exposure           0..100
-confidence         0..100
-criticality        0..100
-```
+- occurrence count in window;
+- consecutive compatible scans;
+- days since previous occurrence;
+- reopen count.
 
-Пример начального веса:
+Replay of the same accepted ResultEnvelope digest must not create another occurrence.
 
-```text
-0.35 * base severity
-0.20 * exploitability
-0.15 * threat context
-0.10 * exposure
-0.10 * confidence
-0.10 * criticality
-```
+## Guardrails
 
-Это стартовая гипотеза, не production-calibrated formula.
+- KEV + Confirmed + public exposure cannot be Low/Medium.
+- Potential + high CVSS alone does not automatically become Critical.
+- Missing CVSS does not imply low risk.
+- Missing/partial coverage cannot improve score as if fixed.
 
-## Deterministic boosts / floors
+## Finding resolution
 
-Допускаются понятные правила, например:
+Risk Engine does not resolve from absence of detection.
+Automatic RESOLVED remains disabled until ADR 0013 compatible-coverage implementation/tests.
 
-- `KEV + Confirmed + Public exposure` не может получить Low/Medium;
-- `Potential` без подтверждения не должен автоматически превращаться в Critical только из-за высокого CVSS;
-- отсутствие CVSS не означает отсутствие риска для misconfiguration/exposure findings.
+## Asset Security Score
 
-Все rules должны быть покрыты unit tests.
+Create only when `SufficientBaselineV1=true`.
 
-## Bands
+Predicate requires:
 
-Пример:
+- active EXACT_HOST authorization at execution;
+- successful VERIFIED_BASELINE;
+- approved policy/profile;
+- COMPLETE required detector groups;
+- explicit NOT_APPLICABLE only where evaluated by same policy;
+- no PARTIAL/UNKNOWN/failed required group;
+- accepted validated ResultEnvelope.
 
-- 0-24 Low
-- 25-49 Medium
-- 50-74 High
-- 75-100 Critical
+Required detector groups:
 
-Пороговые значения подлежат калибровке до production.
+- TARGET_RESOLUTION;
+- DNS_DOMAIN_POSTURE;
+- TLS_CERTIFICATE_POSTURE;
+- HTTP_SECURITY_POSTURE;
+- SAFE_VULNERABILITY_DETECTION.
+
+Conditional:
+
+- MAIL_SECURITY_POSTURE when MX/mail applicability exists.
+
+Store baseline_coverage_policy_version.
+
+If insufficient:
+
+- no Asset Security Score;
+- show missing/failed coverage;
+- never substitute zero findings.
+
+## Organization Security Score
+
+Only explicitly active MonitoringEnrollment assets.
+Store monitored asset set/ref and model version.
+Do not hide Critical findings behind average score.
+
+## Guest
+
+Guest uses Baseline posture only.
+`N=0` signals does not prove no risk.
 
 ## Change significance
 
-Not every change is a vulnerability. Change Intelligence has its own significance logic.
-
-Examples with higher significance:
-
-- new public asset;
-- DMARC `reject/quarantine -> none`;
-- RPKI `Valid -> Invalid`;
-- disappearance of previously detected WAF/CDN where relevant;
-- newly exposed public service;
-- finding `FIXED -> REOPENED`.
-
-Change significance may trigger an alert or Risk Engine re-evaluation. It must remain explainable and versioned.
-
-## Security Score
-
-Workspace Security Score агрегирует состояние verified monitored assets.
-
-Требования:
-
-- объяснимость;
-- model version;
-- score change event;
-- не скрывать Critical finding высоким средним score;
-- new/unknown asset exposure учитывается отдельно;
-- accepted risk не должен исчезать из истории.
-
-## Guest baseline posture
-
-Guest result использует **Baseline posture**, а не полноценный Security Score.
-
-Он оценивает только доступный public configuration subset и не должен визуально создавать впечатление полного security assessment.
+Separate versioned model.
+V1 snapshots; V1.5 diff/significance/timeline/alerts.
 
 ## Explainability
 
-Для каждого score/risk UI должен уметь ответить:
-
-- какие факторы дали основной вклад;
-- что изменит score;
-- что подтверждено, а что только предполагается;
-- какие внешние intelligence sources использованы и когда обновлены.
+UI explains major factors, recurrence/change, confirmed vs inferred, missing coverage, intelligence freshness and next action.

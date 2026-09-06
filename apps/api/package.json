@@ -1,0 +1,27 @@
+{
+  "name": "@outscan/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "pnpm --filter @outscan/capabilities build",
+    "dev": "tsx watch src/server.ts",
+    "prebuild": "pnpm --filter @outscan/capabilities build",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "pretest": "pnpm --filter @outscan/capabilities build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@outscan/capabilities": "workspace:*",
+    "fastify": "5.12.1",
+    "tldts": "7.4.11"
+  },
+  "devDependencies": {
+    "@types/node": "26.4.1",
+    "tsx": "4.23.13",
+    "vitest": "4.1.11"
+  }
+}

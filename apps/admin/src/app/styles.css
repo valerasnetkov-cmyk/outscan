@@ -1,0 +1,48 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #e9ebed;
+  background: #0b0d0f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  width: min(720px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 14vh 0;
+}
+
+.label,
+span {
+  color: #92989e;
+  font:
+    12px/1.4 "Courier New",
+    monospace;
+  letter-spacing: 0.12em;
+}
+
+h1 {
+  margin: 20px 0;
+  font-size: clamp(42px, 8vw, 72px);
+  letter-spacing: -0.05em;
+}
+
+main > p:not(.label) {
+  max-width: 620px;
+  color: #b8bdc1;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+span {
+  display: inline-block;
+  margin-top: 32px;
+  padding-top: 14px;
+  border-top: 1px solid #34383c;
+}
