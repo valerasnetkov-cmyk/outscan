@@ -13,27 +13,32 @@
 
 ## Inventory
 
-| Claim / content                                                   | Owner            | Evidence / condition                                                                    | Status        | Review     |
-| ----------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- | ------------- | ---------- |
-| `OUTSCAN — платформа мониторинга внешних киберрисков`             | Product          | `PRODUCT.md` positioning                                                                | APPROVED_COPY | 2026-09-03 |
-| `Внешние риски под контролем.`                                    | Product          | brand slogan, not assurance                                                             | APPROVED_COPY | 2026-09-03 |
-| `Проверить домен`                                                 | Product          | only after Guest Scan B1 implementation                                                 | CONDITIONAL   | 2026-09-03 |
-| `Без регистрации`                                                 | Product          | only while Guest Scan actually requires no registration                                 | CONDITIONAL   | 2026-09-03 |
-| `Базовая проверка`                                                | Product/Security | safe/non-intrusive Guest result only                                                    | CONDITIONAL   | 2026-09-03 |
-| `N потенциальных рисков`                                          | Security/Product | Guest-safe observations/passive intelligence + coverage disclosure                      | CONDITIONAL   | 2026-09-03 |
-| `Asset Security Score`                                            | Product/Risk     | only when `SufficientBaselineV1=true`                                                   | CONDITIONAL   | 2026-09-03 |
-| `Organization Security Score`                                     | Product/Risk     | only explicitly monitored asset set                                                     | CONDITIONAL   | 2026-09-03 |
-| Product Capability Registry descriptions                          | Product/Security | only `ACTIVE` rollout + approved copy + valid production evidence                       | CONDITIONAL   | 2026-09-06 |
-| `Мониторинг активен`                                              | Product          | only active `MonitoringEnrollment`                                                      | CONDITIONAL   | 2026-09-03 |
-| Change example `DMARC reject → none`                              | Product          | may appear only with label `Концепт будущей возможности V1.5` until V1.5 is implemented | FUTURE_LABEL  | 2026-09-03 |
-| `120+ проверок`                                                   | Product          | no measured evidence                                                                    | BLOCKED       | 2026-09-03 |
-| `35+ источников данных`                                           | Product          | no approved definition/evidence                                                         | BLOCKED       | 2026-09-03 |
-| `24/7 мониторинг`                                                 | Product/Ops      | no availability evidence                                                                | BLOCKED       | 2026-09-03 |
-| `Мгновенные уведомления`                                          | Product/Ops      | no measured latency SLO                                                                 | BLOCKED       | 2026-09-03 |
-| `Нам доверяют`                                                    | Product/Legal    | requires real relationship + permission                                                 | BLOCKED       | 2026-09-03 |
-| Selectel / Cloud.ru / Yandex Cloud / Альфа-Банк / Kaspersky logos | Product/Legal    | no permission evidence                                                                  | BLOCKED       | 2026-09-03 |
-| `100% безопасно` / `защищено от взлома`                           | Security/Legal   | absolute assurance impossible                                                           | BLOCKED       | 2026-09-03 |
-| `Полный автоматический пентест`                                   | Security/Legal   | outside product assurance/scope                                                         | BLOCKED       | 2026-09-03 |
+| Claim / content                                                   | Owner                  | Evidence / condition                                                                          | Status        | Review     |
+| ----------------------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------- | ------------- | ---------- |
+| `OUTSCAN — платформа мониторинга внешних киберрисков`             | Product                | `PRODUCT.md` positioning                                                                      | APPROVED_COPY | 2026-09-03 |
+| `Внешние риски под контролем.`                                    | Product                | brand slogan, not assurance                                                                   | APPROVED_COPY | 2026-09-03 |
+| `Проверить домен`                                                 | Product                | only after Guest Scan B1 implementation                                                       | CONDITIONAL   | 2026-09-03 |
+| `Без регистрации`                                                 | Product                | only while Guest Scan actually requires no registration                                       | CONDITIONAL   | 2026-09-03 |
+| `Базовая проверка`                                                | Product/Security       | safe/non-intrusive Guest result only                                                          | CONDITIONAL   | 2026-09-03 |
+| `N потенциальных рисков`                                          | Security/Product       | Guest-safe observations/passive intelligence + coverage disclosure                            | CONDITIONAL   | 2026-09-03 |
+| `Asset Security Score`                                            | Product/Risk           | only when `SufficientBaselineV1=true`                                                         | CONDITIONAL   | 2026-09-03 |
+| `Organization Security Score`                                     | Product/Risk           | only explicitly monitored asset set                                                           | CONDITIONAL   | 2026-09-03 |
+| Product Capability Registry descriptions                          | Product/Security       | only `ACTIVE` rollout + approved copy + valid production evidence                             | CONDITIONAL   | 2026-09-06 |
+| Security Glossary public definitions                              | Product/Security       | only individually APPROVED reviewed copy consistent with current product/security scope       | CONDITIONAL   | 2026-09-07 |
+| Security Check-ins / Cyberexam educational wording                | Product/Security       | only after canonical question/Cyberexam decision, content review and implemented surface      | CONDITIONAL   | 2026-09-07 |
+| Action Center / Change Intelligence / Emerging Threat wording     | Product/Security       | only the implemented gated slice with tenant, coverage, authorization and runtime evidence    | CONDITIONAL   | 2026-09-07 |
+| OUTSCAN manifesto long-form copy                                  | Product/Security/Legal | section-by-section gate, implementation, evidence and final publication review                | CONDITIONAL   | 2026-09-07 |
+| Trial / promo access, limits, duration or availability            | Product/Legal          | only implemented rollout with accepted terms, eligibility and production entitlement evidence | CONDITIONAL   | 2026-09-07 |
+| `Мониторинг активен`                                              | Product                | only active `MonitoringEnrollment`                                                            | CONDITIONAL   | 2026-09-03 |
+| Change example `DMARC reject → none`                              | Product                | may appear only with label `Концепт будущей возможности V1.5` until V1.5 is implemented       | FUTURE_LABEL  | 2026-09-03 |
+| `120+ проверок`                                                   | Product                | no measured evidence                                                                          | BLOCKED       | 2026-09-03 |
+| `35+ источников данных`                                           | Product                | no approved definition/evidence                                                               | BLOCKED       | 2026-09-03 |
+| `24/7 мониторинг`                                                 | Product/Ops            | no availability evidence                                                                      | BLOCKED       | 2026-09-03 |
+| `Мгновенные уведомления`                                          | Product/Ops            | no measured latency SLO                                                                       | BLOCKED       | 2026-09-03 |
+| `Нам доверяют`                                                    | Product/Legal          | requires real relationship + permission                                                       | BLOCKED       | 2026-09-03 |
+| Selectel / Cloud.ru / Yandex Cloud / Альфа-Банк / Kaspersky logos | Product/Legal          | no permission evidence                                                                        | BLOCKED       | 2026-09-03 |
+| `100% безопасно` / `защищено от взлома`                           | Security/Legal         | absolute assurance impossible                                                                 | BLOCKED       | 2026-09-03 |
+| `Полный автоматический пентест`                                   | Security/Legal         | outside product assurance/scope                                                               | BLOCKED       | 2026-09-03 |
 
 ## Design acceptance
 

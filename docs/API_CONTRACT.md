@@ -42,6 +42,16 @@ Provider webhook routes remain absent. Later email/customer Telegram/Ops Telegra
 
 Detailed contracts: `NOTIFICATIONS_COMMUNICATIONS.md`, `EMAIL_DELIVERY.md`, `TELEGRAM_INTEGRATION.md` and ADR 0015.
 
+Weekly Digest is a deferred Phase 4 proposal and exposes no route or active notification event. After Organization/RLS and delivery prerequisites, V1 may add tenant-scoped settings plus read-only history/detail; it will not accept recipients or expose manual send/preview/regeneration. See `WEEKLY_SECURITY_DIGEST.md` and proposed ADR 0016.
+
+Security Glossary is planned after the B1 critical path and exposes no route today. Future V1 adds bounded anonymous read-only list/search at `GET /v1/public/glossary` and canonical detail at `GET /v1/public/glossary/:slug`; only reviewed public projection is returned, alias-only/malformed/non-public slugs are 404 and no input reaches filesystem, scanners or mutable state. See `SECURITY_GLOSSARY.md`.
+
+Security Check-ins expose no route today. After B2, current-user-only `/v1/me/security-checkins` next/list/answer/defer operations and the existing preference surface may be added with session/CSRF, exact schemas, cooldown/concurrency/idempotency and server-only answer projections. Requests never accept user/organization IDs, answer correctness/scoring, state or reschedule timestamps. See `SECURITY_CHECKINS.md`.
+
+Action Center, Changes, Asset Triage, Monitoring Rules and Emerging Threats expose no route today. Future organization routes require B2, exact tenant lookup/RLS/RBAC/CSRF and bounded schemas. Recheck accepts no target/profile/capability or result state; the server reloads the Finding/Asset and recomputes current authorization. Preview remains absent. See `ACTION_CHANGE.md`.
+
+Promotions and Access Grants expose no route today. After B2 plus accepted entitlement/data/legal decisions, redemption may be organization-scoped and accept only a promo secret under header idempotency; it must not accept target, verification method, scanner mode/profile/template, consent or entitlement snapshot. Platform create/revoke operations use separate platform authz/audit. See `PROMOTIONS_ACCESS_GRANTS.md`.
+
 ### Guest session bootstrap
 
 Before creating a Guest Scan, the browser must have a valid server-issued `__Host-outscan_guest_session` cookie.
@@ -74,9 +84,10 @@ Server:
 1. validates the authenticated Guest-session cookie;
 2. hostname-only validation;
 3. IDNA/Punycode canonicalization;
-4. abuse/rate checks;
-5. ADR 0011 idempotency scoped to Guest session;
-6. queue GUEST_SAFE.
+4. ADR 0011 idempotency lookup scoped to Guest session;
+5. return a valid live same-key/same-hash replay without a new quota reservation;
+6. for CREATE or REPLACE_EXPIRED, atomically check/reserve Guest abuse counters;
+7. queue GUEST_SAFE in the same correctness boundary.
 
 Accepts `Idempotency-Key`.
 
@@ -91,6 +102,21 @@ Within that window:
 - same Guest session + same key + different request → `409 IDEMPOTENCY_KEY_REUSED`.
 
 After the 30-minute idempotency/result-access window, a repeated POST is a new Guest Scan request subject to current rate/abuse policy.
+
+V1 new-scan abuse policy:
+
+| Dimension      | Window/concurrency | Limit |
+| -------------- | ------------------ | ----: |
+| Guest session  | 10 minutes         |     3 |
+| Guest session  | 24 hours           |    10 |
+| Guest session  | concurrent         |     1 |
+| Network signal | 10 minutes         |    20 |
+| Network signal | 24 hours           |   100 |
+| Network signal | concurrent         |     4 |
+
+The network signal is a server-derived HMAC pseudonym over a trusted ingress network bucket, retained no longer than the abuse window. Raw IP, User-Agent and browser fingerprint are not accepted by the admission decision. The network signal is defense-in-depth only and cannot authorize idempotent replay or result access. A server-owned `PAUSED` state denies new Guest scans. Window denials may return bounded `Retry-After`; internal counter keys are never returned.
+
+`apps/api/src/guest-abuse` implements the strict pure decision after idempotency classification. Its reservation binds policy, Guest-session scope, network signal, observation time and all six counter dimensions. `apps/api/src/guest-persistence` now locks/re-checks the PostgreSQL state and reserves all dimensions in the GuestScan create/replace transaction; terminal result processing and expired replacement release concurrency idempotently. No in-memory decision is runtime enforcement.
 
 Response:
 
@@ -130,9 +156,9 @@ Policies:
 
 Missing, malformed, expired, revoked, route-mismatched, tampered and unavailable-key tokens collapse to the same public `RESULT_ACCESS_DENIED` authorization result. Internal cryptographic/keyring causes are not returned.
 
-Response is sanitized Guest posture only.
+Response is sanitized Guest posture only. The public body has five fixed posture sections, all eight canonical coverage groups with explicit missing/unavailable states, aggregate potential-risk/warning counts and fixed no-score/no-assurance limitations. It excludes raw Findings/evidence, severity, confidence, fingerprints and scanner execution metadata.
 
-Current implementation provides the ADR-0011 cryptographic codecs, strict Set-Cookie/Cookie authentication and Bearer result-access authorization primitives in `apps/api/src/guest-crypto`. Result authorization binds the token to the route GuestScan ID, enforces the remaining 30-minute window and supplies mandatory no-store/no-referrer headers. `apps/api/src/guest-idempotency` implements the pure create/replay/conflict decision and deterministic token reproduction over a validated persisted-record view. Database transactions/unique constraints, persisted result lookup/serialization and all public Guest routes remain unimplemented.
+Current implementation provides the ADR-0011 cryptographic codecs, strict Set-Cookie/Cookie authentication and Bearer result-access authorization primitives in `apps/api/src/guest-crypto`. Result authorization binds the token to the route GuestScan ID, enforces the remaining 30-minute window and supplies mandatory no-store/no-referrer headers. `apps/api/src/guest-idempotency` implements the pure create/replay/conflict decision and deterministic token reproduction over a validated persisted-record view. `apps/api/src/guest-abuse` adds pure new-scan admission and 24-hour retention decisions. `apps/api/src/guest-result` builds the exact immutable public body. `apps/api/src/guest-scan` validates exact PUBLIC_GUEST persisted-row snapshots and composes route-bound authorization with a read-only store port; malformed bearer input is denied before storage, while absent/malformed rows and dependency failure share `RESULT_ACCESS_DENIED`. ADR-0017 and the SQL migrations implement the separate PostgreSQL schema/state guards. `apps/api/src/guest-persistence` supplies SERIALIZABLE idempotency plus atomic abuse reservation/release, authenticated terminal result commit/no-write replay, strict result read and bounded transactional due-aggregate/window cleanup. Retention scheduling/metrics, trusted ingress/key rotation and all public Guest routes remain unimplemented.
 
 ## Auth/session
 

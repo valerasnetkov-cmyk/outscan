@@ -49,6 +49,9 @@ export interface GuestAbuseRequest {
 
 export interface GuestAbuseReservation {
   policy_id: typeof GUEST_ABUSE_POLICY.policy_id;
+  guest_session_scope: string;
+  network_signal_digest: string;
+  observed_at_unix_seconds: bigint;
   dimensions: readonly GuestAbuseReservationDimension[];
 }
 

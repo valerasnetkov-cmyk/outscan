@@ -25,6 +25,16 @@ PASS permits source scaffold only when:
 
 Owner acceptance alone cannot override failed evidence/consistency.
 
+Post-Gate-A proposed ADR-0016 documents a deferred Weekly Security Digest and is not a Gate A/B1 blocker or implementation evidence. Its acceptance and runtime gates are evaluated with the future Workspace/Monitoring scope.
+
+The planned code-first Security Glossary is descriptive public metadata, requires no ADR for V1 and does not reopen Gate A or block B1. Its content/API/Web activation requires its own post-B1 validation, accessibility and claim evidence.
+
+The planned Security Question Registry/Check-ins module is post-B2 educational account functionality, requires no ADR for the fixed-choice code-first design and is not Gate A/B1/B2 evidence. Persistence, API and UI wait for accepted user-data classification plus downstream privacy/security/accessibility tests.
+
+Action Center and Action/Change roadmap documentation is deferred: Gate B1 remains the critical path, ADR-0007 keeps complete Change Intelligence in V1.5, and no item expands scanner scope or counts as B1/B2/C evidence. Recheck/targeted execution must use current VerifiedScope/ScanAuthorization; visual preview requires a separate later ADR.
+
+Promotions/Access Grants documentation is deferred post-B2 commercial planning and does not reopen Gate A or block B1. Grants are entitlement-only and cannot create verification, consent, monitoring or scan authority. The package-proposed `ADMIN_ATTESTED` exception conflicts with ADR-0009 and remains denied unless a separate future ADR is owner-accepted and evidenced.
+
 ## Gate B1 — Guest
 
 Requires hostname/IDNA, pinned validated connection preserving Host/SNI/cert checks, SSRF/mixed-set/redirect tests, Guest token/retention/abuse, deterministic job/fencing, supervisor boundary, machine capability policy, hostile-output tests, redaction/coverage and runtime WCAG evidence.
@@ -92,6 +102,10 @@ Gate A closure evidence:
 `Product Capability Registry Gate A impact: NONE`
 `Notifications & Communications ADR-0015 Gate A impact: NONE`
 `Guest supervisor foundation: INJECTED RUNTIME EVIDENCE PASS; production launcher/key provider/persistence pending`
+`Guest abuse/retention policy: HMAC SIGNAL + POSTGRESQL ATOMIC RESERVATION/RELEASE EVIDENCE PASS; trusted-proxy/key-rotation/cleanup/deletion pending`
+`Guest result view: SANITIZED BODY/COVERAGE + DATABASE READ EVIDENCE PASS; route/UI/WCAG pending`
+`PostgreSQL data-access ADR-0017 Gate A impact: NONE`
+`GuestScan persistence boundary: POSTGRESQL IDEMPOTENCY/ABUSE/RESULT-COMMIT/RESULT-READ/RETENTION-BATCH EVIDENCE PASS; scheduling/queue/route pending`
 `Gate B1: IN PROGRESS`
 `Gate B2: NOT STARTED`
 `Gate C: NOT STARTED`

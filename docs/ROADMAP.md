@@ -43,7 +43,7 @@ Excluded V1:
 
 ## V1.5 — Change Intelligence
 
-Diff engine, significance, timeline, alerts, asset/finding changes.
+After B2 Action Center foundation, V1.5 adds compatible deterministic diff, significance, timeline, alerts and asset triage. It reuses MonitoringEvent and canonical recheck authorization. Visual preview remains later because V1 HEADLESS_BROWSER is denied.
 
 ## V2 — EASM / Asset Graph basics
 
@@ -58,6 +58,8 @@ PartnerDelegation, separate client Organizations, White Label, authorized bulk v
 ## V3+
 
 AppSec/API → Supply Chain → Cloud/Private Scanner → Attack Paths → CTEM → Enterprise/Managed.
+
+Brand Protection, DMARC aggregate-report ingestion and credential exposure require separate product/security/legal/source/privacy decisions and are not current capability claims.
 
 ## Sequencing
 

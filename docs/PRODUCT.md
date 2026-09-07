@@ -49,6 +49,14 @@ One code-first `ProductCapability` catalog supplies public capability surfaces a
 
 A public capability is a product claim and requires an active rollout, approved copy and valid production evidence. Availability does not prove asset-specific coverage and cannot authorize execution; `VerifiedScope`, `ScanAuthorization`, entitlement, consent and ADR-0012 scanner policy remain separate.
 
+## Security Glossary
+
+The planned post-B1 Security Glossary is one reviewed Russian-first vocabulary for public term pages and explicit product help. It is descriptive content only: a term or related-capability link cannot assert feature availability, coverage, Risk, verification or scan authority. Seed copy must pass claim/security review before publication.
+
+## Security Check-ins
+
+Planned post-B2 Check-ins are optional fixed-choice KNOWLEDGE questions for the current authenticated user. They do not assess the Organization, verify internal controls, create Findings or affect technical scores. The supplied administrator-offboarding case remains proposed until a canonical Cyberexam/question-bank decision and content review exist.
+
 ## Workspace
 
 After registration:
@@ -60,6 +68,10 @@ After registration:
 5. Asset Security Score only if SufficientBaselineV1.
 
 Monitoring is separate explicit enrollment.
+
+## Promotions and Access Grants
+
+The proposed post-B2 commercial layer may add temporary standard/campaign/direct-admin entitlements without rewriting paid Subscription. Grant state never creates ownership, DomainVerification, VerifiedScope, consent, MonitoringEnrollment or ScanAuthorization. `ADMIN_ATTESTED` is not an accepted verification method under ADR-0009 and remains absent pending a separate future ADR.
 
 ### Scan modes
 
@@ -93,12 +105,16 @@ Organization Security Score: explicitly monitored asset set only.
 V1 stores versioned snapshots/provenance.
 V1.5 provides diff/significance/timeline/alerts.
 
+After B2, Action Center may add assignment/due/report-complete/recheck workflow over canonical Findings. Reported remediation is never verified resolution; recheck uses current server-derived EXACT_HOST authorization. V1.5 asset triage is customer metadata only and cannot establish ownership verification or monitoring.
+
 Any pre-V1.5 hero diff is labelled `Концепт будущей возможности V1.5` and must not imply that enabling monitoring unlocks it today.
 
 ## Claims
 
 Canonical public claims: CLAIM_INVENTORY.md.
 Blocked claims/customer logos must not appear in accepted runtime design.
+
+The owner-supplied [OUTSCAN manifesto](OUTSCAN_MANIFESTO.md) is a draft narrative source, not current capability evidence. Publication is section-by-section: brand copy may use existing approved lines, while discovery, Change Intelligence, remediation/recheck, Monitoring, Threat Intelligence and AI wording waits for its implemented release state and Product/Security/Legal review.
 
 ## Differentiation
 

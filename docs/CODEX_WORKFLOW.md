@@ -31,6 +31,7 @@ If FAIL, work only on docs/ADR/threat model/test plans/design evidence.
 - centralized authz/validation;
 - pinned outbound destinations;
 - tenant/RLS invariants;
+- SQL-first migrations and transaction tests against real PostgreSQL for persistence changes;
 - server-authenticated Guest-session idempotency boundary;
 - deterministic job/fence plus separate primary-commit/terminal-replay semantics;
 - supervisor/scanner credential boundary;

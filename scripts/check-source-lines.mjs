@@ -14,6 +14,7 @@ const authoredExtensions = new Set([
   ".js",
   ".jsx",
   ".mjs",
+  ".sql",
   ".ts",
   ".tsx",
 ]);

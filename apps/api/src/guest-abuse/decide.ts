@@ -26,6 +26,7 @@ const WINDOW_KEYS = ["count", "reset_at_unix_seconds"] as const;
 const SCOPE_PATTERN = /^sha256:[0-9a-f]{64}$/u;
 const NETWORK_PATTERN = /^hmac-sha256:[0-9a-f]{64}$/u;
 const MAX_COUNTER_VALUE = 1_000_000;
+const UINT64_MAX = 0xffff_ffff_ffff_ffffn;
 
 function exactRecord(
   value: unknown,
@@ -66,6 +67,7 @@ function windowUsage(
       !counter(count) ||
       typeof resetAt !== "bigint" ||
       resetAt <= now ||
+      resetAt > UINT64_MAX ||
       resetAt > now + maximumWindowSeconds
     ) {
       return null;
@@ -141,6 +143,7 @@ function snapshotRequest(value: unknown): Readonly<GuestAbuseRequest> | null {
       !NETWORK_PATTERN.test(networkDigest) ||
       typeof now !== "bigint" ||
       now < 0n ||
+      now > UINT64_MAX ||
       (serviceState !== "OPEN" && serviceState !== "PAUSED")
     ) {
       return null;
@@ -163,9 +166,7 @@ function retryAfter(now: bigint, resetAt: bigint): number {
   return Number(resetAt - now);
 }
 
-export function decideGuestAbuseAdmission(
-  value: unknown,
-): GuestAbuseDecision {
+export function decideGuestAbuseAdmission(value: unknown): GuestAbuseDecision {
   const request = snapshotRequest(value);
   if (!request) return { ok: false, code: "INVALID_ABUSE_CONTEXT" };
   const usage = request.usage;
@@ -223,6 +224,9 @@ export function decideGuestAbuseAdmission(
     action: "ALLOW_NEW_SCAN",
     reservation: Object.freeze({
       policy_id: GUEST_ABUSE_POLICY.policy_id,
+      guest_session_scope: request.guest_session_scope,
+      network_signal_digest: request.network_signal_digest,
+      observed_at_unix_seconds: request.now_unix_seconds,
       dimensions: GUEST_ABUSE_RESERVATION_DIMENSIONS,
     }),
   };

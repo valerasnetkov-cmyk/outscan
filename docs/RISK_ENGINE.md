@@ -31,6 +31,8 @@ Use FindingOccurrence:
 
 Replay of the same accepted ResultEnvelope digest must not create another occurrence.
 
+The proposed Weekly Digest has a separate versioned `Digest Priority` used only to select bounded email content. Its weights/order cannot mutate OUTSCAN Risk, Finding confidence, remediation or real-time alert policy.
+
 ## Guardrails
 
 - KEV + Confirmed + public exposure cannot be Low/Medium.
@@ -92,6 +94,8 @@ Guest uses Baseline posture only.
 
 Separate versioned model.
 V1 snapshots; V1.5 diff/significance/timeline/alerts.
+
+Action workflow status, reported remediation, triage declaration and MonitoringRulePreference are not Risk inputs by default. Compatible Finding resolution/recurrence, reviewed change significance and fresh lifecycle evidence may affect future versioned Risk policy only through explicit model changes and tests.
 
 ## Explainability
 

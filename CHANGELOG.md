@@ -2,6 +2,95 @@
 
 ## [Unreleased] — consistency closure
 
+### Transactional Guest retention batches
+
+- Added a bounded PostgreSQL worker that locks due GuestScans and expired abuse windows with `SKIP LOCKED`, deletes each 24-hour Guest aggregate by cascade and reconciles unreleased active quota in the same transaction.
+- Made privacy deletion independent of quota-metadata consistency: missing active rows are counted in a machine-readable inconsistency result and set `alert_required` instead of retaining expired Guest data.
+- Added real PostgreSQL coverage for deadline semantics, cascade deletion, already-released reservations, stale-window pruning, bounded continuation and corrupted quota metadata. Production scheduling and durable metrics/alerts remain pending.
+
+### Transactional Guest abuse counters
+
+- Added `0002_guest_abuse_counters.sql` with digest-only window/active counters, server-owned pause state and per-GuestScan reservation/release records; raw IP, User-Agent and browser fingerprint have no storage field.
+- Integrated all four burst/daily and two concurrency dimensions into the same SERIALIZABLE GuestScan create/expired-replacement transaction. Live idempotent replay bypasses abuse state and denied admission rolls back scan/token/counter writes.
+- Added idempotent concurrency release for terminal result commit and expired replacement while retaining consumed window counts. Concurrent same-session creation converges to one active reservation.
+- Added PostgreSQL tests for six-dimension reservation, privacy schema, replay non-consumption, concurrency races, release, burst limits and pause behavior. The retention slice now supplies bounded cleanup; trusted ingress/key rotation, worker scheduling/telemetry, queue lifecycle and public routes remain pending.
+
+### Atomic Guest terminal result commit
+
+- Added a strict authenticated ResultEnvelope-to-PostgreSQL committer that reconstructs the sanitized projection from canonical signed bytes instead of accepting caller-selected result data.
+- Added one SERIALIZABLE primary branch that locks current scan/attempt state, uses database transaction time, requires RUNNING/current fence/live lease/deadline and atomically succeeds the attempt/job plus inserts one immutable result.
+- Added a separate terminal same-attempt/fence/digest acknowledgement with no payload write, bounded serialization retry and fail-closed stale, expired, cross-target, authentication and digest-conflict outcomes.
+- Added real PostgreSQL tests for primary commit, concurrent duplicate convergence, terminal digest conflict, stale/expired denial and target/authentication substitution. The abuse-counter slice above adds terminal concurrency release; deletion, queue lease acquisition and public Guest routes remain pending.
+
+### Transactional Guest idempotency and result read
+
+- Added a strict `pg` Guest persistence boundary with server-owned scan ID/token material, SERIALIZABLE transactions, bounded serialization/deadlock retry and unique-key winner reread.
+- Implemented same-session stable replay, different-hash conflict, atomic expired-row replacement and independent same-key ownership across Guest sessions without IP/fingerprint identity.
+- Added a parameterized one-query Guest result store that maps PostgreSQL rows through the existing exact snapshots before bearer authorization and sanitized projection.
+- Added fail-closed configuration/database errors and real PostgreSQL concurrency, replacement and authorized-result tests. Subsequent slices close terminal result write and abuse reservation/release; public Guest routes and deletion remain pending.
+
+### PostgreSQL Guest persistence foundation
+
+- Accepted ADR-0017: PostgreSQL 18, append-only checksummed SQL migrations and the low-level `pg` driver; no V1 ORM/query builder or automatic startup migration.
+- Added `0001_guest_scan.sql` for separate PUBLIC_GUEST scan/attempt/result tables with exact time/digest constraints, idempotency uniqueness, deferred accepted-result relationships, FSM/immutability guards and revoked default PUBLIC access.
+- Added the bounded TLS-explicit pool configuration, serialized checksummed migration runner/CLI, PostgreSQL CI service and a real-database suite covering replay/drift, concurrency, chronology, FSM/fence/lease, atomic result identity and cascade deletion.
+- The schema-only foundation kept application writes absent. Subsequent repository slices now implement idempotency, abuse reservation/release, terminal result commit/replay and result read; deletion, queue lease acquisition/CAS wiring and public Guest routes remain pending.
+
+### GuestScan persistence boundary
+
+- Added exact PUBLIC_GUEST GuestScan, GuestScanAttempt and accepted GuestResult record contracts with immutable validation of access/retention chronology, job/attempt state and accepted attempt/fence/digest identity.
+- Added an injected read-only result-store composition that binds the route scan ID, bearer authorization, terminal record, canonical target and sanitized view while collapsing unavailable/inconsistent persisted state to one denial.
+- The row/snapshot slice itself added no database adapter. ADR-0017 and the subsequent persistence slices now supply schema, idempotency and result-read evidence; the remaining write workflows and public Guest routes keep Gate B1 in progress.
+
+### Sanitized Guest result view
+
+- Added a strict immutable Guest response builder with five stable posture sections, a complete eight-group coverage inventory and explicit missing/unavailable states.
+- Kept raw evidence, individual Finding details, severity/confidence/fingerprints and scanner execution metadata outside the public model; fixed limitations prohibit a Security Score or absolute-assurance interpretation.
+- The result-view slice initially kept database lookup absent; the new strict PostgreSQL read store now fills that port. HTTP route, visual page and WCAG runtime evidence remain pending, so Guest exposure stays disabled.
+
+### Promotions and Access Grants proposal
+
+- Added a deferred post-B2 commercial entitlement contract and blocking suite for standard/campaign trials and direct platform-issued grants without changing paid Subscription state.
+- Preserved the mandatory separation between entitlement, verification, VerifiedScope, consent, MonitoringEnrollment and ScanAuthorization; the supplied `ADMIN_ATTESTED` bypass remains denied under ADR-0009 pending a separate future ADR.
+- Kept all entities, migrations, routes, admin/customer UI, notifications and promo rollout absent; Gate B1 remains the critical path.
+
+### OUTSCAN manifesto draft
+
+- Added the owner-supplied long-form manifesto as a gated canonical content source for later product/site insertion, without publishing it or treating future-feature language as runtime evidence.
+- Added section-level claim, gate, Product/Security/Legal and accessibility requirements; Gate B1 remains the critical path and no route, UI or scanner capability was added.
+
+### Action Center and Change Intelligence proposal
+
+- Added staged post-B2 Action Center and V1.5 Change Intelligence/Triage contracts with blocking tenant, coverage, recheck-authorization, monitoring and TI/lifecycle suites while retaining Gate B1 priority.
+- Kept user-reported remediation distinct from verified Finding resolution, declared asset ownership distinct from verification, and every recheck/targeted scan behind current EXACT_HOST VerifiedScope, ScanAuthorization, entitlement and ADR-0012 policy.
+- Reused canonical MonitoringEvent and Weekly Security Digest, deferred HEADLESS_BROWSER-based preview to a separate later ADR, and kept Brand Protection, DMARC report ingestion and credential exposure outside current implementation.
+
+### Security Question Registry and Check-ins proposal
+
+- Added a post-B2 server-only question-registry and optional user Check-ins contract with projection confidentiality, fixed-choice KNOWLEDGE scope, reversible per-user popup suppression and strict separation from Findings, Risk/Scores, monitoring and notifications.
+- Corrected the supplied model by keeping educational progress GLOBAL user-owned without Organization/customer data and treating the claimed Cyberexam banks, attempt rules and O09 approval as unverified until a canonical Cyberexam decision exists.
+- Added blocking privacy/authorization/idempotency/UI tests and a deferred implementation backlog; no registry data, preference, route, UI, analytics, Cyberexam or new ADR was introduced.
+
+### Security Glossary proposal
+
+- Added a post-B1 code-first Security Glossary contract and blocking validation/search/API/Web/security/SEO test plan without adding runtime code, routes, persistence or a new ADR.
+- Recorded package findings that block automatic seed import: 91 parsed records with one blank slug, a stale 84/90 count and nine category-enum mismatches, plus Guest/ACTIVE/IP wording that requires canonical product review.
+- Kept glossary visibility and capability navigation strictly descriptive; glossary metadata cannot publish capabilities or alter Risk, ScannerCapability, VerifiedScope or ScanAuthorization.
+
+### Weekly Security Digest proposal
+
+- Added a deferred deterministic organization Weekly Security Digest contract and blocking security test plan that reuse canonical Monitoring, Risk, Threat Intelligence, Capability/entitlement and Notifications boundaries.
+- Added proposed ADR-0016 for immutable READY snapshots, explicit opt-in scheduling, stale-source uncertainty, server-resolved recipients and separation from real-time alerts, marketing and scanner authorization.
+- Kept source, routes, scheduler, event-catalog activation, persistence, provider delivery and AI absent; Gate A/B1 remain unchanged and implementation stays in Phase 4 after Workspace dependencies.
+
+### Guest abuse and retention policy
+
+- Added a closed V1 Guest abuse policy over authenticated session scope and a server-derived pseudonymous network signal, with burst/daily/concurrency ceilings and a global pause state; raw IP, User-Agent and browser fingerprint are rejected from this decision input.
+- Added an admission composition that returns live same-key/same-hash idempotent replay without consuming a new quota, while CREATE and expired-row replacement require a session/time-bound atomic counter reservation.
+- Added a strict 24-hour Guest deletion-deadline decision tied to the original 30-minute result-access window.
+- Added versioned domain-separated HMAC network-signal derivation from trusted ingress addresses with IPv4-mapped normalization, IPv4 `/32`, IPv6 `/64`, fixed vectors and rejection of client-forwarded fields.
+- That pure-policy checkpoint kept persistence absent; the transactional counter slice above now closes reservation and accepted-result/expired-replacement release. Trusted-proxy/key rotation, other terminal releases, cleanup/deletion/metrics and public routes remain pending.
+
 ### Trusted Guest supervisor runtime
 
 - Added the bounded Guest orchestration path from current attempt/artifact authorization through an injected isolated-process launcher, single-frame IPC, canonical output validation and supervisor-owned authenticated ResultEnvelope signing.

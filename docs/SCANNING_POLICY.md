@@ -90,6 +90,8 @@ Uses only capabilities explicitly marked ALLOW for CONTROLLED_DEEP in ADR 0012.
 
 `HEADLESS_BROWSER` remains DENY in V1. Consent does not override that deny because general browser egress is not compatible with the V1 exact-host connection-pinning contract.
 
+Future Action Center rechecks and Emerging Threat evaluations are orchestration intents only. They cannot accept a client-selected target, profile, template or capability. The server must reload the Asset and Finding, then recompute current `EXACT_HOST` `VerifiedScope`, entitlement, `ScanAuthorization`, ADR-0012 policy, approvals and budgets before creating a normal `ScanRequest`. Asset-triage metadata grants no scan authority. Visual preview remains deferred behind a separate post-V1 decision and does not relax the `HEADLESS_BROWSER` deny.
+
 ### V1 DENY
 
 HTTP_STATE_CHANGE, AUTHENTICATED_REQUEST, OOB_CALLBACK, JAVASCRIPT_TEMPLATE, CODE_EXECUTION, FUZZING, BRUTE_FORCE, RAW_TCP, PORT_ENUMERATION, PAYLOAD_GENERATION, DESTRUCTIVE, UNKNOWN.

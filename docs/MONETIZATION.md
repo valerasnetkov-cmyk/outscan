@@ -27,6 +27,10 @@ Starter/Business/Agency price points remain market hypotheses.
 
 Paid value may include verified baseline, monitored assets, history, reports, notifications, team/API/White Label by plan.
 
+Future Action Center, Change Intelligence, lifecycle or digest packaging remains a pricing hypothesis until implementation/usage evidence. Brand Protection and DMARC report ingestion are only later add-on candidates; triage declarations and ordinary remediation workflow never create billing or monitoring enrollment implicitly.
+
+Future Promotions/Access Grants may provide time-bounded entitlement presets without rewriting paid Subscription state. Grant expiry/revocation affects future entitlement only, never verification, consent, MonitoringEnrollment or historical evidence. Standard trials wait for B2/auth/RLS/audit and accepted legal terms; the proposed administrative verification bypass is not accepted.
+
 ## Agency
 
 Each client is a separate Organization.

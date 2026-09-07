@@ -1,3 +1,5 @@
+import { GUEST_IDEMPOTENCY_WINDOW_SECONDS } from "../guest-idempotency/index.js";
+
 export const GUEST_RETENTION_MAX_SECONDS = 86_400n;
 
 const RECORD_KEYS = [
@@ -27,7 +29,8 @@ function exactRecord(value: unknown): value is Record<string, unknown> {
     return (
       actual.length === RECORD_KEYS.length &&
       actual.every(
-        (key) => typeof key === "string" && RECORD_KEYS.includes(key),
+        (key) =>
+          typeof key === "string" && RECORD_KEYS.some((item) => item === key),
       )
     );
   } catch {
@@ -57,9 +60,10 @@ export function decideGuestRetention(
       !u64(createdAt) ||
       !u64(resultExpiresAt) ||
       !u64(deletionDeadline) ||
+      createdAt > nowUnixSeconds ||
       createdAt > UINT64_MAX - GUEST_RETENTION_MAX_SECONDS ||
       deletionDeadline !== createdAt + GUEST_RETENTION_MAX_SECONDS ||
-      resultExpiresAt <= createdAt ||
+      resultExpiresAt !== createdAt + GUEST_IDEMPOTENCY_WINDOW_SECONDS ||
       resultExpiresAt > deletionDeadline
     ) {
       return { ok: false, code: "INVALID_RETENTION_CONTEXT" };

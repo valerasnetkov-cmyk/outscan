@@ -36,6 +36,8 @@ Before authenticated DAST, intrusive testing, IP/CIDR scanning or private scanne
 Verification does not automatically create paid monitoring.
 MonitoringEnrollment is explicit.
 
+Future promo/trial access requires reviewed eligibility, validity, expiry/revocation, consumer/business terms, marketing-consent separation and accurate paid-versus-temporary wording before rollout. A commercial grant cannot substitute for proof of target control. The proposed administrative verification bypass is not legally or architecturally approved by the planning documentation.
+
 ## Claims
 
 Follow CLAIM_INVENTORY.
@@ -47,6 +49,8 @@ Do not publish absolute protection, guaranteed absence/prevention, unmeasured SL
 Before production define privacy basis, retention, Guest deletion, residency, subprocessors, export/delete, incident process and support-access rules.
 
 Evidence may contain personal/confidential data and must be minimized.
+
+Future Check-in preference/answer history is user-linked product data. Before activation, define privacy notice/basis, retention, account export/delete and analytics minimization; fixed KNOWLEDGE questions must not collect employee, credential, internal-system or incident data.
 
 ## Production
 

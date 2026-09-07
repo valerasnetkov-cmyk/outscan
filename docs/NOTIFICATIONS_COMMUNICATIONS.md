@@ -62,4 +62,6 @@ Never include raw evidence, arbitrary HTML/Markdown, headers, cookies, credentia
 
 - Phase 2: account/transactional email provider ADR, persistence, outbox and webhook handling.
 - Phase 4: customer technical email/Telegram and platform Ops alerts with monitoring.
+- Phase 4 proposal: after ADR-0016 acceptance, `WEEKLY_SECURITY_DIGEST_READY` may become a closed MONITORING tenant event carrying only an immutable issue reference; it is not active today.
+- Deferred Action/Change/Monitoring events must enter the closed tenant catalog with safe subject references and server-derived recipients; rule preferences cannot supply scripts, scanner input or destinations.
 - Later/Commercial: marketing consent, confirmation, campaign delivery and legal review.

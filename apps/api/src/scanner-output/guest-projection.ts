@@ -41,12 +41,14 @@ export const GUEST_COVERAGE_GROUPS = Object.freeze([
   "CT_ENRICHMENT",
 ] as const);
 
-type GuestPostureCheck = (typeof GUEST_POSTURE_CHECKS)[number];
-type GuestCoverageGroup = (typeof GUEST_COVERAGE_GROUPS)[number];
-type PostureOutcome = "PASS" | "ATTENTION" | "UNKNOWN" | "NOT_APPLICABLE";
-type ExecutionStatus =
+export type GuestPostureCheck = (typeof GUEST_POSTURE_CHECKS)[number];
+export type GuestCoverageGroup = (typeof GUEST_COVERAGE_GROUPS)[number];
+export type PostureOutcome =
+  "PASS" | "ATTENTION" | "UNKNOWN" | "NOT_APPLICABLE";
+export type ExecutionStatus =
   "SUCCESS" | "FAILED" | "TIMED_OUT" | "CANCELLED" | "SUPERSEDED";
-type Completeness = "COMPLETE" | "PARTIAL" | "NOT_APPLICABLE" | "UNKNOWN";
+export type Completeness =
+  "COMPLETE" | "PARTIAL" | "NOT_APPLICABLE" | "UNKNOWN";
 
 export interface GuestPostureObservation {
   check_id: GuestPostureCheck;

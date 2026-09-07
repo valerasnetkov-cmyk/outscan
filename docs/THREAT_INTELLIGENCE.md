@@ -65,6 +65,8 @@ Project policy, subject to source limits:
 
 Do not fail customer scan if one intelligence source is temporarily unavailable. Mark stale/missing enrichment explicitly and retry independently.
 
+The proposed Weekly Security Digest consumes only this canonical normalized state plus source health/watermarks. It owns no importer: stale/failed/unknown KEV cannot become `KEV: No`, missing EPSS cannot become zero, and external/editorial text cannot elevate a claim beyond its source semantics.
+
 ## Re-evaluation flow
 
 ```text

@@ -1,13 +1,11 @@
 import {
   decideGuestScanIdempotency,
+  GUEST_IDEMPOTENCY_WINDOW_SECONDS,
   type GuestIdempotencyResult,
 } from "../guest-idempotency/index.js";
 import type { GuestResultTokenKeyring } from "../guest-crypto/index.js";
 import { decideGuestAbuseAdmission } from "./decide.js";
-import type {
-  GuestAbuseDenyCode,
-  GuestAbuseReservation,
-} from "./model.js";
+import type { GuestAbuseDenyCode, GuestAbuseReservation } from "./model.js";
 
 type CreateIdempotencyDecision = Extract<
   GuestIdempotencyResult,
@@ -56,6 +54,15 @@ export function decideGuestScanAdmission(
         ? {}
         : { retry_after_seconds: abuse.retry_after_seconds }),
     };
+  }
+  if (
+    idempotency.lookup.principal_scope !==
+      `GUEST_SESSION:${abuse.reservation.guest_session_scope}` ||
+    idempotency.idempotency_expires_at_unix_seconds -
+      GUEST_IDEMPOTENCY_WINDOW_SECONDS !==
+      abuse.reservation.observed_at_unix_seconds
+  ) {
+    return { ok: false, code: "INVALID_ABUSE_CONTEXT" };
   }
   return Object.freeze({
     ...idempotency,

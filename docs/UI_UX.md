@@ -61,6 +61,8 @@ Statuses:
 
 No subdomain list/CVE/endpoints/vulnerable versions/raw evidence.
 
+The implemented domain response builder supplies this page with five stable sections, the complete canonical coverage inventory and explicit no-score/no-assurance limitations from one sanitized source. The route, visual page, localized labels/CTA and WCAG runtime evidence are still pending Gate B1; the UI must render missing and unavailable coverage without inventing a score or safety claim.
+
 ## Onboarding
 
 `Guest → Registration → Organization → Add exact host/Create Asset → DNS Verification → Verified Baseline → Asset Security Score → optional MonitoringEnrollment`.
@@ -86,6 +88,16 @@ If insufficient:
 
 Organization Security Score is explicitly monitored-asset scope.
 
+Future Weekly Digest settings live under `Настройки → Уведомления → Еженедельная сводка`; disabled-by-default enablement requires explicit weekday/local time/IANA timezone. Read-only history shows immutable generated content and links to current Workspace state. V1 has no arbitrary recipient, send-now, preview or regeneration control.
+
+Future public Security Glossary uses `/glossary` search/category navigation and canonical `/glossary/[slug]` detail pages from one reviewed registry. Inline hints are explicit, keyboard/touch accessible, Escape-dismissible and never hover-only or automatically injected into every matching word. Only approved canonical term pages enter sitemap.
+
+Future post-B2 Check-ins use a non-modal desktop edge card and compact mobile bottom sheet, at most one new card per authenticated session. Manual Question Center remains available when the user disables automatic popups. Radio choices, close/defer and `Больше не показывать вопросы` are keyboard/touch accessible; no countdown, shame, score reward or critical-flow obstruction is allowed.
+
+Deferred Workspace hierarchy uses Actions for current work, Changes for comparable observation history and Assets for inventory/triage. UI must label user-reported remediation as awaiting verification, declared ownership as unverified metadata and missing/incompatible coverage as unknown. No preview, targeted check or future add-on is shown before its own gate/claim evidence.
+
+Future promo UI appears only after B2 and rollout approval. Workspace labels temporary `Промодоступ`, exact expiry and effective usage without calling it a paid subscription or DNS verification. Platform secret reveal is one-time; UI never offers verification/scanner overrides. Backend platform permission and tenant RLS remain authoritative. Status, limits and expiry are keyboard-accessible, non-color-only and reflow at 320px.
+
 ## Findings
 
 Condition, occurrence, transition and disposition are distinct.
@@ -103,6 +115,8 @@ Before V1.5, hero diff label:
 
 Follow CLAIM_INVENTORY.
 Existing public/maket.png is reference-only and must not be treated as Gate A evidence. It may inform first-screen layout, but blocked claims/nonconforming motifs must not be copied; remove/exclude it before Gate B1/public deployment if it would be served.
+
+The future long-form manifesto uses `docs/OUTSCAN_MANIFESTO.md` as its sole draft source. Insert it only after section-level claim approval; keep it outside the Guest critical flow, use semantic headings and readable line length, and prove keyboard navigation, WCAG 2.2 AA contrast and 320px reflow. Deferred paragraphs must be omitted or explicitly labelled as future concepts, never silently presented as current behavior.
 
 ## Brand
 

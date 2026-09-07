@@ -23,56 +23,57 @@ Sensitivity:
 
 ## Entity matrix
 
-| Entity                       | Ownership          | Sensitivity | Tenant key                      |
-| ---------------------------- | ------------------ | ----------- | ------------------------------- |
-| User                         | GLOBAL             | SENSITIVE   | none                            |
-| Organization                 | TENANT_ROOT        | SENSITIVE   | id is tenant root               |
-| OrganizationMember           | TENANT             | SENSITIVE   | organization_id                 |
-| Subscription                 | TENANT             | SENSITIVE   | organization_id                 |
-| MonitoringEnrollment         | TENANT             | SENSITIVE   | organization_id                 |
-| DomainVerification           | TENANT             | RESTRICTED  | organization_id                 |
-| VerifiedScope                | TENANT             | RESTRICTED  | organization_id                 |
-| Asset                        | TENANT             | SENSITIVE   | organization_id                 |
-| AssetRelation                | TENANT             | SENSITIVE   | organization_id                 |
-| TechnologyObservation        | TENANT             | SENSITIVE   | organization_id                 |
-| ScanRequest                  | TENANT             | SENSITIVE   | organization_id                 |
-| ScanJob                      | TENANT             | SENSITIVE   | organization_id                 |
-| ScanAttempt                  | TENANT             | SENSITIVE   | organization_id                 |
-| Finding                      | TENANT             | RESTRICTED  | organization_id                 |
-| FindingOccurrence            | TENANT             | RESTRICTED  | organization_id                 |
-| FindingEvent                 | TENANT             | RESTRICTED  | organization_id                 |
-| FindingDisposition           | TENANT             | RESTRICTED  | organization_id                 |
-| FindingCoverage              | TENANT             | RESTRICTED  | organization_id                 |
-| FindingEvidence              | TENANT             | RESTRICTED  | organization_id                 |
-| AssetRiskScore               | TENANT             | SENSITIVE   | organization_id                 |
-| OrganizationSecurityScore    | TENANT             | SENSITIVE   | organization_id                 |
-| AssetPostureSnapshot         | TENANT             | RESTRICTED  | organization_id                 |
-| MonitoringEvent              | TENANT             | SENSITIVE   | organization_id                 |
-| UserNotificationEndpoint     | GLOBAL             | SENSITIVE   | none                            |
-| AccountNotificationEvent     | GLOBAL             | SENSITIVE   | none                            |
-| AccountNotificationDelivery  | GLOBAL             | SENSITIVE   | none                            |
-| TenantNotificationEvent      | TENANT             | SENSITIVE   | organization_id                 |
-| TenantNotificationDelivery   | TENANT             | SENSITIVE   | organization_id                 |
-| TenantNotificationPreference | TENANT             | SENSITIVE   | organization_id                 |
-| TelegramBinding              | GLOBAL             | SENSITIVE   | none                            |
-| PlatformNotificationEvent    | PLATFORM           | INTERNAL    | none                            |
-| PlatformNotificationDelivery | PLATFORM           | INTERNAL    | none                            |
-| PlatformNotificationEndpoint | PLATFORM           | RESTRICTED  | none                            |
-| MarketingConsent             | GLOBAL             | SENSITIVE   | none                            |
-| NotificationSuppression      | GLOBAL             | SENSITIVE   | none                            |
-| Report                       | TENANT             | RESTRICTED  | organization_id                 |
-| TenantAuditLog               | TENANT             | RESTRICTED  | organization_id                 |
-| GuestScan                    | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
-| GuestScanAttempt             | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
-| GuestObservation             | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
-| GuestResult                  | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
-| CVERecord                    | GLOBAL             | PUBLIC      | none                            |
-| ThreatIntelObservation       | GLOBAL             | PUBLIC      | none                            |
-| ScannerPolicyBundle          | PLATFORM           | INTERNAL    | none                            |
-| ScannerTemplateApproval      | PLATFORM           | INTERNAL    | none                            |
-| PlatformAuditLog             | PLATFORM           | RESTRICTED  | none                            |
-| PartnerDelegation            | CROSS_TENANT_GRANT | RESTRICTED  | partner+client                  |
-| SupportAccessGrant           | PLATFORM_GRANT     | RESTRICTED  | client org + platform principal |
+| Entity                        | Ownership          | Sensitivity | Tenant key                      |
+| ----------------------------- | ------------------ | ----------- | ------------------------------- |
+| User                          | GLOBAL             | SENSITIVE   | none                            |
+| Organization                  | TENANT_ROOT        | SENSITIVE   | id is tenant root               |
+| OrganizationMember            | TENANT             | SENSITIVE   | organization_id                 |
+| Subscription                  | TENANT             | SENSITIVE   | organization_id                 |
+| MonitoringEnrollment          | TENANT             | SENSITIVE   | organization_id                 |
+| DomainVerification            | TENANT             | RESTRICTED  | organization_id                 |
+| VerifiedScope                 | TENANT             | RESTRICTED  | organization_id                 |
+| Asset                         | TENANT             | SENSITIVE   | organization_id                 |
+| AssetRelation                 | TENANT             | SENSITIVE   | organization_id                 |
+| TechnologyObservation         | TENANT             | SENSITIVE   | organization_id                 |
+| ScanRequest                   | TENANT             | SENSITIVE   | organization_id                 |
+| ScanJob                       | TENANT             | SENSITIVE   | organization_id                 |
+| ScanAttempt                   | TENANT             | SENSITIVE   | organization_id                 |
+| Finding                       | TENANT             | RESTRICTED  | organization_id                 |
+| FindingOccurrence             | TENANT             | RESTRICTED  | organization_id                 |
+| FindingEvent                  | TENANT             | RESTRICTED  | organization_id                 |
+| FindingDisposition            | TENANT             | RESTRICTED  | organization_id                 |
+| FindingCoverage               | TENANT             | RESTRICTED  | organization_id                 |
+| FindingEvidence               | TENANT             | RESTRICTED  | organization_id                 |
+| AssetRiskScore                | TENANT             | SENSITIVE   | organization_id                 |
+| OrganizationSecurityScore     | TENANT             | SENSITIVE   | organization_id                 |
+| AssetPostureSnapshot          | TENANT             | RESTRICTED  | organization_id                 |
+| MonitoringEvent               | TENANT             | SENSITIVE   | organization_id                 |
+| UserNotificationEndpoint      | GLOBAL             | SENSITIVE   | none                            |
+| AccountNotificationEvent      | GLOBAL             | SENSITIVE   | none                            |
+| AccountNotificationDelivery   | GLOBAL             | SENSITIVE   | none                            |
+| TenantNotificationEvent       | TENANT             | SENSITIVE   | organization_id                 |
+| TenantNotificationDelivery    | TENANT             | SENSITIVE   | organization_id                 |
+| TenantNotificationPreference  | TENANT             | SENSITIVE   | organization_id                 |
+| TelegramBinding               | GLOBAL             | SENSITIVE   | none                            |
+| PlatformNotificationEvent     | PLATFORM           | INTERNAL    | none                            |
+| PlatformNotificationDelivery  | PLATFORM           | INTERNAL    | none                            |
+| PlatformNotificationEndpoint  | PLATFORM           | RESTRICTED  | none                            |
+| MarketingConsent              | GLOBAL             | SENSITIVE   | none                            |
+| NotificationSuppression       | GLOBAL             | SENSITIVE   | none                            |
+| Report                        | TENANT             | RESTRICTED  | organization_id                 |
+| TenantAuditLog                | TENANT             | RESTRICTED  | organization_id                 |
+| GuestScan                     | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestScanAttempt              | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestAbuseCounter/Reservation | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestObservation              | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestResult                   | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| CVERecord                     | GLOBAL             | PUBLIC      | none                            |
+| ThreatIntelObservation        | GLOBAL             | PUBLIC      | none                            |
+| ScannerPolicyBundle           | PLATFORM           | INTERNAL    | none                            |
+| ScannerTemplateApproval       | PLATFORM           | INTERNAL    | none                            |
+| PlatformAuditLog              | PLATFORM           | RESTRICTED  | none                            |
+| PartnerDelegation             | CROSS_TENANT_GRANT | RESTRICTED  | partner+client                  |
+| SupportAccessGrant            | PLATFORM_GRANT     | RESTRICTED  | client org + platform principal |
 
 Any new persistent entity enters this matrix before migration.
 
@@ -175,6 +176,8 @@ The server issues a 256-bit random `guest_session_id` and derives a non-secret p
 Raw Guest session cookie/identifier is not persisted or logged.
 IP, User-Agent and browser fingerprint are abuse signals only and never substitute for Guest-session ownership.
 
+`GuestAbuseWindowCounter`, `GuestAbuseActiveCounter` and `GuestAbuseReservation` are bounded operational records keyed only by authenticated Guest-session scope digest or a server-derived HMAC network-signal digest plus closed policy dimension. They store counts/reset/release state, never raw IP, cookie/session ID, User-Agent or browser fingerprint. PostgreSQL applies counter check+increment and GuestScan create/replace in one atomic boundary; terminal processing and expired replacement release concurrency idempotently. Stale window rows remain cleanup-due no later than their applicable 24-hour window and grant no replay/result authority.
+
 ### GuestScan
 
 PUBLIC_GUEST aggregate root:
@@ -198,6 +201,8 @@ PUBLIC_GUEST aggregate root:
 - timestamps.
 
 GuestScan maps to generic request+job semantics but uses separate persistence.
+
+`deletion_deadline = created_at + 24h` exactly. The 30-minute result-access/idempotency expiry must be later than creation and no later than this deadline. At/after deletion deadline the aggregate and sanitized result are delete-due; a keep decision never extends the deadline.
 
 Guest idempotency/result-access contract:
 
@@ -228,6 +233,8 @@ PUBLIC_GUEST maps 1:1 to ScanAttempt FSM:
 ### GuestObservation / GuestResult
 
 PUBLIC_GUEST sanitized bounded posture/result.
+
+The strict snapshots and ADR-0017 migrations implement separate GuestScan, GuestScanAttempt, GuestResult and digest-only abuse state, including 30-minute access/idempotency alignment, exact 24-hour deletion deadline, current attempt/fence and deferred accepted digest identity. The concrete repository implements transactional idempotency, six-dimension abuse reservation/release, authenticated terminal result commit/no-write replay, result read and bounded due-aggregate/window cleanup. Deletion cascades through attempts/results/reservations; unreleased reservations reconcile active counters, and missing quota metadata produces an alert flag without retaining expired Guest data. Scheduling and durable cleanup telemetry remain pending.
 
 Guest uses the same ExecutionEnvelope and ResultEnvelope contracts. No organization_id.
 
@@ -367,7 +374,17 @@ TenantAuditLog and PlatformAuditLog are separate.
 
 The initial Product Capability Registry is code-first and adds no persistent entity. Future `CapabilityRollout`, `EngineInventory` and `EngineBinding` are GLOBAL operational metadata and require a data-model review before migration; only their safe projection may be PUBLIC.
 
+The planned V1 Security Glossary is also code-first GLOBAL product content with a PUBLIC reviewed projection and adds no database entity or tenant data. Runtime editorial persistence/CMS requires a separate ADR, trust model and data-classification review before migration.
+
+The planned server-only Security Question Registry is code-first and unpersisted. Future `UserCheckInPreference` and `UserQuestionProgress` are GLOBAL SENSITIVE user-owned concepts with no `organization_id` or customer content; they must enter ADR-0010 before migration and follow account export/delete/retention. Cyberexam attempts require a separate accepted model.
+
+Deferred `RemediationAction`, `AssetTriage`, `MonitoringRulePreference`, `EmergingThreatEvaluation` and `TechnologyLifecycleObservation` are proposed TENANT concepts only. Reuse canonical MonitoringEvent and Weekly Digest; every new entity needs ADR-0010 classification/composite keys/RLS/retention before migration. Visual preview has no approved entity or storage model.
+
 The External Asset Sources foundation is also code-only. Future `IntegrationConnection`, `ExternalCounter`, `AssetCandidate` and `AssetSourceLink` are TENANT rows, organization-keyed with composite tenant constraints and RLS. Encrypted OAuth token material is SENSITIVE and belongs only to `IntegrationConnection`; counters/candidates/provenance are INTERNAL. No Yandex-specific column is added to `Asset`, and no migration exists until the Workspace auth/RLS/audit foundation is reviewed.
+
+Proposed ADR 0016 reserves future TENANT `OrganizationDigestSettings`, `DigestGenerationAttempt`, immutable `DigestIssue` and closed `DigestItem` concepts. They are not approved entities or migrations yet; before implementation they must enter the ADR-0010 matrix with sensitivity, composite tenant keys, RLS and retention. Snapshot facts/watermarks are bounded versioned schemas, not arbitrary JSON; delivery state stays in tenant notification records.
+
+Future Promotions propose PLATFORM `Promotion`, RESTRICTED `PromoCode`, TENANT `PromotionRedemption`/`AccessGrant` and a versioned `AccessPresetVersion`. These are planning concepts, not accepted matrix rows or migrations. Before implementation ADR-0010 must fix ownership/sensitivity/retention, composite tenant keys and RLS; grant snapshots are closed/versioned entitlement data and cannot contain scanner policy, verification or consent flags.
 
 ## Tenant integrity
 

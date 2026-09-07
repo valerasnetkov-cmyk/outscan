@@ -67,6 +67,7 @@
 | TenantAuditLog               | TENANT             | RESTRICTED  | organization_id                 |
 | GuestScan                    | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestScanAttempt             | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestAbuseCounter            | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestObservation             | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestResult                  | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | CVERecord                    | GLOBAL             | PUBLIC      | none                            |
@@ -78,6 +79,8 @@
 | SupportAccessGrant           | PLATFORM_GRANT     | RESTRICTED  | client org + platform principal |
 
 Any new persistent entity must enter this matrix before schema migration.
+
+`GuestAbuseCounter` contains only bounded session-scope/network-signal digests, policy dimension/window, count/reset and concurrency state. It contains no raw IP/cookie/User-Agent/fingerprint, expires within the 24-hour abuse window and grants no Guest ownership, replay or result access.
 
 ## TENANT_ROOT — Organization access
 

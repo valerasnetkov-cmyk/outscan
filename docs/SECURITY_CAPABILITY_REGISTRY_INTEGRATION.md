@@ -135,6 +135,8 @@ Add only the separation rule:
 
 > ProductCapability metadata may describe an available OUTSCAN function but never changes SAFE/CONTROLLED/ACTIVE/DISABLED machine capability classification or profile authorization.
 
+Future glossary `relatedCapabilities` is descriptive navigation only and must resolve through the safe public capability projection; it cannot reveal or change hidden rollout/claim/evidence state.
+
 If an engine binding references Nuclei/Subfinder/httpx/etc., it remains descriptive until the corresponding approved profile/policy permits execution.
 
 ## 8. `docs/DATA_MODEL.md`

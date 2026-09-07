@@ -198,6 +198,43 @@ Implemented Guest projection evidence:
 
 Guest input, progress, token result/expiry, full posture/coverage, registration CTA, abuse limits, WCAG critical flow.
 
+## Implemented sanitized Guest result-view evidence
+
+- `apps/api/src/guest-result` accepts only a successful result-access record and the exact sanitized Guest projection; malformed, extra, oversized, non-canonical and hostile getter input fails closed.
+- The response has five ordered posture sections and enumerates all eight canonical detector groups, mapping failed execution to `UNAVAILABLE` and absent groups to `MISSING`; insufficient coverage never produces a Security Score.
+- Fixed limitations state Guest posture only, no Security Score and no absolute assurance. Raw Findings/evidence, severity, confidence, fingerprints, duration and request count are absent from the response model.
+- Result expiry and completion chronology are bounded, no-store/no-referrer headers are preserved and all returned records/collections are frozen.
+- Targeted `npm --prefix apps/api test -- guest-result-view.test.ts`: PASS, 1 file / 14 tests; API lint and typecheck: PASS.
+- No database-backed lookup, route, page, browser request or WCAG runtime evidence was added. Gate B1 remains open.
+
+## Implemented GuestScan snapshot and result-read evidence
+
+- `apps/api/src/guest-scan` validates exact PUBLIC_GUEST GuestScan, GuestScanAttempt and GuestResult record shapes with no `organization_id`, raw session ID, IP or client ownership field.
+- Tests enforce 30-minute access/idempotency and exact 24-hour deletion deadlines, canonical target, token/scan identity, job/attempt state chronology, lease/deadline shape and accepted attempt/fence/digest consistency.
+- The async read service queries only the route GuestScan ID, denies malformed bearer input before lookup, then reuses canonical token authorization and sanitized view projection over one validated snapshot.
+- Missing, hostile, inconsistent, cross-target, expired, revoked, delete-due and unavailable-key inputs return the same access denial; raw persisted identity/token/digest/execution fields are absent from success output.
+- Targeted `npm --prefix apps/api test -- guest-scan-record.test.ts guest-result-read.test.ts`: PASS, 2 files / 44 tests; API lint and typecheck: PASS.
+- The store began as an injected port. ADR-0017 and the repository evidence below now provide its PostgreSQL adapter; HTTP route and browser request remain absent, so Gate B1 stays open.
+
+## Implemented PostgreSQL Guest schema evidence
+
+- `0001_guest_scan.sql` creates separate no-tenant Guest scan/attempt/result tables with bounded types, exact 30-minute/24-hour chronology and idempotency uniqueness.
+- Deferred accepted-result foreign keys and database guards enforce job/attempt FSM, monotonic fence/lease state, terminal immutability and exact accepted attempt/fence/digest/target identity.
+- The migration runner serializes execution with an advisory lock, records checksums and rejects drift, missing applied files and out-of-order additions. Pool TLS mode is explicit and certificate validation cannot be disabled when required.
+- PostgreSQL tests cover migration replay/drift, concurrent idempotency conflict, invalid time windows, attempt transitions, atomic result commit, missing/cross-target result rejection and cascade deletion.
+- The schema suite remains 1 file / 11 tests against PostgreSQL 18. The repository suite below extends the combined database evidence.
+
+## Implemented PostgreSQL Guest repository evidence
+
+- Strict input rejects unknown/malformed scope, key, hash, canonical target and server time before acquiring a client. IDs, token nonce and active key version come only from trusted dependencies.
+- SERIALIZABLE create/replay/replacement uses one checked-out client, bounded retry for serialization/deadlock/idempotency-winner races and stable redacted failures.
+- Tests prove one concurrent creator plus same-ID/token replay, different-hash conflict, cross-session independence, exact-expiry replacement, missing-key rollback and no expiry extension.
+- The one-query result store maps explicit columns through exact Guest snapshots; an integration test completes a valid attempt/result transaction and exercises bearer authorization plus sanitized output.
+- The terminal committer verifies workload/audience/time/MAC/digest/size, reconstructs canonical sanitized output and rejects target substitution before accepting any result data.
+- PostgreSQL transaction time, locked current scan/attempt rows and CAS updates enforce RUNNING/current attempt/fence/live lease/deadline. Primary commit atomically persists one immutable result; terminal same-digest replay performs no payload write.
+- Database tests prove concurrent duplicate convergence, different-digest audit signaling, stale/expired denial and authentication/target fail-closed behavior.
+- `pnpm verify:db`: PASS, 5 files / 44 tests. Abuse reservation/release and bounded retention batches are included; production scheduling/telemetry, queue lease acquisition and HTTP/UI remain pending.
+
 ## B2 E2E
 
 Registration, Organization, Add exact host, DNS verification, baseline, insufficient baseline=no score, sufficient baseline=score, explicit enrollment, tenant isolation, controlled consent.
@@ -240,7 +277,7 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 - Success carries the mandatory frozen `Cache-Control: no-store` and `Referrer-Policy: no-referrer` header policy plus the unchanged expiry/remaining lifetime.
 - Result-token metadata validation now lives in one immutable snapshot function reused by direct verification and idempotency; non-string tokens, invalid U64 data, extra fields and throwing keyrings fail closed.
 - Targeted `npm --prefix apps/api test`: PASS, 17 files / 396 tests; API lint, typecheck and build: PASS.
-- No persisted GuestScan lookup, Fastify route, sanitized result serializer or browser/network request was added. Gate B1 remains open.
+- The concrete database-backed GuestScan lookup is now wired to the read-store port. No Fastify route or browser/network request is exposed; Gate B1 remains open.
 
 ## Implemented hostname/IDNA boundary evidence
 
@@ -316,6 +353,40 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 - Result signing rejects unknown fields, invalid identifiers/times/key versions/key sizes and profile-overlimit payloads; returned payload/submission copies cannot mutate the signed snapshot.
 - Scanner policy capabilities, budgets and artifact dependencies are immutable snapshots after authorization, closing mutation-after-check behavior.
 - Tests start no child process, container, DNS query, outbound connection, queue or database transaction; production isolation, key provisioning and commit evidence remain pending.
+
+## Implemented Guest abuse and retention policy evidence
+
+- New-scan policy enforces session/network burst, daily and concurrency ceilings plus a server-owned pause state over strict digest-only input.
+- Raw IP, User-Agent, browser fingerprint, unknown fields, malformed/stale windows, invalid counters/digests/clocks and hostile getters fail closed.
+- A valid live idempotent replay returns without reading abuse state or reserving another quota; create and expired replacement require abuse admission.
+- Reservations bind the same authenticated session scope and transaction time as idempotency and enumerate all six atomic counter dimensions.
+- Retention requires the original 30-minute result-access expiry and exact 24-hour deletion deadline; the exact boundary returns `DELETE_NOW`.
+- The trusted-ingress primitive derives a domain-separated HMAC signal from an exact address and 32-byte key, normalizes IPv4-mapped IPv6, groups IPv6 at `/64`, returns no raw address and rejects forwarded-header/port/zone/extra-field input.
+- Fixed-vector, key-separation, IPv4/mapped equivalence, IPv6 bucket separation and hostile/changing getter tests pass.
+- `0002_guest_abuse_counters.sql` stores fixed digest-only window/active rows, server pause state and a per-scan release record; no raw network/browser identifier column exists.
+- Real PostgreSQL tests cover six-dimension atomic reservation, replay non-consumption, concurrent same-session admission, idempotent release, retained burst usage, pause and terminal-result release.
+- Bounded retention tests prove exact-deadline aggregate deletion, cascade cleanup, one-time active-counter reconciliation, expired-window pruning, `SKIP LOCKED` batch continuation and privacy deletion with an alert flag when quota metadata is missing.
+- Trusted-proxy/key-rotation wiring, non-success terminal release, worker scheduling/durable metrics and public 429/Retry-After behavior remain pending.
+
+## Proposed Weekly Digest blocking suite
+
+Future implementation must pass `WEEKLY_DIGEST_SECURITY_TESTING.md`: cross-tenant rows/access, recipient injection/removal, concurrent issue/outbox replay, immutable rendering, stale-source uncertainty, content/evidence escaping, Risk isolation, capability entitlement, real-time/marketing separation, bounded scheduling and tenant API/WCAG negatives. Documentation is not runtime evidence.
+
+## Planned Security Glossary blocking suite
+
+Future implementation must pass `SECURITY_GLOSSARY_TESTING.md`: exact registry/seed validation, normalized search collisions/order/bounds, fail-closed API projections, hidden capability non-enumeration, no scanner/Risk/tenant coupling, safe rendering, canonical SEO and WCAG interaction/reflow. Documentation and archive copy are not runtime or claim evidence.
+
+## Planned Security Check-ins blocking suite
+
+Future post-B2 implementation must pass `SECURITY_CHECKINS_TESTING.md`: server-only answer/scoring confidentiality, immutable versions, current-user preference/progress authorization, eligibility/session/cooldown/idempotency races, no internal data, score/finding/notification isolation, safe analytics and accessible non-blocking UI. The supplied Cyberexam bank/O09 assertions are not implementation evidence.
+
+## Planned Action & Change blocking suites
+
+Deferred slices must pass `ACTION_CHANGE_TESTING.md`: tenant/action transition and assignment races, reported-vs-verified resolution, server-derived recheck authorization, compatible deterministic snapshot diffs, declared-ownership isolation, closed monitoring rules, TI/lifecycle uncertainty and absence of deferred data from Guest/public surfaces. Preview requires a separate later ADR/suite.
+
+## Planned Promotions and Access Grants blocking suite
+
+Future implementation must pass `PROMOTIONS_ACCESS_GRANTS_TESTING.md`: tenant/platform authz, secret handling, transactional capacity/idempotency, deterministic entitlement composition, expiry/revoke, safe API/UI/notification/analytics projection and strict separation from verification, consent, MonitoringEnrollment and scanner policy. `ADMIN_ATTESTED` remains a denied input unless a separate ADR is accepted.
 
 ## Release
 
