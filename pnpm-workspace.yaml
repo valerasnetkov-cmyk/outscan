@@ -3,6 +3,7 @@ packages:
   - "packages/*"
 allowBuilds:
   esbuild: true
+  msgpackr-extract: false
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - "@types/node@26.4.1"

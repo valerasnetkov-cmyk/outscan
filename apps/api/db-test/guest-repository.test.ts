@@ -46,7 +46,7 @@ function request(overrides: Record<string, unknown> = {}) {
     idempotency_key: "request-01",
     request_hash: REQUEST_HASH,
     canonical_target: "example.com",
-    network_signal_digest: NETWORK,
+    network_signal_digests: [NETWORK],
     trusted_now_unix_seconds: NOW,
     ...overrides,
   };
@@ -256,7 +256,10 @@ describe("PostgreSQL Guest repository", () => {
     { request_hash: "invalid" },
     { canonical_target: "https://example.com" },
     { canonical_target: "Example.com" },
-    { network_signal_digest: "192.0.2.1" },
+    { network_signal_digests: ["192.0.2.1"] },
+    { network_signal_digests: [] },
+    { network_signal_digests: [NETWORK, NETWORK] },
+    { network_signal_digests: [NETWORK, NETWORK, NETWORK, NETWORK] },
     { trusted_now_unix_seconds: -1n },
     { extra: true },
   ])(

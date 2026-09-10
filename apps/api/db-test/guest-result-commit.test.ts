@@ -122,7 +122,7 @@ async function prepareRunningScan(
     idempotency_key: `commit-${scanSequence}`,
     request_hash: `sha256:${"2".repeat(64)}`,
     canonical_target: options.host ?? "example.com",
-    network_signal_digest: `hmac-sha256:${"3".repeat(64)}`,
+    network_signal_digests: [`hmac-sha256:${"3".repeat(64)}`],
     trusted_now_unix_seconds: now - 10n,
   });
   if (!created.ok) throw new Error(created.code);

@@ -18,7 +18,8 @@
     "build": "pnpm -r --if-present run build",
     "check:lines": "node scripts/check-source-lines.mjs",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:lines",
-    "verify:db": "pnpm --filter @outscan/api run test:db"
+    "verify:db": "pnpm --filter @outscan/api run test:db",
+    "verify:queue": "pnpm --filter @outscan/api run test:queue"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",

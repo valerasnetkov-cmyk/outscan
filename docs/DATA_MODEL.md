@@ -65,6 +65,9 @@ Sensitivity:
 | GuestScan                     | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestScanAttempt              | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestAbuseCounter/Reservation | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestResultRejectionEvent     | PUBLIC_GUEST       | RESTRICTED  | forbidden                       |
+| GuestRetentionRun             | PLATFORM           | INTERNAL    | none                            |
+| GuestQueueTelemetryBatch      | PLATFORM           | INTERNAL    | none                            |
 | GuestObservation              | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestResult                   | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | CVERecord                     | GLOBAL             | PUBLIC      | none                            |
@@ -176,7 +179,7 @@ The server issues a 256-bit random `guest_session_id` and derives a non-secret p
 Raw Guest session cookie/identifier is not persisted or logged.
 IP, User-Agent and browser fingerprint are abuse signals only and never substitute for Guest-session ownership.
 
-`GuestAbuseWindowCounter`, `GuestAbuseActiveCounter` and `GuestAbuseReservation` are bounded operational records keyed only by authenticated Guest-session scope digest or a server-derived HMAC network-signal digest plus closed policy dimension. They store counts/reset/release state, never raw IP, cookie/session ID, User-Agent or browser fingerprint. PostgreSQL applies counter check+increment and GuestScan create/replace in one atomic boundary; terminal processing and expired replacement release concurrency idempotently. Stale window rows remain cleanup-due no later than their applicable 24-hour window and grant no replay/result authority.
+`GuestAbuseWindowCounter`, `GuestAbuseActiveCounter` and `GuestAbuseReservation` are bounded operational records keyed only by authenticated Guest-session scope digest or a server-derived HMAC network-signal digest plus closed policy dimension. They store counts/reset/release state, never raw IP, cookie/session ID, User-Agent or browser fingerprint. During staged HMAC rotation, PostgreSQL locks and sums live rows for the active and retained digests, writes new usage only to the active digest and captures that digest on the reservation for exact release. Retired keys remain available for the 24-hour maximum counter window plus skew. Counter check+increment and GuestScan create/replace share one atomic boundary; terminal processing and expired replacement release concurrency idempotently. Stale window rows remain cleanup-due no later than their applicable 24-hour window and grant no replay/result authority.
 
 ### GuestScan
 
@@ -234,7 +237,7 @@ PUBLIC_GUEST maps 1:1 to ScanAttempt FSM:
 
 PUBLIC_GUEST sanitized bounded posture/result.
 
-The strict snapshots and ADR-0017 migrations implement separate GuestScan, GuestScanAttempt, GuestResult and digest-only abuse state, including 30-minute access/idempotency alignment, exact 24-hour deletion deadline, current attempt/fence and deferred accepted digest identity. The concrete repository implements transactional idempotency, six-dimension abuse reservation/release, authenticated terminal result commit/no-write replay, result read and bounded due-aggregate/window cleanup. Deletion cascades through attempts/results/reservations; unreleased reservations reconcile active counters, and missing quota metadata produces an alert flag without retaining expired Guest data. Scheduling and durable cleanup telemetry remain pending.
+The strict snapshots and ADR-0017 migrations implement separate GuestScan, GuestScanAttempt, GuestResult, rejection events and digest-only abuse state, including 30-minute access/idempotency alignment, exact 24-hour deletion deadline, current attempt/fence and deferred accepted digest identity. The concrete repository implements transactional idempotency, abuse reservation/release, claim/start/renew lease CAS, trusted internal cancellation, terminal result commit/replay, result read and bounded cleanup. Guest attempts use fixed 15-second leases, 45-second hard deadlines and at most three attempts; replacement strictly increments attempt number/fence. A minimized rejection event is idempotently bound by composite FK to scan/attempt/fence and deleted with the aggregate. Separate PLATFORM/INTERNAL GuestRetentionRun and GuestQueueTelemetryBatch rows retain only bounded counters and closed alert state for 30 days. Queue batches contain no Guest/tenant/target/session/network/payload/scanner identity and use stable-ID exact replay. BullMQ transports only GuestScan identity and composes PostgreSQL authority with supervisor heartbeat; worker deployment/alert export and public cancellation authorization remain pending.
 
 Guest uses the same ExecutionEnvelope and ResultEnvelope contracts. No organization_id.
 

@@ -11,7 +11,7 @@ export interface PersistGuestScanRequest {
   idempotency_key: string;
   request_hash: string;
   canonical_target: string;
-  network_signal_digest: string;
+  network_signal_digests: readonly string[];
   trusted_now_unix_seconds: bigint;
 }
 
@@ -84,4 +84,32 @@ export type CommitGuestResultResult =
 
 export interface GuestResultCommitter {
   commit(value: unknown): Promise<CommitGuestResultResult>;
+}
+
+export type GuestResultRejectionCode = Extract<
+  CommitGuestResultResult,
+  { ok: false }
+>["code"];
+
+export interface RecordGuestResultRejection {
+  schema_version: 1;
+  guest_scan_id: string;
+  attempt_id: string;
+  monotonic_fence: number;
+  rejection_code: GuestResultRejectionCode;
+}
+
+export type RecordGuestResultRejectionResult =
+  | {
+      ok: true;
+      action: "RECORDED" | "ALREADY_RECORDED";
+      security_relevant: boolean;
+    }
+  | {
+      ok: false;
+      code: "INVALID_REQUEST" | "GUEST_PERSISTENCE_UNAVAILABLE";
+    };
+
+export interface GuestResultRejectionSink {
+  record(value: unknown): Promise<RecordGuestResultRejectionResult>;
 }

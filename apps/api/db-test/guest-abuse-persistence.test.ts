@@ -17,6 +17,7 @@ const migrations = new URL("../db/migrations/", import.meta.url);
 const NOW = 1_800_000_000n;
 const SESSION = `sha256:${"1".repeat(64)}`;
 const NETWORK = `hmac-sha256:${"2".repeat(64)}`;
+const NEW_NETWORK = `hmac-sha256:${"a".repeat(64)}`;
 let sequence = 0;
 
 function repository() {
@@ -35,7 +36,7 @@ function request(overrides: Record<string, unknown> = {}) {
     idempotency_key: "request-01",
     request_hash: `sha256:${"3".repeat(64)}`,
     canonical_target: "example.com",
-    network_signal_digest: NETWORK,
+    network_signal_digests: [NETWORK],
     trusted_now_unix_seconds: NOW,
     ...overrides,
   };
@@ -242,6 +243,76 @@ describe("PostgreSQL Guest abuse counters", () => {
     });
     expect((await counts()).windows.map((item) => item.usage_count)).toEqual([
       3, 3, 3, 3,
+    ]);
+  });
+
+  it("aggregates retained-key counters and increments only the active digest", async () => {
+    const oldDigest = Buffer.from(NETWORK.slice("hmac-sha256:".length), "hex");
+    await pool.query(
+      `INSERT INTO guest_abuse_window_counters (
+        scope_kind, scope_digest, dimension, usage_count, reset_at, updated_at
+      ) VALUES
+        ('NETWORK', $1, 'NETWORK_BURST', 19,
+          to_timestamp($2::double precision) + interval '10 minutes',
+          to_timestamp($2::double precision)),
+        ('NETWORK', $1, 'NETWORK_DAILY', 19,
+          to_timestamp($2::double precision) + interval '24 hours',
+          to_timestamp($2::double precision))`,
+      [oldDigest, NOW.toString()],
+    );
+    const store = repository();
+    const created = await store.createOrReplay(
+      request({ network_signal_digests: [NEW_NETWORK, NETWORK] }),
+    );
+    expect(created).toMatchObject({ ok: true, action: "CREATE" });
+    if (!created.ok) return;
+    await cancelAndRelease(created.guest_scan_id, NOW + 1n);
+    expect(
+      await store.createOrReplay(
+        request({
+          guest_session_scope: `sha256:${"7".repeat(64)}`,
+          idempotency_key: "rotated-network-limit",
+          request_hash: `sha256:${"8".repeat(64)}`,
+          network_signal_digests: [NEW_NETWORK, NETWORK],
+          trusted_now_unix_seconds: NOW + 2n,
+        }),
+      ),
+    ).toEqual({
+      ok: false,
+      code: "ABUSE_LIMIT_EXCEEDED",
+      abuse_code: "NETWORK_BURST_LIMIT",
+      retry_after_seconds: 598,
+    });
+    const networkRows = await pool.query<{
+      digest: string;
+      dimension: string;
+      usage_count: number;
+    }>(
+      `SELECT encode(scope_digest, 'hex') AS digest, dimension, usage_count
+       FROM guest_abuse_window_counters WHERE scope_kind = 'NETWORK'
+       ORDER BY digest, dimension`,
+    );
+    expect(networkRows.rows).toEqual([
+      {
+        digest: "2".repeat(64),
+        dimension: "NETWORK_BURST",
+        usage_count: 19,
+      },
+      {
+        digest: "2".repeat(64),
+        dimension: "NETWORK_DAILY",
+        usage_count: 19,
+      },
+      {
+        digest: "a".repeat(64),
+        dimension: "NETWORK_BURST",
+        usage_count: 1,
+      },
+      {
+        digest: "a".repeat(64),
+        dimension: "NETWORK_DAILY",
+        usage_count: 1,
+      },
     ]);
   });
 

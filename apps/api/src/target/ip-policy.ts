@@ -204,6 +204,35 @@ function parseCidr(value: string): CidrRange | null {
   return { family: address.family, network, prefix };
 }
 
+export function snapshotConfiguredInternalCidrs(
+  input: unknown,
+): readonly string[] | null {
+  try {
+    if (
+      !Array.isArray(input) ||
+      input.length > MAX_CONFIGURED_INTERNAL_RANGES
+    ) {
+      return null;
+    }
+    const values: string[] = [];
+    for (let index = 0; index < input.length; index += 1) {
+      const value: unknown = input[index];
+      if (
+        typeof value !== "string" ||
+        value.length > 80 ||
+        !parseCidr(value) ||
+        values.includes(value)
+      ) {
+        return null;
+      }
+      values.push(value);
+    }
+    return Object.freeze(values);
+  } catch {
+    return null;
+  }
+}
+
 function contains(range: CidrRange, address: ParsedIp): boolean {
   if (range.family !== address.family) return false;
   const hostBits = BigInt(address.bits - range.prefix);
@@ -248,18 +277,16 @@ export function classifyResolvedAddressSet(
   if (input.length > MAX_RESOLVED_ADDRESSES) {
     return { ...base, ok: false, code: "TOO_MANY_ADDRESSES" };
   }
-  if (
-    !Array.isArray(configuredInternalCidrs) ||
-    configuredInternalCidrs.length > MAX_CONFIGURED_INTERNAL_RANGES
-  ) {
+  const configuredCidrs = snapshotConfiguredInternalCidrs(
+    configuredInternalCidrs,
+  );
+  if (!configuredCidrs) {
     return { ...base, ok: false, code: "INVALID_INTERNAL_RANGE" };
   }
 
   const configuredRanges: CidrRange[] = [];
-  for (let index = 0; index < configuredInternalCidrs.length; index += 1) {
-    const value: unknown = configuredInternalCidrs[index];
-    const range =
-      typeof value === "string" && value.length <= 80 ? parseCidr(value) : null;
+  for (const value of configuredCidrs) {
+    const range = parseCidr(value);
     if (!range) return { ...base, ok: false, code: "INVALID_INTERNAL_RANGE" };
     configuredRanges.push(range);
   }

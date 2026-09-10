@@ -24,9 +24,9 @@ Gate A and ADR-0010 already fix ownership, tenant-key, composite-FK and RLS rule
 
 ## Initial migration
 
-`0001_guest_scan.sql` creates `guest_scans`, `guest_scan_attempts` and `guest_results`. `0002_guest_abuse_counters.sql` adds server-owned pause state, digest-only window/active counters and per-scan reservation/release identity. Checks, unique keys, deferred relationships and guards enforce immutable identity, 30-minute access/idempotency, 24-hour deletion, job/attempt FSM and accepted result linkage.
+`0001_guest_scan.sql` creates `guest_scans`, `guest_scan_attempts` and `guest_results`. `0002_guest_abuse_counters.sql` adds server-owned pause state, digest-only counters and per-scan reservation/release identity; `0003_guest_abuse_expired_release.sql` adds a distinct closed `EXPIRED` release reason. Checks, unique keys, deferred relationships and guards enforce immutable identity, 30-minute access/idempotency, 24-hour deletion, job/attempt FSM and accepted result linkage.
 
-The migrations are schema evidence. Current application slices add SERIALIZABLE Guest idempotency, atomic six-dimension abuse reservation/release, authenticated terminal result commit/no-write replay, strict result read and bounded transactional retention batches. Trusted ingress/key rotation, retention scheduling/telemetry, queue lease acquisition/CAS wiring and HTTP routes remain Gate B1 work.
+The migrations are schema evidence. Current application slices add SERIALIZABLE Guest idempotency/abuse, exact-version attempt leases, cancellation, authenticated terminal result commit/no-write replay, strict result read and bounded retention. Migration `0004` adds an append-only, composite attempt/fence-bound Guest result-rejection event with closed codes and aggregate cascade. Migration `0005` adds immutable, 30-day PLATFORM/INTERNAL retention-run counters and closed alert state without Guest identity/content. Migration `0006` adds equivalent minimized immutable queue-outcome batches with exact replay and 30-day pruning. BullMQ composes PostgreSQL authority with supervisor heartbeat, mandatory rejection recording and worker-owned telemetry flushing. Production worker deployment/export, public cancellation authorization and HTTP routes remain Gate B1 work.
 
 ## Rejected now
 

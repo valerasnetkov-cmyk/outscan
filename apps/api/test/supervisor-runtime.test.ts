@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   RESULT_ENVELOPE_AUDIENCE,
@@ -271,6 +271,31 @@ describe("trusted Guest supervisor runtime", () => {
       runGuestScannerAttempt(envelope(), trusted(), test.dependencies),
     ).resolves.toEqual({ ok: false, code: "RUN_ABORTED" });
     expect(test.plans).toHaveLength(0);
+  });
+
+  it("aborts a pending launch and kills a handle that arrives late", async () => {
+    const controller = new AbortController();
+    let resolveLaunch: ((value: unknown) => void) | undefined;
+    const test = harness({
+      signal: controller.signal,
+      launcher: {
+        launch: () =>
+          new Promise((resolve) => {
+            resolveLaunch = resolve;
+          }),
+      },
+    });
+    const running = runGuestScannerAttempt(
+      envelope(),
+      trusted(),
+      test.dependencies,
+    );
+    await vi.waitFor(() => expect(resolveLaunch).toBeTypeOf("function"));
+    controller.abort();
+    await expect(running).resolves.toEqual({ ok: false, code: "RUN_ABORTED" });
+    resolveLaunch?.(test.handle);
+    await vi.waitFor(() => expect(test.stops).toEqual(["KILL"]));
+    expect(test.keyReads()).toBe(0);
   });
 
   it("rejects non-zero, signalled and malformed process exits", async () => {

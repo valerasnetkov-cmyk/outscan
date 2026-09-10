@@ -7,6 +7,13 @@ import { produceCanonicalGuestScannerResult } from "../scanner-output/index.js";
 import { authorizeSupervisorExecution } from "./authorize.js";
 import type { ExecutionEnvelope, TrustedExecutionState } from "./model.js";
 import {
+  scannerProcessCompletion,
+  snapshotScannerProcessHandle,
+  stopScannerWithEscalation,
+  waitForScannerCompletion,
+  waitForScannerLaunch,
+} from "./process-lifecycle.js";
+import {
   GUEST_RESULT_ENVELOPE_LIFETIME_SECONDS,
   GUEST_SUPERVISOR_WORKLOAD_IDENTITY,
   SUPERVISOR_MAX_TERMINATION_GRACE_MS,
@@ -14,13 +21,7 @@ import {
   type GuestSupervisorRunCode,
   type GuestSupervisorRunResult,
   type ScannerLaunchPlan,
-  type ScannerProcessExit,
-  type ScannerProcessHandle,
 } from "./runtime-model.js";
-
-type Completion =
-  { kind: "EXIT"; exit: ScannerProcessExit } | { kind: "ERROR" };
-type WaitDecision = Completion | { kind: "TIMEOUT" } | { kind: "ABORTED" };
 
 function fail(code: GuestSupervisorRunCode): GuestSupervisorRunResult {
   return { ok: false, code };
@@ -66,138 +67,6 @@ function snapshotDependencies(
   } catch {
     return null;
   }
-}
-
-function stopMalformedHandle(value: unknown): void {
-  if (!isRecord(value)) return;
-  try {
-    const stop = value.stop;
-    if (typeof stop === "function") {
-      void Promise.resolve(stop.call(value, "KILL")).catch(() => undefined);
-    }
-  } catch {
-    // A malformed launcher result is already a stable launch failure.
-  }
-}
-
-function snapshotHandle(value: unknown): ScannerProcessHandle | null {
-  if (!isRecord(value)) return null;
-  try {
-    const stdout = value.stdout;
-    const wait = value.wait;
-    const stop = value.stop;
-    if (
-      !isRecord(stdout) ||
-      !(Symbol.asyncIterator in stdout) ||
-      typeof wait !== "function" ||
-      typeof stop !== "function"
-    ) {
-      return null;
-    }
-    return {
-      stdout: stdout as AsyncIterable<Uint8Array>,
-      wait: wait.bind(value) as () => Promise<unknown>,
-      stop: stop.bind(value) as ScannerProcessHandle["stop"],
-    };
-  } catch {
-    return null;
-  }
-}
-
-function snapshotExit(value: unknown): ScannerProcessExit | null {
-  if (!isRecord(value)) return null;
-  try {
-    const keys = Reflect.ownKeys(value);
-    const exitCode = value.exit_code;
-    const signal = value.signal;
-    if (
-      keys.length !== 2 ||
-      !keys.includes("exit_code") ||
-      !keys.includes("signal") ||
-      !(
-        exitCode === null ||
-        (Number.isSafeInteger(exitCode) &&
-          (exitCode as number) >= 0 &&
-          (exitCode as number) <= 255)
-      ) ||
-      !(
-        signal === null ||
-        (typeof signal === "string" && /^[A-Z][A-Z0-9_]{0,31}$/u.test(signal))
-      )
-    ) {
-      return null;
-    }
-    return { exit_code: exitCode as number | null, signal };
-  } catch {
-    return null;
-  }
-}
-
-function completionOf(handle: ScannerProcessHandle): Promise<Completion> {
-  return Promise.resolve()
-    .then(() => handle.wait())
-    .then(
-      (value) => {
-        const exit = snapshotExit(value);
-        return exit
-          ? { kind: "EXIT" as const, exit }
-          : { kind: "ERROR" as const };
-      },
-      () => ({ kind: "ERROR" as const }),
-    );
-}
-
-function waitForCompletion(
-  completion: Promise<Completion>,
-  signal: AbortSignal,
-  timeoutMs: number,
-): Promise<WaitDecision> {
-  if (signal.aborted) return Promise.resolve({ kind: "ABORTED" });
-  if (timeoutMs <= 0) return Promise.resolve({ kind: "TIMEOUT" });
-  return new Promise((resolve) => {
-    let settled = false;
-    const finish = (value: WaitDecision) => {
-      if (settled) return;
-      settled = true;
-      clearTimeout(timer);
-      signal.removeEventListener("abort", onAbort);
-      resolve(value);
-    };
-    const onAbort = () => finish({ kind: "ABORTED" });
-    const timer = setTimeout(() => finish({ kind: "TIMEOUT" }), timeoutMs);
-    signal.addEventListener("abort", onAbort, { once: true });
-    completion.then(finish);
-  });
-}
-
-function requestStop(
-  handle: ScannerProcessHandle,
-  signal: "TERM" | "KILL",
-): void {
-  try {
-    void Promise.resolve(handle.stop(signal)).catch(() => undefined);
-  } catch {
-    // Shutdown is best-effort; stable supervisor failure remains authoritative.
-  }
-}
-
-async function stopWithEscalation(
-  handle: ScannerProcessHandle,
-  completion: Promise<Completion>,
-  graceMs: number,
-): Promise<void> {
-  requestStop(handle, "TERM");
-  if (graceMs === 0) {
-    requestStop(handle, "KILL");
-    return;
-  }
-  const controller = new AbortController();
-  const result = await waitForCompletion(
-    completion,
-    controller.signal,
-    graceMs,
-  );
-  if (result.kind !== "EXIT") requestStop(handle, "KILL");
 }
 
 function launchPlan(envelope: ExecutionEnvelope): Readonly<ScannerLaunchPlan> {
@@ -268,26 +137,42 @@ export async function runGuestScannerAttempt(
     return fail("RUN_TIMEOUT");
   }
 
-  let rawHandle: unknown;
-  try {
-    rawHandle = await dependencies.launcher.launch(launchPlan(envelope));
-  } catch {
-    return fail("SCANNER_LAUNCH_FAILED");
-  }
-  const handle = snapshotHandle(rawHandle);
-  if (!handle) {
-    stopMalformedHandle(rawHandle);
-    return fail("SCANNER_LAUNCH_FAILED");
-  }
-  const completion = completionOf(handle);
   const overallDeadline = Date.now() + timeoutMs;
+  const launching = Promise.resolve().then(() =>
+    dependencies.launcher.launch(launchPlan(envelope)),
+  );
+  const launched = await waitForScannerLaunch(
+    launching,
+    dependencies.signal,
+    overallDeadline - Date.now(),
+  );
+  if (launched.kind !== "LAUNCHED") {
+    if (launched.kind === "ABORTED") return fail("RUN_ABORTED");
+    if (launched.kind === "TIMEOUT") return fail("RUN_TIMEOUT");
+    return fail("SCANNER_LAUNCH_FAILED");
+  }
+  const rawHandle = launched.value;
+  const handle = snapshotScannerProcessHandle(rawHandle);
+  if (!handle) {
+    return fail("SCANNER_LAUNCH_FAILED");
+  }
+  const completion = scannerProcessCompletion(handle);
+  const remainingMs = overallDeadline - Date.now();
+  if (remainingMs <= 0) {
+    await stopScannerWithEscalation(
+      handle,
+      completion,
+      dependencies.termination_grace_ms,
+    );
+    return fail("RUN_TIMEOUT");
+  }
   const ipc = await readScannerIpcFrame(handle.stdout, {
     max_payload_bytes: envelope.policy.budgets.max_output_bytes,
-    timeout_ms: timeoutMs,
+    timeout_ms: remainingMs,
     signal: dependencies.signal,
   });
   if (!ipc.ok) {
-    await stopWithEscalation(
+    await stopScannerWithEscalation(
       handle,
       completion,
       dependencies.termination_grace_ms,
@@ -297,13 +182,13 @@ export async function runGuestScannerAttempt(
     return fail("SCANNER_OUTPUT_REJECTED");
   }
 
-  const exit = await waitForCompletion(
+  const exit = await waitForScannerCompletion(
     completion,
     dependencies.signal,
     overallDeadline - Date.now(),
   );
   if (exit.kind === "ABORTED" || exit.kind === "TIMEOUT") {
-    await stopWithEscalation(
+    await stopScannerWithEscalation(
       handle,
       completion,
       dependencies.termination_grace_ms,
@@ -311,7 +196,7 @@ export async function runGuestScannerAttempt(
     return fail(exit.kind === "ABORTED" ? "RUN_ABORTED" : "RUN_TIMEOUT");
   }
   if (exit.kind === "ERROR") {
-    await stopWithEscalation(
+    await stopScannerWithEscalation(
       handle,
       completion,
       dependencies.termination_grace_ms,

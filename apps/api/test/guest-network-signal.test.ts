@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import {
   deriveGuestNetworkSignal,
+  deriveGuestNetworkSignalKeyring,
   GUEST_NETWORK_SIGNAL_POLICY_ID,
+  resolveTrustedIngressAddress,
+  TRUSTED_INGRESS_POLICY_ID,
 } from "../src/guest-abuse/index.js";
 
 const KEY = Buffer.from(
@@ -15,6 +18,12 @@ function derive(address: string, key: Uint8Array = KEY) {
     trusted_ingress_address: address,
     hmac_key: key,
   });
+}
+
+function digest(address: string, key: Uint8Array): string {
+  const result = derive(address, key);
+  if (!result.ok) throw new Error(result.code);
+  return result.network_signal_digest;
 }
 
 describe("trusted ingress Guest network signal", () => {
@@ -47,6 +56,63 @@ describe("trusted ingress Guest network signal", () => {
     expect(derive("203.0.113.9", Buffer.alloc(32, 0xaa))).not.toEqual(
       derive("203.0.113.9", Buffer.alloc(32, 0xbb)),
     );
+  });
+
+  it("projects the active and retained HMAC digests in stable order", () => {
+    const result = deriveGuestNetworkSignalKeyring({
+      trusted_ingress_address: "203.0.113.9",
+      hmac_keyring: new Map([
+        [4, Buffer.alloc(32, 0x44)],
+        [6, Buffer.alloc(32, 0x66)],
+        [5, Buffer.alloc(32, 0x55)],
+      ]),
+      active_key_version: 5,
+    });
+    expect(result).toMatchObject({
+      ok: true,
+      policy_id: GUEST_NETWORK_SIGNAL_POLICY_ID,
+    });
+    if (!result.ok) return;
+    expect(result.network_signal_digests).toEqual([
+      digest("203.0.113.9", Buffer.alloc(32, 0x55)),
+      digest("203.0.113.9", Buffer.alloc(32, 0x66)),
+      digest("203.0.113.9", Buffer.alloc(32, 0x44)),
+    ]);
+    expect(Object.isFrozen(result.network_signal_digests)).toBe(true);
+    expect(JSON.stringify(result)).not.toContain("203.0.113.9");
+  });
+
+  it.each([
+    new Map<number, Uint8Array>(),
+    new Map([[1, Buffer.alloc(31)]]),
+    new Map([
+      [1, Buffer.alloc(32, 1)],
+      [2, Buffer.alloc(32, 1)],
+    ]),
+    new Map([
+      [1, Buffer.alloc(32, 1)],
+      [2, Buffer.alloc(32, 2)],
+      [3, Buffer.alloc(32, 3)],
+      [4, Buffer.alloc(32, 4)],
+    ]),
+  ])("rejects an unsafe rotation keyring %#", (hmacKeyring) => {
+    expect(
+      deriveGuestNetworkSignalKeyring({
+        trusted_ingress_address: "203.0.113.9",
+        hmac_keyring: hmacKeyring,
+        active_key_version: 1,
+      }),
+    ).toEqual({ ok: false, code: "INVALID_NETWORK_SIGNAL_CONTEXT" });
+  });
+
+  it("requires the declared active key to exist", () => {
+    expect(
+      deriveGuestNetworkSignalKeyring({
+        trusted_ingress_address: "203.0.113.9",
+        hmac_keyring: new Map([[2, Buffer.alloc(32, 2)]]),
+        active_key_version: 1,
+      }),
+    ).toEqual({ ok: false, code: "INVALID_NETWORK_SIGNAL_CONTEXT" });
   });
 
   it.each([
@@ -89,5 +155,90 @@ describe("trusted ingress Guest network signal", () => {
     });
     expect(deriveGuestNetworkSignal(changing)).toMatchObject({ ok: true });
     expect(reads).toBe(1);
+  });
+});
+
+describe("trusted proxy address selection", () => {
+  it("ignores spoofed forwarding metadata from an untrusted socket peer", () => {
+    expect(
+      resolveTrustedIngressAddress({
+        socket_remote_address: "198.51.100.40",
+        x_forwarded_for: "203.0.113.9",
+        trusted_proxy_cidrs: ["10.0.0.0/8"],
+      }),
+    ).toEqual({
+      ok: true,
+      policy_id: TRUSTED_INGRESS_POLICY_ID,
+      trusted_ingress_address: "198.51.100.40",
+      source: "DIRECT_SOCKET",
+    });
+  });
+
+  it("walks a trusted proxy chain from the socket toward the client", () => {
+    expect(
+      resolveTrustedIngressAddress({
+        socket_remote_address: "10.0.0.8",
+        x_forwarded_for: "203.0.113.9, 10.0.0.7",
+        trusted_proxy_cidrs: ["10.0.0.0/8"],
+      }),
+    ).toEqual({
+      ok: true,
+      policy_id: TRUSTED_INGRESS_POLICY_ID,
+      trusted_ingress_address: "203.0.113.9",
+      source: "TRUSTED_PROXY_CHAIN",
+    });
+  });
+
+  it("normalizes mapped socket peers before applying IPv4 trust", () => {
+    expect(
+      resolveTrustedIngressAddress({
+        socket_remote_address: "::ffff:10.0.0.8",
+        x_forwarded_for: "2001:db8::9",
+        trusted_proxy_cidrs: ["10.0.0.0/8"],
+      }),
+    ).toMatchObject({
+      ok: true,
+      trusted_ingress_address: "2001:db8::9",
+      source: "TRUSTED_PROXY_CHAIN",
+    });
+  });
+
+  it.each([
+    {
+      socket_remote_address: "10.0.0.8",
+      x_forwarded_for: null,
+      trusted_proxy_cidrs: ["10.0.0.0/8"],
+    },
+    {
+      socket_remote_address: "10.0.0.8",
+      x_forwarded_for: "unknown",
+      trusted_proxy_cidrs: ["10.0.0.0/8"],
+    },
+    {
+      socket_remote_address: "10.0.0.8:443",
+      x_forwarded_for: "203.0.113.9",
+      trusted_proxy_cidrs: ["10.0.0.0/8"],
+    },
+    {
+      socket_remote_address: "10.0.0.8",
+      x_forwarded_for: "203.0.113.9",
+      trusted_proxy_cidrs: ["10.0.0.1/99"],
+    },
+    {
+      socket_remote_address: "10.0.0.8",
+      x_forwarded_for: "10.0.0.7",
+      trusted_proxy_cidrs: ["10.0.0.0/8"],
+    },
+    {
+      socket_remote_address: "10.0.0.8",
+      x_forwarded_for: "203.0.113.9",
+      trusted_proxy_cidrs: ["10.0.0.0/8"],
+      extra: true,
+    },
+  ])("fails closed for invalid trusted-ingress context %#", (value) => {
+    expect(resolveTrustedIngressAddress(value)).toEqual({
+      ok: false,
+      code: "INVALID_INGRESS_CONTEXT",
+    });
   });
 });

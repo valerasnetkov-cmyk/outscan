@@ -2,6 +2,102 @@
 
 ## [Unreleased] — consistency closure
 
+### Detached Guest session bootstrap boundary
+
+- Added an unregistered Fastify plugin for `POST /v1/public/guest-session`. It requires the exact configured HTTPS Origin, rejects query/body and duplicate raw headers, returns no session material in the body, and emits only a canonical host-only Secure/HttpOnly cookie or a no-refresh reuse response.
+- Hostile bootstrap decisions, unsafe Set-Cookie values and provider failures collapse to a redacted 503. Route tests also prove the endpoint remains absent from production `buildApp()`; Gate B1 remains open and no browser receives the cookie yet.
+
+### Detached Guest result HTTP boundary
+
+- Added an unregistered Fastify plugin for `GET /v1/public/scans/:scanId` over the existing authorized read service. It rejects every query, disables implicit HEAD, preserves no-store/no-referrer, maps all access/resource denials to one enumeration-resistant 404 and contains clock/adapter failures behind a stable 503.
+- Six route tests cover sanitized success, stable error mapping, dependency failure, query rejection, HEAD absence and continued absence from the production `buildApp()`. This is composition evidence only: Gate B1 remains open and the route is not publicly reachable.
+
+### Minimal first-party GUEST_SAFE scanner
+
+- Added a dependency-free scanner process entrypoint over the existing runtime DNS, full-set destination policy, pinned HTTP/TLS transport, same-host redirect flow and bounded result IPC. Its exact versioned runtime configuration carries explicit DNS settings plus a copied deployment-specific internal CIDR deny-list.
+- The scanner revalidates the exact current GUEST_SAFE policy, requires its DNS/TLS/HTTP capabilities and enforces one request counter across DNS and HTTPS. Built-in or configured forbidden resolution never reaches transport; malformed, sparse or duplicate deny ranges fail closed, and raw addresses, headers and bodies never enter output.
+- Current observations cover resolution, IPv6 availability, TLS reachability and a conservative security-header posture subset. HSTS requires positive `max-age` (including quoted form); CSP requires a unique enforcing directive; frame protection accepts valid X-Frame-Options or CSP `frame-ancestors`; permissive/unknown referrer and permissions values remain ATTENTION. RDAP, CT, mail and public-infrastructure groups stay explicitly unavailable. Container/egress deployment and owned-target live TLS evidence remain Gate B1 blockers.
+- Added a bounded same-host HTTPS `/.well-known/security.txt` check using the existing pinned flow and shared request budget. PASS requires the conservative unsigned RFC 9116 subset: exact plain-text UTF-8 media type, a valid Contact, one future UTC Expires value and a matching Canonical URI when present; body content and contact data never enter output.
+
+### Guest worker process entrypoint
+
+- Added a dedicated `start:worker` process that composes the existing PostgreSQL/BullMQ runtime, mounted approval and result-key providers, durable telemetry and the fixed scanner process adapter from strict absolute-path environment configuration.
+- Startup accepts only the current approved GUEST_SAFE artifact and an active 256-bit signing key that is present byte-for-byte in the startup verification keyring; revoked, missing, rotated-without-keyring and malformed state fails closed.
+- Added process-configuration and signing-key/keyring binding negatives. The entrypoint emits only bounded local status, adds no route or scanner capability, and is not production deployment, container/egress or approved alert-export evidence; Gate B1 remains in progress.
+
+### Fixed scanner process adapter
+
+- Added a dependency-free shell-free process adapter that binds one exact approved artifact identity to an absolute executable/working directory and static bounded arguments, inherits no environment and sends only a bounded canonical scanner input document to stdin.
+- Revalidates exact plan shape, canonical hostname, current scanner policy and artifact/profile identity before spawn; stderr is discarded, stdout remains the bounded result IPC channel, initialization is capped at five seconds, and TERM/KILL plus start/input failures expose stable process outcomes.
+- The supervisor's one execution deadline and AbortSignal now include launcher startup and kill a valid handle that resolves after cancellation. Nine local process tests plus one late-launch supervisor negative pass. Container/OS isolation, egress enforcement and deployment binding remain Gate B1 blockers.
+
+### Durable Guest queue telemetry
+
+- Added a dependency-free buffer for the existing twelve closed BullMQ processor outcomes. It emits stable-ID immutable batches with saturating counters and one fixed-priority alert code, never dynamic labels or Guest/target/session/tenant/payload/scanner identifiers.
+- Added `0006_guest_queue_telemetry.sql` and an idempotent PostgreSQL store with exact replay, conflicting-ID denial, immutable rows and exact 30-day pruning. Store failure retains the same pending snapshot while later outcomes collect separately.
+- Added a fixed ten-second non-overlapping worker cadence, normalized closed outcome callback and final flush after queue transport shutdown. Five additional lifecycle/options cases pass. Production worker deployment and approved Ops alert export remain Gate B1 blockers; no route, scanner capability or external service was added.
+
+### Mounted supervisor approval and signing-key providers
+
+- Added concrete fresh-read regular-file providers for versioned GUEST_SAFE artifact approval/revocation and exact 256-bit ResultEnvelope signing keys. Files are bounded to 16 KiB and 1 KiB respectively, decoded as fatal UTF-8 and rejected on BOM, malformed/deep JSON, duplicate or unknown keys.
+- Added a strict 4 KiB startup loader for 1–3 active+retained ResultEnvelope verification keys. Each version is unique and bounded, every key is canonical base64url for exactly 32 bytes, and the private-file policy is reused without introducing another secret backend.
+- The reader rejects non-regular files, symlinks and lstat/open identity or size drift. POSIX approval files cannot be group/world-writable and signing-key files must be owner-only; Windows ACL validation remains deployment evidence rather than a portable mode-bit claim.
+- Added rotation/revoke, canonical key/keyring, duplicate-version, missing/oversized/malformed file and configuration negatives. Local Windows evidence is 19 passed plus one POSIX-only case skipped; no Vault/KMS, Kubernetes symlink adapter, production container or public route was added.
+
+### Guest worker runtime composition
+
+- Added a strict Redis/BullMQ connection parser with explicit `redis`/`rediss` agreement, bounded database/credentials, no query or fragment options and certificate-validating TLS configuration. TLS mode requires authentication and cannot be downgraded by URL parameters.
+- Added an internal Guest worker runtime that composes PostgreSQL lease/commit/rejection adapters, fresh approved execution context, supervisor runner, heartbeat and BullMQ transport using fixed GUEST_SAFE ResultEnvelope identities and limits.
+- Added idempotent ready/close lifecycle, stable startup/shutdown errors and forced cleanup of malformed transport handles. Twenty-four focused tests pass; the later process entrypoint composes this runtime, while managed secret/artifact storage, container launcher, egress enforcement, deployment and public routes remain absent.
+
+### Trusted supervisor provider boundaries
+
+- Added fresh-read validation wrappers for active Guest artifact approval/revocation and result-signing key sources. Approval is pinned to the accepted `outscan-v1` policy version and `GUEST_SAFE` profile; signing material is an exact copied 256-bit key with a bounded version.
+- Unknown fields, malformed/hostile values, wrong policy/profile, invalid keys and provider failures deny without leaking source details. Approval and key data are re-read on every use so revocation/rotation cannot be hidden by module caching.
+- Added 16 unit cases and kept the actual secret manager, approval store, isolated process/container launcher and worker deployment pending Gate B1.
+
+### Internal Guest scan creation composition
+
+- Added a strict server-owned creation service that authenticates the Guest session, canonicalizes the hostname, resolves trusted ingress, derives rotation-safe network HMAC signals and invokes transactional PostgreSQL admission.
+- Added stable-ID BullMQ enqueue acknowledgement and crash-window recovery: a live replay re-enqueues the same scan without consuming quota or extending expiry, while queue failure/ambiguity withholds the result token and returns a minimized unavailable response.
+- Added unit and PostgreSQL evidence for canonical request hashing, hostile input/output containment, public error mapping, replay across network-signal changes, changed-request conflict and transactional concurrency denial. No Fastify route or scanner capability was exposed; Gate B1 remains in progress.
+
+### Scheduled Guest retention telemetry
+
+- Added a dedicated retention process that immediately runs bounded 100-row batches, drains at most ten batches per cycle, never overlaps cycles and waits 60 seconds between completed cycles. Invalid worker output, clock state and storage failure remain closed outcomes.
+- Added `0005_guest_retention_runs.sql` and an idempotent PostgreSQL store for immutable PLATFORM/INTERNAL cycle outcomes. Rows contain only bounded counters and closed status/alert codes, expire at exactly 30 days and have no Guest, target, session/network, tenant or scanner field.
+- Added unit and real PostgreSQL coverage for bounded drain/partial/failure/inconsistency paths, scheduler non-overlap, strict projection, exact replay, conflicting run identity, immutability and expiry pruning. Production process deployment and external Ops alert export remain Gate B1 blockers.
+
+### Durable Guest result-rejection evidence
+
+- Added append-only migration `0004_guest_result_rejection_events.sql` and a strict PostgreSQL sink for idempotent, composite scan/attempt/fence-bound result rejection events. Stored fields are limited to closed code/classification and occurrence time; the table has no tenant, target, payload, digest, token or scanner-output column and cascades with Guest retention.
+- Required the BullMQ consumer to record every rejected commit before retry and to fail closed when recording fails or security classification disagrees. Unit and PostgreSQL tests cover malformed input, concurrency, immutability, minimized schema, FK denial and cascade cleanup.
+
+### BullMQ Guest supervisor composition
+
+- Added pinned BullMQ/ioredis transport with a strict queue payload containing only schema version and server-created GuestScan ID, deterministic job identity, bounded delivery retries and poison-job fail-closed handling.
+- Added the internal consumer composition for PostgreSQL claim/start, approved server-owned GUEST_SAFE execution context, five-second lease heartbeat, abort on renewal loss, injected supervisor run and authenticated terminal commit. Redis is never attempt/fence authority and receives no target, policy, result token or credential.
+- Added closed queue-outcome telemetry, unit negatives and a real Redis integration suite for delivery, duplicate enqueue and unrecoverable foreign jobs. The optional `msgpackr-extract` native build remains explicitly denied; production worker deployment, process/container and secret providers plus durable metrics/alerts remain pending Gate B1.
+
+### Trusted ingress and rotation-safe Guest network quota
+
+- Added strict trusted-ingress address selection: untrusted socket peers cannot inject forwarding identity, configured proxy CIDRs are exact and bounded, and trusted chains are walked right-to-left with malformed, excessive or all-trusted input denied.
+- Added an active-first, maximum-three-key network-HMAC projection with duplicate/missing/invalid key rejection. It returns only domain-separated digests and preserves IPv4 `/32`, IPv6 `/64` and mapped-address normalization.
+- Changed the Guest persistence command to carry active plus retained digests. PostgreSQL locks and sums live alias window/concurrency rows, increments only the active digest and stores that digest on the release reservation, preventing a normal staged rotation from resetting quota.
+- Added unit and PostgreSQL rotation negatives/evidence. Public 429 mapping, retention-process deployment/alert export and route exposure remain pending Gate B1.
+
+### Transactional Guest cancellation
+
+- Added a trusted internal PostgreSQL cancellation adapter over a server-created GuestScan ID; no public route or ownership authorization is implied.
+- Cancellation locks the job/current attempt, invalidates LEASED work as `SUPERSEDED` or RUNNING work as `CANCELLED`, terminalizes the job and releases its abuse-concurrency reservation in one SERIALIZABLE transaction.
+- Duplicate and concurrent cancellation converge to one state/release effect. PostgreSQL tests cover QUEUED, LEASED and RUNNING paths plus malformed input; public cancellation authorization/wiring remains pending Gate B1.
+
+### PostgreSQL Guest attempt leases
+
+- Added queue-delivery claim, idempotent start and running-lease renewal persistence with exact attempt/fence/lease-version CAS, fixed 15-second leases, 45-second hard deadlines and three-attempt retry budget.
+- Duplicate delivery now observes the live lease without mutation; expiry terminalizes the old attempt before issuing a strictly greater fence. Retry exhaustion and result-access expiry terminalize the job and release abuse concurrency.
+- Added append-only migration `0003_guest_abuse_expired_release.sql` for an explicit `EXPIRED` release reason and real PostgreSQL concurrency/FSM/CAS coverage. The subsequent BullMQ slice now composes the heartbeat; production telemetry remains pending.
+
 ### Transactional Guest retention batches
 
 - Added a bounded PostgreSQL worker that locks due GuestScans and expired abuse windows with `SKIP LOCKED`, deletes each 24-hour Guest aggregate by cascade and reconciles unreleased active quota in the same transaction.
@@ -13,14 +109,14 @@
 - Added `0002_guest_abuse_counters.sql` with digest-only window/active counters, server-owned pause state and per-GuestScan reservation/release records; raw IP, User-Agent and browser fingerprint have no storage field.
 - Integrated all four burst/daily and two concurrency dimensions into the same SERIALIZABLE GuestScan create/expired-replacement transaction. Live idempotent replay bypasses abuse state and denied admission rolls back scan/token/counter writes.
 - Added idempotent concurrency release for terminal result commit and expired replacement while retaining consumed window counts. Concurrent same-session creation converges to one active reservation.
-- Added PostgreSQL tests for six-dimension reservation, privacy schema, replay non-consumption, concurrency races, release, burst limits and pause behavior. The retention slice now supplies bounded cleanup; trusted ingress/key rotation, worker scheduling/telemetry, queue lifecycle and public routes remain pending.
+- Added PostgreSQL tests for six-dimension reservation, privacy schema, replay non-consumption, concurrency races, release, burst limits and pause behavior. Subsequent retention, queue and trusted-ingress/HMAC-rotation slices now close cleanup, scheduling foundation, internal delivery and quota-preserving rotation; production deployment/alert export and public routes remain pending.
 
 ### Atomic Guest terminal result commit
 
 - Added a strict authenticated ResultEnvelope-to-PostgreSQL committer that reconstructs the sanitized projection from canonical signed bytes instead of accepting caller-selected result data.
 - Added one SERIALIZABLE primary branch that locks current scan/attempt state, uses database transaction time, requires RUNNING/current fence/live lease/deadline and atomically succeeds the attempt/job plus inserts one immutable result.
 - Added a separate terminal same-attempt/fence/digest acknowledgement with no payload write, bounded serialization retry and fail-closed stale, expired, cross-target, authentication and digest-conflict outcomes.
-- Added real PostgreSQL tests for primary commit, concurrent duplicate convergence, terminal digest conflict, stale/expired denial and target/authentication substitution. The abuse-counter slice above adds terminal concurrency release; deletion, queue lease acquisition and public Guest routes remain pending.
+- Added real PostgreSQL tests for primary commit, concurrent duplicate convergence, terminal digest conflict, stale/expired denial and target/authentication substitution. Abuse, retention, lease and subsequent BullMQ/supervisor slices now close the internal execution composition; public Guest routes remain pending.
 
 ### Transactional Guest idempotency and result read
 
@@ -34,7 +130,7 @@
 - Accepted ADR-0017: PostgreSQL 18, append-only checksummed SQL migrations and the low-level `pg` driver; no V1 ORM/query builder or automatic startup migration.
 - Added `0001_guest_scan.sql` for separate PUBLIC_GUEST scan/attempt/result tables with exact time/digest constraints, idempotency uniqueness, deferred accepted-result relationships, FSM/immutability guards and revoked default PUBLIC access.
 - Added the bounded TLS-explicit pool configuration, serialized checksummed migration runner/CLI, PostgreSQL CI service and a real-database suite covering replay/drift, concurrency, chronology, FSM/fence/lease, atomic result identity and cascade deletion.
-- The schema-only foundation kept application writes absent. Subsequent repository slices now implement idempotency, abuse reservation/release, terminal result commit/replay and result read; deletion, queue lease acquisition/CAS wiring and public Guest routes remain pending.
+- The schema-only foundation kept application writes absent. Subsequent repository and BullMQ slices now implement idempotency, abuse, attempt-lease CAS, supervisor heartbeat, terminal result commit/replay, result read and retention; public Guest routes remain pending.
 
 ### GuestScan persistence boundary
 
@@ -89,7 +185,7 @@
 - Added an admission composition that returns live same-key/same-hash idempotent replay without consuming a new quota, while CREATE and expired-row replacement require a session/time-bound atomic counter reservation.
 - Added a strict 24-hour Guest deletion-deadline decision tied to the original 30-minute result-access window.
 - Added versioned domain-separated HMAC network-signal derivation from trusted ingress addresses with IPv4-mapped normalization, IPv4 `/32`, IPv6 `/64`, fixed vectors and rejection of client-forwarded fields.
-- That pure-policy checkpoint kept persistence absent; the transactional counter slice above now closes reservation and accepted-result/expired-replacement release. Trusted-proxy/key rotation, other terminal releases, cleanup/deletion/metrics and public routes remain pending.
+- That pure-policy checkpoint kept persistence absent; subsequent transactional counter, retention and trusted-ingress/HMAC-rotation slices now close reservation, accepted-result/expired-replacement release, cleanup/deletion and quota-preserving rotation. Other terminal releases, scheduling/metrics and public routes remain pending.
 
 ### Trusted Guest supervisor runtime
 

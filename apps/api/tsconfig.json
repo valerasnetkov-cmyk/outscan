@@ -4,5 +4,10 @@
     "noEmit": true,
     "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "db-test/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "db-test/**/*.ts",
+    "queue-test/**/*.ts"
+  ]
 }

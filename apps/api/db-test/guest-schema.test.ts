@@ -168,6 +168,10 @@ describe("PostgreSQL Guest persistence", () => {
     expect(result.already_applied).toEqual([
       "0001_guest_scan.sql",
       "0002_guest_abuse_counters.sql",
+      "0003_guest_abuse_expired_release.sql",
+      "0004_guest_result_rejection_events.sql",
+      "0005_guest_retention_runs.sql",
+      "0006_guest_queue_telemetry.sql",
     ]);
   });
 
@@ -194,7 +198,10 @@ describe("PostgreSQL Guest persistence", () => {
     const result = await pool.query<{ count: string }>(
       `SELECT count(*)::text AS count FROM information_schema.columns
        WHERE table_schema = 'public'
-         AND table_name IN ('guest_scans', 'guest_scan_attempts', 'guest_results')
+         AND table_name IN (
+           'guest_scans', 'guest_scan_attempts', 'guest_results',
+           'guest_result_rejection_events'
+         )
          AND column_name = 'organization_id'`,
     );
     expect(result.rows[0]?.count).toBe("0");

@@ -64,15 +64,18 @@
 - [x] trusted supervisor pre-launch ExecutionEnvelope/approval authorization boundary.
 - [x] machine scanner-policy validator.
 - [x] pure ScanJob/ScanAttempt FSM and result commit/replay decision boundary.
-- [ ] queue-driven job/lease acquisition and renewal persistence; Guest idempotency and terminal-result persistence are implemented in Phase 1.
+- [x] PostgreSQL queue-delivery claim/start/renew persistence with exact lease-version CAS, bounded retries and monotonic attempt fences.
+- [x] Wire internal BullMQ producer/consumer, server-owned execution context, five-second supervisor heartbeat renewal, authenticated commit and bounded outcome telemetry port; real Redis integration tests cover delivery/deduplication/poison-job denial.
 
 ## Phase 1 — Guest / B1
 
 - [x] strict Guest-session Set-Cookie issuance and Cookie-header authentication primitives.
+- [x] implement a detached same-origin Guest-session bootstrap Fastify plugin with strict request/decision/cookie/error semantics while keeping it unregistered from `buildApp()`.
 - [ ] wire the Guest-session bootstrap route after remaining B1 controls pass.
 - [x] Guest-session cookie MAC codec and authenticated scope derivation primitives.
 - [x] pure Guest idempotency decision scoped by authenticated session digest, never IP/fingerprint.
 - [x] transactional Guest idempotency persistence with SERIALIZABLE bounded retry, unique-key winner reread and atomic expired replacement.
+- [x] compose strict internal Guest scan creation across authenticated session, hostname canonicalization, trusted ingress/network HMAC, transactional admission and replay-safe enqueue; keep the Fastify route unregistered.
 - [x] canonical ADR-0011 Guest result-token derivation/test vectors.
 - [x] strict hostname parser + IDNA/Punycode canonicalization with negative tests.
 - [x] full-set A/AAAA normalization, deduplication and fail-closed destination classification.
@@ -86,28 +89,40 @@
 - [x] PostgreSQL migration for GuestScan/GuestScanAttempt/GuestResult with constraints, deferred accepted-result relationships and FSM/immutability guards.
 - [x] Implement the transactional `pg` Guest idempotency repository and strict database-backed result-read store.
 - [x] Implement authenticated atomic terminal result commit and same-digest no-write replay with current attempt/fence/lease/deadline checks.
-- [ ] Wire the terminal-result rejection audit/metric sink before result-ingress exposure.
+- [x] Wire an idempotent append-only PUBLIC_GUEST terminal-result rejection event sink with closed codes, attempt/fence FK, minimized fields, 24-hour aggregate cascade and fail-closed queue retry composition.
 - [x] Implement transactional six-dimension abuse reservation with GuestScan create/replace and idempotent terminal concurrency release.
 - [x] Implement bounded expired abuse-window cleanup and transactional 24-hour Guest aggregate deletion batches.
 - [x] Guest result bearer-token authorization with 30m/no-store/no-referrer boundary.
 - [x] compose route-bound result authorization and sanitized view through an injected read-only Guest store port.
 - [x] wire the concrete PostgreSQL Guest result lookup into the existing read-store port.
+- [x] implement a detached Guest result Fastify plugin with strict query/header/error/privacy semantics while keeping it unregistered from `buildApp()`.
 - [ ] wire the sanitized Guest result HTTP route after remaining B1 controls pass.
 - [x] pure sanitized Guest result view with five stable posture sections, a complete coverage inventory and explicit limitations.
 - [x] pure Guest retention decision enforcing the original 30m access window and fixed 24h deletion deadline.
 - [x] Return machine-readable deletion/window/quota-inconsistency counters and alert-required state from each retention batch.
-- [ ] Schedule the Guest retention worker and wire durable metrics/alerts before exposure.
+- [x] Schedule bounded non-overlapping Guest retention cycles and persist minimized 30-day PLATFORM run metrics plus closed inconsistency/unavailable alert state.
+- [ ] Deploy the retention process and export its closed alerts to the approved Ops collector before exposure.
 - [x] closed Guest burst/daily/concurrency admission policy separated from ownership/idempotency.
 - [x] versioned HMAC Guest network-signal derivation from a trusted ingress address with IPv4 `/32`, IPv6 `/64` and mapped-address normalization.
+- [x] trusted socket/proxy address selection with a closed CIDR allow-list, bounded right-to-left forwarding-chain walk and fail-closed malformed/all-trusted input.
+- [x] bounded network-HMAC keyring projection plus transactional active/retained-digest aggregation without quota reset; require staged rotation and 24h+skew retained-key lifetime.
 - [x] transactional abuse-counter reservation/release integrated with Guest persistence.
-- [ ] trusted proxy/ingress adapter, network-HMAC rotation and public 429/Retry-After wiring.
+- [x] trusted internal Guest cancellation with attempt invalidation, idempotent replay and atomic abuse-concurrency release; keep public cancellation absent until ownership authorization is composed.
+- [ ] public abuse-denial 429/Retry-After route wiring.
 - [x] GUEST_SAFE capability policy and budgets enforced before launch and through output handling.
 - [x] bounded Guest scanner-output JSON projection with strict schema and disclosure minimization.
 - [x] authenticated ResultEnvelope header/MAC/digest/size validation.
 - [x] canonical GUEST_SAFE ScannerResultEnvelope producer with evidence redaction and digest.
 - [x] bounded single-result scanner IPC framing/reader with deadline and cancellation.
 - [x] injected supervisor launch/pipe/exit/cancellation orchestration and supervisor-side ResultEnvelope HMAC signing.
-- [ ] production process/container launcher, secret-manager signing-key provider, queue/CAS state wiring and bounded persistence.
+- [x] validated fresh-read boundaries for active GUEST_SAFE artifact approval/revocation and exact 256-bit result-signing keys from injected trusted providers.
+- [x] concrete bounded regular-file readers for versioned artifact approval/revocation, active 256-bit signing key and 1–3-key result-verification keyring, with duplicate-key/version denial, symlink/TOCTOU checks and POSIX permission policy.
+- [x] strict TLS-explicit Redis/BullMQ configuration plus internal Guest worker composition and idempotent ready/close lifecycle over PostgreSQL, approved context, supervisor and result/rejection adapters.
+- [x] buffered stable-ID Guest queue/result-ingress telemetry with closed counters/alert classification, exact replay, immutable 30-day PostgreSQL storage, non-overlapping worker cadence and final shutdown flush.
+- [x] fixed shell-free scanner process adapter with exact artifact binding, absolute command/cwd, static bounded arguments, empty environment, bounded scanner-only stdin and TERM/KILL lifecycle.
+- [x] dedicated Guest worker CLI composition over mounted approval/signing/keyring inputs, fixed scanner process adapter, PostgreSQL telemetry and TLS-explicit Redis, with fail-closed startup and shutdown.
+- [x] minimal first-party GUEST_SAFE scanner executable over explicit runtime DNS, built-in plus deployment-specific CIDR denial, pinned HTTPS/same-host redirects, shared outbound request budget, conservative security-header and RFC 9116 `security.txt` semantics, and bounded IPC; unsupported detector groups remain explicitly unavailable.
+- [ ] production container/egress policy and adapter binding, secret-manager signing-key and active artifact-approval providers, worker deployment and approved alert export.
 - [ ] wire the full Guest posture page and registration/verification CTA after the remaining B1 controls.
 - [x] honest Guest coverage states with explicit missing/unavailable groups and no Security Score.
 - [ ] WCAG runtime evidence.

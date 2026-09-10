@@ -6,6 +6,7 @@ import {
   deriveGuestSessionScope,
   GUEST_SESSION_COOKIE_NAME,
   GUEST_SESSION_MAX_AGE_SECONDS,
+  isGuestSessionSetCookieHeader,
   issueGuestSessionCookieHeader,
 } from "../src/guest-crypto/index.js";
 
@@ -33,6 +34,19 @@ describe("Guest session HTTP cookie boundary", () => {
     const issued = issueGuestSessionCookieHeader(7, KEY, SESSION_ID);
     if (!issued.ok) throw new Error("Expected issued cookie.");
     expect(issued.set_cookie).not.toMatch(/(?:^|;)\s*Domain=/iu);
+    expect(isGuestSessionSetCookieHeader(issued.set_cookie)).toBe(true);
+  });
+
+  it.each([
+    undefined,
+    "",
+    `${GUEST_SESSION_COOKIE_NAME}=${value()}\r\nX-Injected: yes`,
+    `${GUEST_SESSION_COOKIE_NAME}=${value()}; Max-Age=86400; Path=/; Secure; HttpOnly`,
+    `${GUEST_SESSION_COOKIE_NAME}=${value()}; Max-Age=86400; Path=/; Secure; HttpOnly; SameSite=Lax; Domain=example.com`,
+    `${GUEST_SESSION_COOKIE_NAME}=v1.4294967296.${"a".repeat(43)}.${"b".repeat(43)}; Max-Age=86400; Path=/; Secure; HttpOnly; SameSite=Lax`,
+    `${GUEST_SESSION_COOKIE_NAME}=${value().replace("Hh8.", "Hh9.")}; Max-Age=86400; Path=/; Secure; HttpOnly; SameSite=Lax`,
+  ])("rejects a non-canonical Set-Cookie value", (candidate) => {
+    expect(isGuestSessionSetCookieHeader(candidate)).toBe(false);
   });
 
   it("authenticates the target cookie and returns no raw session ID", () => {

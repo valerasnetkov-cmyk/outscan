@@ -8,7 +8,7 @@ const REQUEST = Object.freeze({
   idempotency_key: "request-01",
   request_hash: `sha256:${"2".repeat(64)}`,
   canonical_target: "example.com",
-  network_signal_digest: `hmac-sha256:${"3".repeat(64)}`,
+  network_signal_digests: [`hmac-sha256:${"3".repeat(64)}`],
   trusted_now_unix_seconds: 1_800_000_000n,
 });
 

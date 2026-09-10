@@ -102,10 +102,10 @@ Gate A closure evidence:
 `Product Capability Registry Gate A impact: NONE`
 `Notifications & Communications ADR-0015 Gate A impact: NONE`
 `Guest supervisor foundation: INJECTED RUNTIME EVIDENCE PASS; production launcher/key provider/persistence pending`
-`Guest abuse/retention policy: HMAC SIGNAL + POSTGRESQL ATOMIC RESERVATION/RELEASE EVIDENCE PASS; trusted-proxy/key-rotation/cleanup/deletion pending`
+`Guest abuse/retention policy: TRUSTED INGRESS + ROTATION-SAFE HMAC SIGNAL + POSTGRESQL ATOMIC RESERVATION/RELEASE/CLEANUP EVIDENCE PASS; scheduling/public mapping pending`
 `Guest result view: SANITIZED BODY/COVERAGE + DATABASE READ EVIDENCE PASS; route/UI/WCAG pending`
 `PostgreSQL data-access ADR-0017 Gate A impact: NONE`
-`GuestScan persistence boundary: POSTGRESQL IDEMPOTENCY/ABUSE/RESULT-COMMIT/RESULT-READ/RETENTION-BATCH EVIDENCE PASS; scheduling/queue/route pending`
+`GuestScan internal execution boundary: POSTGRESQL IDEMPOTENCY/ABUSE/LEASE-CAS/CANCELLATION/RESULT-COMMIT/REJECTION-EVENT/RESULT-READ/RETENTION + BULLMQ/HEARTBEAT EVIDENCE PASS; production worker/scheduling/exported telemetry/routes pending`
 `Gate B1: IN PROGRESS`
 `Gate B2: NOT STARTED`
 `Gate C: NOT STARTED`

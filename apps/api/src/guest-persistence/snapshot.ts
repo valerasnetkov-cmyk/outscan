@@ -6,7 +6,7 @@ const REQUEST_KEYS = [
   "idempotency_key",
   "request_hash",
   "canonical_target",
-  "network_signal_digest",
+  "network_signal_digests",
   "trusted_now_unix_seconds",
 ] as const;
 const SCOPE = /^sha256:[0-9a-f]{64}$/u;
@@ -39,7 +39,7 @@ export function snapshotPersistGuestScanRequest(
     const idempotencyKey = value.idempotency_key;
     const requestHash = value.request_hash;
     const canonicalTarget = value.canonical_target;
-    const networkSignalDigest = value.network_signal_digest;
+    const networkSignalDigests = value.network_signal_digests;
     const now = value.trusted_now_unix_seconds;
     if (
       typeof sessionScope !== "string" ||
@@ -49,8 +49,13 @@ export function snapshotPersistGuestScanRequest(
       typeof requestHash !== "string" ||
       !HASH.test(requestHash) ||
       typeof canonicalTarget !== "string" ||
-      typeof networkSignalDigest !== "string" ||
-      !NETWORK.test(networkSignalDigest) ||
+      !Array.isArray(networkSignalDigests) ||
+      networkSignalDigests.length === 0 ||
+      networkSignalDigests.length > 3 ||
+      networkSignalDigests.some(
+        (digest) => typeof digest !== "string" || !NETWORK.test(digest),
+      ) ||
+      new Set(networkSignalDigests).size !== networkSignalDigests.length ||
       typeof now !== "bigint" ||
       now < 0n ||
       now + RETENTION_SECONDS > MAX_POSTGRES_UNIX_SECONDS
@@ -63,7 +68,7 @@ export function snapshotPersistGuestScanRequest(
       idempotency_key: idempotencyKey,
       request_hash: requestHash,
       canonical_target: host.canonical_host,
-      network_signal_digest: networkSignalDigest,
+      network_signal_digests: Object.freeze([...networkSignalDigests]),
       trusted_now_unix_seconds: now,
     });
   } catch {

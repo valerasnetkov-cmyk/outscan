@@ -5,6 +5,7 @@ import {
   type GuestSessionKeyring,
   verifyGuestSessionCookie,
 } from "./guest-session.js";
+import { decodeCanonicalBase64Url } from "./binary.js";
 
 const MAX_COOKIE_HEADER_BYTES = 8_192;
 const MAX_COOKIE_PAIRS = 64;
@@ -103,6 +104,45 @@ export function issueGuestSessionCookieHeader(
   } catch {
     return { ok: false, code: "GUEST_SESSION_ISSUE_FAILED" };
   }
+}
+
+export function isGuestSessionSetCookieHeader(value: unknown): value is string {
+  if (typeof value !== "string" || /[\0\r\n]/u.test(value)) return false;
+
+  const segments = value.split("; ");
+  if (segments.length !== GUEST_SESSION_SET_COOKIE_ATTRIBUTES.length + 1) {
+    return false;
+  }
+  if (
+    !GUEST_SESSION_SET_COOKIE_ATTRIBUTES.every(
+      (attribute, index) => segments[index + 1] === attribute,
+    )
+  ) {
+    return false;
+  }
+
+  const prefix = `${GUEST_SESSION_COOKIE_NAME}=`;
+  const pair = segments[0];
+  if (!pair?.startsWith(prefix)) return false;
+  const parts = pair.slice(prefix.length).split(".");
+  if (
+    parts.length !== 4 ||
+    parts[0] !== "v1" ||
+    !/^(0|[1-9][0-9]{0,9})$/u.test(parts[1] ?? "") ||
+    !/^[A-Za-z0-9_-]{43}$/u.test(parts[2] ?? "") ||
+    !/^[A-Za-z0-9_-]{43}$/u.test(parts[3] ?? "")
+  ) {
+    return false;
+  }
+  const version = Number(parts[1]);
+  const sessionId = decodeCanonicalBase64Url(parts[2] ?? "");
+  const mac = decodeCanonicalBase64Url(parts[3] ?? "");
+  return (
+    Number.isSafeInteger(version) &&
+    version <= 0xffff_ffff &&
+    sessionId?.byteLength === 32 &&
+    mac?.byteLength === 32
+  );
 }
 
 export function authenticateGuestSessionCookieHeader(

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   classifyResolvedAddressSet,
   IP_DESTINATION_POLICY_VERSION,
+  snapshotConfiguredInternalCidrs,
 } from "../src/target/index.js";
 
 describe("resolved address-set policy", () => {
@@ -109,6 +110,28 @@ describe("resolved address-set policy", () => {
     ).toMatchObject({
       blocked_addresses: [{ reason: "PRIVATE" }],
     });
+  });
+
+  it("snapshots a strict deployment-specific deny list", () => {
+    const input = ["8.8.8.0/24", "2001:4860::/32"];
+    const snapshot = snapshotConfiguredInternalCidrs(input);
+    input[0] = "1.1.1.0/24";
+    expect(snapshot).toEqual(["8.8.8.0/24", "2001:4860::/32"]);
+    expect(Object.isFrozen(snapshot)).toBe(true);
+    for (const invalid of [
+      null,
+      ["8.8.8.8"],
+      ["8.8.8.0/24", "8.8.8.0/24"],
+      new Array(1),
+      Array(129).fill("10.0.0.0/8"),
+      new Proxy([], {
+        get: () => {
+          throw new Error("hostile detail");
+        },
+      }),
+    ]) {
+      expect(snapshotConfiguredInternalCidrs(invalid)).toBeNull();
+    }
   });
 
   it.each([null, {}, "8.8.8.8"])(

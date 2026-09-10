@@ -68,6 +68,9 @@
 | GuestScan                    | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestScanAttempt             | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestAbuseCounter            | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestResultRejectionEvent    | PUBLIC_GUEST       | RESTRICTED  | forbidden                       |
+| GuestRetentionRun            | PLATFORM           | INTERNAL    | none                            |
+| GuestQueueTelemetryBatch     | PLATFORM           | INTERNAL    | none                            |
 | GuestObservation             | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestResult                  | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | CVERecord                    | GLOBAL             | PUBLIC      | none                            |
@@ -81,6 +84,12 @@
 Any new persistent entity must enter this matrix before schema migration.
 
 `GuestAbuseCounter` contains only bounded session-scope/network-signal digests, policy dimension/window, count/reset and concurrency state. It contains no raw IP/cookie/User-Agent/fingerprint, expires within the 24-hour abuse window and grants no Guest ownership, replay or result access.
+
+`GuestResultRejectionEvent` is an append-only, attempt/fence-bound closed-code record. It contains no target, payload, digest, token, scanner output or tenant field and is deleted with its GuestScan aggregate.
+
+`GuestRetentionRun` is immutable operational telemetry, not part of the Guest aggregate. It stores only bounded run status/counters and closed alert/failure codes, contains no Guest/tenant/target/session identity and expires after 30 days.
+
+`GuestQueueTelemetryBatch` is immutable minimized operational telemetry outside the Guest aggregate. It contains only closed queue outcome counters, saturation and one derived alert code; it has no Guest, tenant, target, session/network, payload or scanner identity and expires exactly 30 days after batch completion.
 
 ## TENANT_ROOT — Organization access
 

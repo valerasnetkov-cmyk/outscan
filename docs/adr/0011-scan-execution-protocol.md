@@ -61,7 +61,7 @@ For persistence/idempotency, derive:
 
 Store only this scope digest where a stable Guest principal key is required. Do not store/log the raw cookie/session identifier.
 
-IP, User-Agent and browser/device fingerprint may be separate abuse/rate-limit signals, but **must not** be used as the authorization or idempotency ownership boundary.
+IP, User-Agent and browser/device fingerprint may be separate abuse/rate-limit signals, but **must not** be used as the authorization or idempotency ownership boundary. The network signal is derived only from a canonical socket peer or a bounded `X-Forwarded-For` chain behind an explicit trusted-proxy CIDR allow-list; untrusted forwarding data is ignored, while missing/malformed trusted-proxy data, excessive hops and a chain with no untrusted client fail closed. Raw addresses are not persisted and the digest grants no ownership/access. Normal HMAC rotation first deploys transactional active+retained digest reads everywhere, then selects the new active key; admission locks/sums live aliases but increments/reserves only the active digest. Retired keys remain for the 24-hour maximum abuse window plus deployment/clock skew. Emergency removal is an explicit audited fail-closed/reset decision, never a silent reset.
 
 ## Entities
 

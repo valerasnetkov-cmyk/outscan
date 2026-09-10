@@ -236,7 +236,7 @@ export function createPostgresGuestScanPersistence(
           const abuse = await reserveGuestAbuseCounters(client, {
             guest_scan_id: guestScanId,
             guest_session_scope: request.guest_session_scope,
-            network_signal_digest: request.network_signal_digest,
+            network_signal_digests: request.network_signal_digests,
             now_unix_seconds: request.trusted_now_unix_seconds,
           });
           if (!abuse.ok) {

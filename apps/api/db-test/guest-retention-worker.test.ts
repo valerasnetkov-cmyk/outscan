@@ -38,7 +38,9 @@ function request(index: number) {
     idempotency_key: `retention-${index}`,
     request_hash: `sha256:${String(((index + 1) % 8) + 1).repeat(64)}`,
     canonical_target: `host-${index}.example.com`,
-    network_signal_digest: `hmac-sha256:${String(((index + 2) % 8) + 1).repeat(64)}`,
+    network_signal_digests: [
+      `hmac-sha256:${String(((index + 2) % 8) + 1).repeat(64)}`,
+    ],
     trusted_now_unix_seconds: BigInt(CREATED_AT),
   };
 }

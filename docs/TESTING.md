@@ -157,7 +157,7 @@ Implemented scanner IPC protocol evidence:
 - exact snapshotted options reject unknown fields, hostile getters and invalid global/profile limits;
 - a complete IPC frame feeds the strict canonical GUEST_SAFE producer successfully.
 
-Targeted verification: `npm --prefix apps/api test` PASS, 21 files / 494 tests; API lint, typecheck and build PASS. Tests use synthetic async iterators only; no child process, OS pipe, container, queue or external network was started.
+The IPC unit suite uses synthetic async iterators only; it starts no child process, OS pipe or external network.
 
 ### Tenant / tenant root
 
@@ -213,8 +213,8 @@ Guest input, progress, token result/expiry, full posture/coverage, registration 
 - Tests enforce 30-minute access/idempotency and exact 24-hour deletion deadlines, canonical target, token/scan identity, job/attempt state chronology, lease/deadline shape and accepted attempt/fence/digest consistency.
 - The async read service queries only the route GuestScan ID, denies malformed bearer input before lookup, then reuses canonical token authorization and sanitized view projection over one validated snapshot.
 - Missing, hostile, inconsistent, cross-target, expired, revoked, delete-due and unavailable-key inputs return the same access denial; raw persisted identity/token/digest/execution fields are absent from success output.
-- Targeted `npm --prefix apps/api test -- guest-scan-record.test.ts guest-result-read.test.ts`: PASS, 2 files / 44 tests; API lint and typecheck: PASS.
-- The store began as an injected port. ADR-0017 and the repository evidence below now provide its PostgreSQL adapter; HTTP route and browser request remain absent, so Gate B1 stays open.
+- Targeted Guest snapshot/read evidence remains 2 files / 44 tests; the detached result HTTP adapter adds 6 passing cases for sanitized success, 400/404/503 mapping, privacy headers, query and implicit-HEAD rejection, dependency containment and production-app route absence.
+- ADR-0017 supplies the PostgreSQL adapter and `guest-http` supplies unregistered bootstrap/result Fastify plugins. `buildApp()` and browsers still have no Guest route, so Gate B1 stays open.
 
 ## Implemented PostgreSQL Guest schema evidence
 
@@ -226,14 +226,14 @@ Guest input, progress, token result/expiry, full posture/coverage, registration 
 
 ## Implemented PostgreSQL Guest repository evidence
 
-- Strict input rejects unknown/malformed scope, key, hash, canonical target and server time before acquiring a client. IDs, token nonce and active key version come only from trusted dependencies.
+- Strict input rejects unknown/malformed scope, key, hash, canonical target and server time before acquiring a client. The internal creation composition also rejects malformed request/dependency/persistence/queue shapes and authenticates the Guest cookie before persistence; IDs, token nonce and active key version come only from trusted dependencies.
 - SERIALIZABLE create/replay/replacement uses one checked-out client, bounded retry for serialization/deadlock/idempotency-winner races and stable redacted failures.
-- Tests prove one concurrent creator plus same-ID/token replay, different-hash conflict, cross-session independence, exact-expiry replacement, missing-key rollback and no expiry extension.
+- Tests prove one concurrent creator plus same-ID/token replay, different-hash conflict, cross-session independence, exact-expiry replacement, missing-key rollback and no expiry extension. Creation tests additionally prove canonical request hashing, trusted-network pseudonymization, exact-ID enqueue acknowledgement, token withholding on queue failure and stable-ID re-enqueue after a changed network signal.
 - The one-query result store maps explicit columns through exact Guest snapshots; an integration test completes a valid attempt/result transaction and exercises bearer authorization plus sanitized output.
 - The terminal committer verifies workload/audience/time/MAC/digest/size, reconstructs canonical sanitized output and rejects target substitution before accepting any result data.
 - PostgreSQL transaction time, locked current scan/attempt rows and CAS updates enforce RUNNING/current attempt/fence/live lease/deadline. Primary commit atomically persists one immutable result; terminal same-digest replay performs no payload write.
-- Database tests prove concurrent duplicate convergence, different-digest audit signaling, stale/expired denial and authentication/target fail-closed behavior.
-- `pnpm verify:db`: PASS, 5 files / 44 tests. Abuse reservation/release and bounded retention batches are included; production scheduling/telemetry, queue lease acquisition and HTTP/UI remain pending.
+- Database tests prove concurrent result convergence, target/authentication denial and idempotent append-only rejection evidence bound by composite scan/attempt/fence FK, minimized columns and aggregate cascade. Queue tests require successful rejection recording before retry and fail closed when the sink is unavailable or classification disagrees.
+- `pnpm verify:db`: PASS, 11 files / 75 tests against PostgreSQL 18.6. It includes creation composition plus abuse/retention/cancellation, lease/fence concurrency, rejection evidence, retention-run persistence and minimized queue telemetry exact replay/constraints. The separate Redis suite covers BullMQ delivery; production alert export and HTTP/UI remain pending.
 
 ## B2 E2E
 
@@ -253,12 +253,12 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 
 ## Implemented Guest-session HTTP boundary evidence
 
-- `apps/api/src/guest-crypto/guest-session-http.ts` emits one deterministic Set-Cookie header contract: `__Host-outscan_guest_session`, `Max-Age=86400`, `Path=/`, `Secure`, `HttpOnly`, `SameSite=Lax` and no Domain attribute.
+- `apps/api/src/guest-crypto/guest-session-http.ts` emits and validates one deterministic Set-Cookie header contract: `__Host-outscan_guest_session`, `Max-Age=86400`, `Path=/`, `Secure`, `HttpOnly`, `SameSite=Lax` and no Domain attribute.
 - Cookie authentication accepts a bounded header with at most 64 syntactically valid pairs, treats names case-sensitively and rejects control bytes, merged/invalid syntax and duplicate Guest cookie names before MAC verification.
 - Success returns only `key_version` and `guest_session_scope`; the raw 256-bit session identifier is not returned by the HTTP boundary. Scope-based revocation, retained rotation keys, removed-key emergency invalidation and hostile dependency failures are covered.
-- Guest-session crypto verification now also contains non-string values and throwing keyring lookups without exposing their details.
-- Targeted `npm --prefix apps/api test`: PASS, 15 files / 340 tests; API lint, typecheck and build: PASS.
-- No Fastify route, browser cookie, persistence or public Guest Scan exposure was added. Route-level security headers and bootstrap behavior remain pending B1 work.
+- The detached bootstrap plugin requires one exact configured HTTPS Origin, rejects query/body and malformed/extra service decisions, emits only `204` plus a validated cookie when issued, and does not refresh a reused session.
+- Full `npm run verify`: PASS, including 60 API files / 938 passed and 1 Windows-inapplicable skip; 19 new boundary/validator cases pass.
+- `buildApp()` still has no bootstrap route, browser cookie, persistence or public Guest Scan exposure. Concrete bootstrap/revocation providers and registration remain pending B1 work.
 
 ## Implemented Guest idempotency decision evidence
 
@@ -267,7 +267,7 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 - Within the window, same hash returns the original GuestScan and HMAC-derived token with the original expiry; different hash returns `IDEMPOTENCY_KEY_REUSED`; revoked access or a missing/invalidated HMAC key cannot replay.
 - Tests cover another Guest scope, concurrent-winner reread semantics, exact expiry, U64 overflow, malformed/inconsistent records, retained/removed rotation keys and throwing/changing getters. Parsed request/record/token values are snapshotted once.
 - Targeted `npm --prefix apps/api test`: PASS, 16 files / 367 tests; API lint, typecheck and build: PASS.
-- The decision is persistence-agnostic. PostgreSQL uniqueness, transaction isolation, atomic expired-row replacement and loser reread are not implemented or claimed; route exposure remains disabled.
+- The pure decision remains persistence-agnostic; the PostgreSQL adapter and internal creation composition now implement uniqueness, transaction isolation, atomic expired-row replacement and winner reread. Route exposure remains disabled.
 
 ## Implemented Guest result-access authorization evidence
 
@@ -341,18 +341,25 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 - Tests prove a changed DNS answer becomes the next selected pin for both retry and redirect, both A/AAAA queries run again, fragments are not sent, and cross-host destinations are never resolved or dispatched.
 - Validated transport limits are copied into an immutable snapshot; a changing getter cannot alter a post-validation limit.
 - Targeted `npm --prefix apps/api test`: PASS, 14 files / 317 tests; API lint, typecheck and build: PASS.
-- All flow dependencies are injected fakes. No live DNS request or outbound socket was used; owned-target live HTTP/TLS integration evidence remains pending.
+- All flow dependencies are injected fakes. The minimal first-party Guest scanner composes this flow; its tests prove exact policy/capability input, built-in and configured-CIDR no-dispatch, shared DNS+HTTP request budgets, strict runtime configuration, target-safe canonical output, conservative security-header outcomes and bounded unsigned RFC 9116 `security.txt` acceptance/rejection including stale data and denied cross-host redirects. No live DNS request or outbound socket was used; owned-target live HTTP/TLS integration evidence remains pending.
 
 ## Implemented trusted Guest supervisor runtime evidence
 
 - A current approved GUEST_SAFE attempt produces one canonical, target-bound payload and a 60-second authenticated ResultEnvelope that passes the independent ingress verifier.
-- The launch plan is frozen and excludes job ID, authorization reference, result credential and signing key; the key provider is not read until IPC, exit and output validation succeed.
+- The launch plan is frozen and excludes job ID, authorization reference, result credential and signing key; the key provider is not read until IPC, exit and output validation succeeds. Fresh-read and mounted-file tests cover approval/revocation reload, wrong policy/profile, exact 256-bit keys, copy isolation, strict JSON/size/path failures, symlink/TOCTOU design and POSIX permissions; the POSIX-only case is skipped on Windows and runs in Linux CI.
 - Stale attempt/fence and non-Guest profiles cannot launch through this runtime.
-- Malformed/throwing launchers and handles, invalid IPC, non-zero/signalled/malformed exit, changed canonical target, crossed deadline and unavailable/malformed signing keys fail with stable codes.
-- Abort and rejected/unknown process state exercise bounded TERM→KILL escalation using injected fakes only.
+- Malformed/throwing launchers and handles, invalid IPC, non-zero/signalled/malformed exit, changed canonical target, crossed deadline and unavailable/malformed signing keys fail with stable codes. Mounted-provider tests additionally cover active+retained verification-keyring rotation, 1–3-key bounds, duplicate versions, canonical 32-byte keys, strict fields, file limits and symlink/POSIX permission denial.
+- Abort and rejected/unknown process state exercise bounded TERM→KILL escalation; a pending-launch negative proves cancellation returns promptly and kills a valid handle that resolves later.
 - Result signing rejects unknown fields, invalid identifiers/times/key versions/key sizes and profile-overlimit payloads; returned payload/submission copies cannot mutate the signed snapshot.
 - Scanner policy capabilities, budgets and artifact dependencies are immutable snapshots after authorization, closing mutation-after-check behavior.
-- Tests start no child process, container, DNS query, outbound connection, queue or database transaction; production isolation, key provisioning and commit evidence remain pending.
+- Supervisor/provider tests otherwise use injected fakes; the fixed-process adapter suite starts only the local Node executable to prove scanner-only stdin, clean exit/signal handling, exact artifact/policy binding, unsafe configuration denial and stable startup failure. Worker bootstrap tests reject unsafe paths/arguments, revoked/wrong-profile approval and signing keys absent or byte-different in the startup verification keyring. They perform no DNS query or outbound connection; managed secret/approval stores, container/egress isolation and production deployment remain pending.
+
+## Implemented BullMQ Guest composition evidence
+
+- Queue payload validation permits only schema version and a server-created GuestScan ID; target, policy, token, attempt, fence and credentials are absent.
+- Processor tests cover claim/start ordering, terminal acknowledgement, held-lease retry, abort/no-commit on renewal loss, supervisor failure and persistence exceptions.
+- Server-owned context tests bind the live lease to the fixed GUEST_SAFE policy and active approved artifact; malformed, wrong-profile and expired input fails closed. Redis configuration/runtime tests cover TLS/auth agreement, option-injection denial, bounded worker settings, exact adapter composition, stable lifecycle failures and malformed-handle cleanup.
+- `pnpm verify:queue` runs against Redis 7.4 and proves one delivery for duplicate enqueue plus unrecoverable rejection of a foreign job without processor invocation. Unit and PostgreSQL tests also prove closed queue outcome aggregation, sensitive-field exclusion, stable pending replay after store failure, non-overlapping cadence/final shutdown flush, hostile adapter/reporter containment, alert constraints, immutability and exact 30-day pruning. The worker CLI is implemented but not deployed; production worker/export, managed secret store, sandbox and egress claims remain absent.
 
 ## Implemented Guest abuse and retention policy evidence
 
@@ -361,12 +368,12 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 - A valid live idempotent replay returns without reading abuse state or reserving another quota; create and expired replacement require abuse admission.
 - Reservations bind the same authenticated session scope and transaction time as idempotency and enumerate all six atomic counter dimensions.
 - Retention requires the original 30-minute result-access expiry and exact 24-hour deletion deadline; the exact boundary returns `DELETE_NOW`.
-- The trusted-ingress primitive derives a domain-separated HMAC signal from an exact address and 32-byte key, normalizes IPv4-mapped IPv6, groups IPv6 at `/64`, returns no raw address and rejects forwarded-header/port/zone/extra-field input.
-- Fixed-vector, key-separation, IPv4/mapped equivalence, IPv6 bucket separation and hostile/changing getter tests pass.
+- The trusted-ingress adapter ignores spoofed forwarding data from untrusted peers, canonicalizes mapped addresses, walks only a bounded chain behind an exact proxy CIDR list and rejects missing/malformed/all-trusted chains, ports, zones and unknown fields.
+- Domain-separated network-HMAC tests cover fixed vectors, key separation, IPv4 `/32`, IPv6 `/64`, active-first keyring order, retained-key limits, duplicate/missing/invalid keys and absence of raw address output.
 - `0002_guest_abuse_counters.sql` stores fixed digest-only window/active rows, server pause state and a per-scan release record; no raw network/browser identifier column exists.
-- Real PostgreSQL tests cover six-dimension atomic reservation, replay non-consumption, concurrent same-session admission, idempotent release, retained burst usage, pause and terminal-result release.
-- Bounded retention tests prove exact-deadline aggregate deletion, cascade cleanup, one-time active-counter reconciliation, expired-window pruning, `SKIP LOCKED` batch continuation and privacy deletion with an alert flag when quota metadata is missing.
-- Trusted-proxy/key-rotation wiring, non-success terminal release, worker scheduling/durable metrics and public 429/Retry-After behavior remain pending.
+- Real PostgreSQL tests cover six-dimension atomic reservation, replay non-consumption, concurrent same-session admission, idempotent release, retained burst usage, pause, terminal-result release and rotation-safe aggregation where old+new digest usage reaches one shared limit while only the active digest is incremented.
+- Bounded retention tests prove exact-deadline aggregate deletion, cascade cleanup, one-time active-counter reconciliation, expired-window pruning and `SKIP LOCKED` continuation. Runtime tests prove a bounded non-overlapping scheduler, partial drain, strict outcome validation and fail-closed storage; PostgreSQL tests prove immutable minimized 30-day run telemetry, exact replay, conflicting-ID denial and pruning.
+- PostgreSQL cancellation tests cover QUEUED, LEASED and RUNNING jobs, exact attempt terminalization, one-time concurrency release, duplicate/concurrent convergence and strict malformed-input rejection. Public cancellation authorization/route, production retention deployment/alert export and public 429/Retry-After behavior remain pending.
 
 ## Proposed Weekly Digest blocking suite
 
