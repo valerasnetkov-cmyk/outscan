@@ -74,7 +74,7 @@
 - [x] Add a detached, no-network API Compose baseline with pinned multi-stage build, runtime hardening smoke and an Ubuntu CI job; full service topology, isolated scanner launch and target-server evidence remain pending.
 - [x] Add opt-in offline scanner CLI container tests for bounded stdin/IPC, IPv4/IPv6 DNS-unavailable coverage and invalid-input denial; keep the production launch/egress integration pending.
 - [x] Verify offline container failure/TERM-to-KILL/cleanup with run-owned IDs and labels; production supervisor-to-container lifecycle binding remains pending.
-- [x] Implement and verify a detached host-side offline `ScannerProcessLauncher` with immutable image binding, fixed isolation, scanner-only stdin and container-owned stop/cleanup; no worker/egress activation.
+- [x] Implement and verify a detached host-side offline `ScannerProcessLauncher` with immutable image binding, fixed isolation, scanner-only stdin and container-owned stop/cleanup; no worker/egress activation. Closure evidence and verification limitations: [audit 2026-09-12](docs/audit-2026-09-12.md).
 
 - [x] Verify detached bootstrap → cookie → scan HTTP composition with real services and controlled persistence/queue outcomes, including key removal, revocation and enqueue/replay recovery.
 

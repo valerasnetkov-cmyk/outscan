@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { BUDGET_CEILINGS } from "../src/scanner-policy/index.js";
+import type { ScannerLaunchPlan } from "../src/supervisor/runtime-model.js";
 
 const fake = vi.hoisted(() => ({ command: vi.fn(), attach: vi.fn() }));
 vi.mock("node:child_process", async () => {
@@ -41,7 +42,7 @@ const configuration = {
   working_directory: process.cwd(),
   artifact_identity: artifact,
 };
-const plan = {
+const plan: ScannerLaunchPlan = {
   schema_version: 1 as const,
   artifact_identity: artifact,
   scanner_input: {

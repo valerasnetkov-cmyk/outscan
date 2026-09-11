@@ -117,8 +117,6 @@ The internal worker composition keeps Redis connection state at the trusted work
 
 Mounted provider files use an exact versioned JSON envelope, fatal UTF-8, duplicate-key/depth checks and fixed size ceilings. Every access repeats lstat/open/fstat identity and size validation; symlinks and non-regular files deny. Positional reads allocate only the validated size plus one growth sentinel; truncation, excess bytes and observed post-read size/mtime/ctime/permission changes deny. This is not filesystem snapshot isolation. On POSIX, approvals reject group/world write and signing keys reject every group/world permission bit. Windows mode bits are not treated as ACL proof, and Kubernetes-style symlink mounts require a separately reviewed source adapter. Provider failures expose only unavailable state.
 
-## Findings/scores
-
 The detached offline container launcher is a host-authority adapter, not a public
 broker or worker default. It validates the existing artifact/policy/input contract,
 uses a fixed local Docker endpoint and non-overridable no-network container policy,
@@ -126,6 +124,8 @@ and requires run-identity-bound cleanup before acknowledging completion. Scanner
 stdin contains no application credential and the Docker socket stays on the host.
 Local synthetic-approval tests do not replace image promotion, a minimal scanner
 image, launcher privilege review, live egress enforcement or crash reconciliation.
+
+## Findings/scores
 
 Condition OPEN|RESOLVED.
 Occurrences record recurrence.

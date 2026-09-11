@@ -1,75 +1,80 @@
-# OUTSCAN canonical repository-state sync package v4
+# OUTSCAN Reporting Codex Package
 
 ## Purpose
 
-Records the successful v3/v4 consistency reviews and final Gate A closure. ADR-0009…ADR-0014 are Accepted; package integrity, security/architecture consistency, content consistency and post-acceptance verification are PASS.
+Documentation package for implementing Reporting V1 in OUTSCAN.
 
-## New evidence/current audit
+The package formalizes the confirmed product model:
 
-- `docs/CLAIM_INVENTORY.md`
-- `docs/UX_ACCEPTANCE.md`
-- `docs/audit-2026-09-03.md`
-- `APPLY_CHECKLIST.md`
+`one immutable Report Snapshot -> multiple audience-specific projections`.
 
-## Amended previously Accepted ADR
+## Files
 
-- `docs/adr/0004-guest-scan-boundary.md`
-- `docs/adr/0007-change-intelligence-first-class.md`
+### Start here
 
-## Accepted ADR
+- `CODEX_HANDOFF.md` - implementation order, invariants, scope and Definition of Done.
 
-- `docs/adr/0009-target-scope-authorization.md`
-- `docs/adr/0010-tenancy-data-classification.md`
-- `docs/adr/0011-scan-execution-protocol.md`
-- `docs/adr/0012-worker-boundary-scanner-policy.md`
-- `docs/adr/0013-finding-fingerprint-coverage.md`
-- `docs/adr/0014-public-ux-claims-accessibility.md`
+### Core architecture
 
-## Updated canonical docs
+- `docs/REPORT_ENGINE.md` - Report Engine boundaries, entities, state, storage and lifecycle.
+- `docs/REPORT_SCHEMA_VERSIONING.md` - canonical snapshot schema, stable Finding IDs and versioning.
+- `docs/REPORT_FORMATS.md` - Workspace, PDF, MD RU/EN, AI MD, JSON and ZIP semantics.
+- `docs/REPORT_RENDERING_RULES.md` - shared localization, references, output bounds and renderer parity rules.
+- `docs/REPORT_SCHEMA_COMPATIBILITY.md` - provenance, JSON serialization, validation and backward compatibility.
 
-- `AGENTS.md`
-- `README.md`
-- `SECURITY.md`
-- `CHANGELOG.md`
-- `plan.md`
-- `docs/PRE_SCAFFOLD_GATE.md`
-- `docs/PRODUCT.md`
-- `docs/ARCHITECTURE.md`
-- `docs/SECURITY_MODEL.md`
-- `docs/SCANNING_POLICY.md`
-- `docs/DATA_MODEL.md`
-- `docs/API_CONTRACT.md`
-- `docs/RISK_ENGINE.md`
-- `docs/UI_UX.md`
-- `docs/TESTING.md`
-- `docs/OPERATIONS.md`
-- `docs/ROADMAP.md`
-- `docs/MONETIZATION.md`
-- `docs/LEGAL.md`
-- `docs/CODEX_WORKFLOW.md`
-- `docs/audit-2026-09-02.md`
+### Security
 
-## Unchanged files retained from previous package
+- `docs/AI_HANDOFF_SECURITY.md` - indirect prompt injection, redaction, trust classes and negative tests.
+- `docs/REPORT_BUNDLE_STORAGE.md` - private artifact storage, hashes, ZIP security and downloads.
 
-Other Markdown files remain included for package completeness.
+### Product/UI
 
-## Repository facts from latest review
+- `docs/REPORT_UI_UX.md` - Reports UI, historical/current distinction and download UX.
 
-- old correction drafts are already absent;
-- owner decision for `agent.md` is resolved;
-- post-application `git diff --check` passed for the currently applied revision.
+### Verification
 
-## Current repository state / Gate A closure
+- `docs/REPORT_ACCEPTANCE_TESTS.md` - functional, schema, renderer and lifecycle acceptance tests.
+- `docs/REPORT_SECURITY_TESTS.md` - authorization, AI injection, storage, ZIP, concurrency and abuse negative tests.
 
-- v3 is already applied;
-- old correction drafts are absent;
-- `agent.md` decision is resolved;
-- current `git diff --check` PASS;
-- current package/security/content consistency PASS;
-- `public/maket.png` may remain temporarily as reference-only first-screen material and is not a Gate A blocker;
-- ADR-0009…ADR-0014 are Accepted;
-- post-acceptance `git diff --check` passed;
-- final read-only Gate A consistency review passed;
-- Gate A is PASS.
+### Architecture decision
 
-Before Gate B1/public deployment, move/exclude `public/maket.png` from served runtime assets if it is still present.
+- `docs/adr/ADR-NEXT-report-engine.md` - accepted decision; Codex must assign the next free ADR number after inspecting the repository.
+
+### Repository integration
+
+- `REPOSITORY_INTEGRATION.md` - checklist for README, CHANGELOG, plan, architecture, data model, API, security, testing and operations documentation.
+
+## V1 outputs
+
+- Workspace;
+- PDF;
+- Markdown RU;
+- Markdown EN;
+- AI Handoff Markdown;
+- JSON;
+- ZIP Report Bundle.
+
+## Deferred
+
+- SARIF;
+- public/revocable share-link;
+- White Label;
+- scheduled delivery;
+- direct external AI action;
+- API push delivery.
+
+## Critical invariants
+
+- snapshot immutable;
+- stable Finding ID;
+- renderer parity;
+- tenant isolation;
+- reporting does not grant scan permissions;
+- AI evidence is untrusted;
+- no secret values in AI export;
+- `FIX_REPORTED != RESOLVED`;
+- historical state is not silently replaced by current state.
+
+## Recommended Codex instruction
+
+`Начни с CODEX_HANDOFF.md. Сначала проинспектируй фактический working tree и ADR, затем интегрируй Reporting V1 по минимальным вертикальным slices. Не создавай параллельные модели Scan/Finding/Authorization и не расширяй scanning permissions. После каждого slice запускай relevant tests; перед завершением выполни полный verification gate и синхронизируй README/CHANGELOG/plan/docs.`
