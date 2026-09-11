@@ -23,6 +23,8 @@ OUTSCAN accepts user-controlled external targets and invokes complex third-party
 
 ## Consequences
 
+Owner clarification, 2026-09-10: the current OUTSCAN deployment target is Ubuntu + Docker Compose. B1 isolation/egress implementation is designed for that environment. Scanner execution workers may subsequently move to Kubernetes while retaining the original security boundary, credential exclusions and bounded result contract; this does not approve a shared scanner/trusted-service security context. See [deployment target](../DEPLOYMENT_TARGET.md). The accepted isolation decision remains unchanged.
+
 - queue/job contract required;
 - scanner images/profiles pinned;
 - result channel must be narrow and authenticated;

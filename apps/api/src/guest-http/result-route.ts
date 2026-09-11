@@ -2,6 +2,7 @@ import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 
 import { GUEST_RESULT_SECURITY_HEADERS } from "../guest-crypto/index.js";
 import type { ReadGuestResultDecision } from "../guest-scan/index.js";
+import { projectGuestResultDecision } from "./result-projection.js";
 
 const UINT64_MAX = 0xffff_ffff_ffff_ffffn;
 const ROUTE = "/v1/public/scans/:scanId";
@@ -98,14 +99,15 @@ export function createGuestResultRoutePlugin(
         let now: bigint;
         try {
           now = dependencies.now_unix_seconds();
-          if (now < 0n || now > UINT64_MAX) throw new Error();
+          if (typeof now !== "bigint" || now < 0n || now > UINT64_MAX)
+            throw new Error();
         } catch {
           return error(reply, 503, "RESULT_SERVICE_UNAVAILABLE");
         }
 
         let decision: ReadGuestResultDecision;
         try {
-          decision = await dependencies.read_result(
+          const rawDecision = await dependencies.read_result(
             Object.freeze({
               authorization_header: authorizationHeader(request),
               route_guest_scan_id: request.params.scanId,
@@ -113,6 +115,14 @@ export function createGuestResultRoutePlugin(
               now_unix_seconds: now,
             }),
           );
+          const projected = projectGuestResultDecision(
+            rawDecision,
+            request.params.scanId,
+            now,
+          );
+          if (!projected)
+            return error(reply, 503, "RESULT_SERVICE_UNAVAILABLE");
+          decision = projected;
         } catch {
           return error(reply, 503, "RESULT_SERVICE_UNAVAILABLE");
         }

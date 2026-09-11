@@ -99,7 +99,7 @@ function snapshotConfiguration(
   }
 }
 
-function scannerInput(
+export function encodeApprovedScannerInput(
   value: unknown,
   configuredArtifact: ScannerArtifactIdentity,
 ): Uint8Array | null {
@@ -230,7 +230,10 @@ export function createFixedScannerProcessLauncher(
   }
   return Object.freeze({
     async launch(plan: Readonly<ScannerLaunchPlan>) {
-      const input = scannerInput(plan, configuration.artifact_identity);
+      const input = encodeApprovedScannerInput(
+        plan,
+        configuration.artifact_identity,
+      );
       if (!input) throw new Error("SCANNER_PROCESS_LAUNCH_DENIED");
       let child: ScannerChildProcess | undefined;
       try {

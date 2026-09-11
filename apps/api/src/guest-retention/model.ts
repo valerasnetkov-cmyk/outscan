@@ -21,6 +21,7 @@ export interface GuestRetentionRunRecord {
   scans_deleted: number;
   active_counter_decrements: number;
   stale_windows_deleted: number;
+  session_revocations_deleted: number;
   inconsistencies: number;
   more_work: boolean | null;
   failure_code: "GUEST_RETENTION_UNAVAILABLE" | null;

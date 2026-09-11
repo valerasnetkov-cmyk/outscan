@@ -8,3 +8,4 @@ export * from "./postgres-retention.js";
 export * from "./postgres-result-commit.js";
 export * from "./postgres-result-rejection.js";
 export * from "./postgres-result-read.js";
+export * from "./postgres-session-revocation.js";

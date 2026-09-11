@@ -1,0 +1,41 @@
+# Opt-in offline checks only; no ports, database or production scanner.
+services:
+  scanner-offline-check:
+    profiles: [scanner-check]
+    build:
+      context: ../..
+      dockerfile: deploy/compose/api.Dockerfile
+    command: [node, scanner-smoke.mjs]
+    init: true
+    user: "1000:1000"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+    restart: "no"
+    stop_grace_period: 10s
+  api-baseline:
+    profiles: [baseline]
+    build:
+      context: ../..
+      dockerfile: deploy/compose/api.Dockerfile
+    init: true
+    user: "1000:1000"
+    read_only: true
+    network_mode: none
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 256m
+    cpus: 0.5
+    restart: "no"
+    stop_grace_period: 10s
+    healthcheck:
+      test: [CMD, node, container-smoke.mjs]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

@@ -8,6 +8,8 @@ JSON API, runtime validation, stable errors, correlation IDs, server-derived ten
 
 ## Public Guest
 
+The detached result HTTP adapter independently rebuilds successful service responses through the canonical Guest view builder and requires exact deep equality, including nested fields, headers, section/coverage inventory and aggregate counts. The scan ID must match the route, completion cannot be in the future, and remaining access must be 1–1800 seconds. Invalid service decisions or non-bigint/out-of-range clocks return redacted `503 RESULT_SERVICE_UNAVAILABLE`; only rebuilt data reaches serialization.
+
 ### `GET /v1/public/capabilities`
 
 Anonymous read-only product metadata endpoint. It returns only an explicit safe projection of code-defined capabilities that are `ACTIVE`, public-visible, claim-approved and backed by valid production evidence.
@@ -54,9 +56,13 @@ Promotions and Access Grants expose no route today. After B2 plus accepted entit
 
 ### Guest session bootstrap
 
+The detached adapter enforces a defensive 1 KiB parser ceiling even though bodies are prohibited. Malformed/empty JSON, excess body size and unsupported media types use the same redacted 400 contract and privacy headers without calling bootstrap; unexpected framework failures use redacted 503.
+
 Before creating a Guest Scan, the browser must have a valid server-issued `__Host-outscan_guest_session` cookie.
 
 The intended bootstrap boundary is `POST /v1/public/guest-session`. It accepts no query or body, requires one exact deployment-configured HTTPS `Origin`, and returns `204` with `no-store`/`no-referrer`. A missing or invalid session may receive one canonical Set-Cookie header; an already authenticated session is reused without extending its cookie lifetime. Malformed input is `400 INVALID_GUEST_SESSION_REQUEST`; unavailable or invalid server decisions are `503 GUEST_SESSION_UNAVAILABLE`. No cookie/session identifier is returned in a response body.
+
+The server reads and strictly snapshots the current active/retained Guest-session MAC keyring for every bootstrap and scan admission. A valid retained-key session is reused until its original cookie expiry; emergency key removal is observed on the next request and denies the removed-key cookie before persistence or queue access. Scope revocation is checked only after MAC authentication through the digest-only PostgreSQL store and is independently rechecked before scan admission. Invalid, removed-key or revoked credentials may receive a fresh active-key session through bootstrap, but it has a new scope and cannot recover the prior session's idempotency or result ownership. A confirmed revoke makes scan creation return the bounded session denial; key/revocation ambiguity returns service unavailable before persistence or queue access.
 
 Required cookie attributes:
 
@@ -69,7 +75,7 @@ Required cookie attributes:
 
 The cookie carries a 256-bit random Guest session identifier plus server authentication/MAC. The API rejects invalid/client-forged Guest-session cookies.
 
-The public page/session bootstrap establishes this cookie **before** `POST /v1/public/scans`. If the cookie is missing/invalid, the scan POST must not create a GuestScan; the client must complete session bootstrap first. The detached Fastify adapter exists for contract tests, but production `buildApp()` does not register it before Gate B1.
+The public page/session bootstrap establishes this cookie **before** `POST /v1/public/scans`. If the cookie is missing/invalid, the scan POST must not create a GuestScan; the client must complete session bootstrap first. Detached Fastify adapters exist for bootstrap and scan-creation contract tests, but production `buildApp()` registers neither before Gate B1.
 
 IP, NAT address, User-Agent and browser fingerprint may inform abuse controls but are not Guest authorization/idempotency ownership boundaries.
 
@@ -133,7 +139,7 @@ Response:
 }
 ```
 
-New or expired-replacement admission returns `202`; a live same-request replay returns `200`. Invalid input is `400`, missing/invalid Guest session is `401`, changed-request idempotency reuse is `409`, bounded public quota denial is `429` with optional safe `Retry-After`, and server pause/dependency/queue ambiguity is `503`. Responses use `no-store`/`no-referrer`; internal limit dimensions and dependency details are not returned.
+New or expired-replacement admission returns `202`; a live same-request replay returns `200`. Invalid input is `400`, missing/invalid Guest session is `401`, changed-request idempotency reuse is `409`, bounded public quota denial is `429` with optional safe `Retry-After`, and server pause/dependency/queue ambiguity is `503`. Responses use `no-store`/`no-referrer`; internal limit dimensions and dependency details are not returned. The detached adapter additionally requires one exact configured HTTPS Origin, a single JSON media type/Cookie/Idempotency-Key/forwarding header, no query and a 1 KiB body ceiling; it rejects any service outcome outside this closed projection and remains unregistered.
 
 ### `GET /v1/public/scans/:scanId`
 
@@ -165,7 +171,7 @@ The detached HTTP adapter maps malformed route/query input to `400 INVALID_RESUL
 
 Response is sanitized Guest posture only. The public body has five fixed posture sections, all eight canonical coverage groups with explicit missing/unavailable states, aggregate potential-risk/warning counts and fixed no-score/no-assurance limitations. It excludes raw Findings/evidence, severity, confidence, fingerprints and scanner execution metadata.
 
-Current implementation provides the ADR-0011 cryptographic codecs, strict Set-Cookie/Cookie authentication and Bearer result-access authorization primitives in `apps/api/src/guest-crypto`. Result authorization binds the token to the route GuestScan ID, enforces the remaining 30-minute window and supplies mandatory no-store/no-referrer headers. `apps/api/src/guest-idempotency` implements the pure create/replay/conflict decision and deterministic token reproduction over a validated persisted-record view. `apps/api/src/guest-abuse` adds trusted ingress/HMAC rotation, pure new-scan admission and 24-hour retention decisions. `apps/api/src/guest-result` builds the exact immutable public body. `apps/api/src/guest-scan` validates exact PUBLIC_GUEST snapshots and composes both creation and route-bound result authorization: creation authenticates the Guest cookie, canonicalizes the host, derives trusted network digests, commits PostgreSQL admission, enqueues/re-enqueues only the stable ID and withholds the result token on queue ambiguity. `apps/api/src/guest-http` contains the detached result adapter described above, but the production app does not register it. ADR-0017 and SQL migrations implement the separate PostgreSQL schema/state guards. `apps/api/src/guest-persistence` supplies SERIALIZABLE idempotency/abuse, queue lease CAS, cancellation, authenticated result commit/read/cleanup and an append-only minimized rejection-event sink. `apps/api/src/guest-queue` composes BullMQ delivery, server-owned approved context, heartbeat, commit and mandatory rejection recording before retry. `apps/api/src/guest-retention` supplies an internal scheduled process and minimized durable run/alert telemetry; `apps/api/src/guest-telemetry` adds minimized durable queue-outcome batches with worker-owned periodic/final flush. Production worker deployment, exported alerts and all public Guest route registrations remain unimplemented.
+Current implementation provides the ADR-0011 cryptographic codecs, strict Set-Cookie/Cookie authentication and Bearer result-access authorization primitives in `apps/api/src/guest-crypto`. Result authorization binds the token to the route GuestScan ID, enforces the remaining 30-minute window and supplies mandatory no-store/no-referrer headers. `apps/api/src/guest-idempotency` implements the pure create/replay/conflict decision and deterministic token reproduction over a validated persisted-record view. `apps/api/src/guest-abuse` adds trusted ingress/HMAC rotation, pure new-scan admission and 24-hour retention decisions. `apps/api/src/guest-result` builds the exact immutable public body. `apps/api/src/guest-scan` validates exact PUBLIC_GUEST snapshots and composes both creation and route-bound result authorization: creation authenticates the Guest cookie, canonicalizes the host, derives trusted network digests, commits PostgreSQL admission, enqueues/re-enqueues only the stable ID and withholds the result token on queue ambiguity. `apps/api/src/guest-http` contains detached session, scan-creation and result adapters with closed input/output/error projections, but the production app does not register them. ADR-0017 and SQL migrations implement the separate PostgreSQL schema/state guards. `apps/api/src/guest-persistence` supplies SERIALIZABLE idempotency/abuse, queue lease CAS, cancellation, authenticated result commit/read/cleanup and an append-only minimized rejection-event sink. `apps/api/src/guest-queue` composes BullMQ delivery, server-owned approved context, heartbeat, commit and mandatory rejection recording before retry. `apps/api/src/guest-retention` supplies an internal scheduled process and minimized durable run/alert telemetry; `apps/api/src/guest-telemetry` adds minimized durable queue-outcome batches with worker-owned periodic/final flush. Production worker deployment, exported alerts and all public Guest route registrations remain unimplemented.
 
 ## Auth/session
 

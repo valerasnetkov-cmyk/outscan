@@ -1,5 +1,5 @@
-import type { GuestSessionKeyring } from "../guest-crypto/index.js";
 import type { GuestScanPersistence } from "../guest-persistence/index.js";
+import type { GuestSessionKeyProvider } from "../guest-session/index.js";
 
 export interface GuestScanCreationRequest {
   body: unknown;
@@ -14,8 +14,10 @@ export interface GuestScanEnqueuer {
 }
 
 export interface GuestScanCreationDependencies {
-  guest_session_keyring: GuestSessionKeyring;
-  is_guest_session_revoked(guestSessionScope: string): boolean;
+  guest_session_key_provider: GuestSessionKeyProvider;
+  is_guest_session_revoked(
+    guestSessionScope: string,
+  ): Promise<unknown> | unknown;
   trusted_proxy_cidrs: readonly string[];
   network_hmac_keyring: Map<number, Uint8Array>;
   active_network_hmac_key_version: number;

@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 
 import { createDatabasePool } from "./db/index.js";
-import { createPostgresGuestRetentionWorker } from "./guest-persistence/index.js";
+import {
+  createPostgresGuestRetentionWorker,
+  createPostgresGuestSessionRevocationStore,
+} from "./guest-persistence/index.js";
 import {
   createPostgresGuestRetentionRunStore,
   startGuestRetentionScheduler,
@@ -18,6 +21,7 @@ const scheduler = startGuestRetentionScheduler(
       pool,
       now_unix_seconds: now,
     }),
+    revocation_pruner: createPostgresGuestSessionRevocationStore(pool),
     run_store: createPostgresGuestRetentionRunStore(pool),
     create_run_id: randomUUID,
     now_unix_seconds: now,
@@ -33,6 +37,8 @@ const scheduler = startGuestRetentionScheduler(
           batch_count: outcome.record.batch_count,
           scans_deleted: outcome.record.scans_deleted,
           stale_windows_deleted: outcome.record.stale_windows_deleted,
+          session_revocations_deleted:
+            outcome.record.session_revocations_deleted,
           inconsistencies: outcome.record.inconsistencies,
         }
       : {

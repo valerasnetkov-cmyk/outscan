@@ -56,7 +56,12 @@ function harness(result: PersistGuestScanResult = successful()) {
     guest_scan_id: guestScanId,
   }));
   const dependencies: GuestScanCreationDependencies = {
-    guest_session_keyring: new Map([[7, SESSION_KEY]]),
+    guest_session_key_provider: {
+      get_current_keys: async () => ({
+        active_key_version: 7,
+        keys: new Map([[7, SESSION_KEY]]),
+      }),
+    },
     is_guest_session_revoked: () => false,
     trusted_proxy_cidrs: [],
     network_hmac_keyring: new Map([[4, NETWORK_KEY]]),
@@ -131,6 +136,83 @@ describe("Guest scan creation composition", () => {
     });
     expect(test.createOrReplay).not.toHaveBeenCalled();
     expect(test.enqueue).not.toHaveBeenCalled();
+  });
+
+  it("separates confirmed revocation from revocation-store failure", async () => {
+    const revoked = harness();
+    revoked.dependencies.is_guest_session_revoked = vi.fn(async () => true);
+    await expect(
+      createGuestScanCreationService(revoked.dependencies)(input()),
+    ).resolves.toMatchObject({
+      ok: false,
+      status_code: 401,
+      body: { error: { code: "GUEST_SESSION_INVALID" } },
+    });
+    expect(revoked.createOrReplay).not.toHaveBeenCalled();
+
+    for (const unavailable of [
+      vi.fn(async () => null),
+      vi.fn(async () => {
+        throw new Error("database detail");
+      }),
+    ]) {
+      const test = harness();
+      test.dependencies.is_guest_session_revoked = unavailable;
+      await expect(
+        createGuestScanCreationService(test.dependencies)(input()),
+      ).resolves.toMatchObject({
+        ok: false,
+        status_code: 503,
+        body: { error: { code: "GUEST_SCAN_UNAVAILABLE" } },
+      });
+      expect(test.createOrReplay).not.toHaveBeenCalled();
+      expect(test.enqueue).not.toHaveBeenCalled();
+    }
+  });
+
+  it("freshly applies Guest-session key rotation and provider failure", async () => {
+    const test = harness();
+    const getKeys = vi
+      .fn()
+      .mockResolvedValueOnce({
+        active_key_version: 7,
+        keys: new Map([[7, SESSION_KEY]]),
+      })
+      .mockResolvedValueOnce({
+        active_key_version: 8,
+        keys: new Map([[8, Buffer.alloc(32, 0x55)]]),
+      });
+    test.dependencies.guest_session_key_provider = {
+      get_current_keys: getKeys,
+    };
+    const service = createGuestScanCreationService(test.dependencies);
+    await expect(service(input())).resolves.toMatchObject({ ok: true });
+    await expect(service(input())).resolves.toMatchObject({
+      ok: false,
+      status_code: 401,
+      body: { error: { code: "GUEST_SESSION_INVALID" } },
+    });
+    expect(getKeys).toHaveBeenCalledTimes(2);
+
+    for (const unavailable of [
+      async () => null,
+      async () => {
+        throw new Error("secret provider detail");
+      },
+    ]) {
+      const failed = harness();
+      failed.dependencies.guest_session_key_provider = {
+        get_current_keys: unavailable,
+      };
+      await expect(
+        createGuestScanCreationService(failed.dependencies)(input()),
+      ).resolves.toMatchObject({
+        status_code: 503,
+        body: { error: { code: "GUEST_SCAN_UNAVAILABLE" } },
+      });
+      expect(failed.createOrReplay).not.toHaveBeenCalled();
+      expect(failed.enqueue).not.toHaveBeenCalled();
+    }
   });
 
   it("maps idempotency conflict without enqueue or internal detail", async () => {

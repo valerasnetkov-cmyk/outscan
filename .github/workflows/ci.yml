@@ -13,6 +13,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  compose-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose -p outscan-ci-baseline -f deploy/compose/compose.yaml --profile baseline config --quiet
+      - run: docker compose -p outscan-ci-baseline -f deploy/compose/compose.yaml --profile baseline build
+      - run: docker compose -p outscan-ci-baseline -f deploy/compose/compose.yaml --profile baseline up -d --wait --wait-timeout 90
+      - run: docker compose -p outscan-ci-baseline -f deploy/compose/compose.yaml --profile baseline exec -T api-baseline node container-smoke.mjs
+      - run: docker compose -p outscan-ci-baseline -f deploy/compose/compose.yaml --profile scanner-check run --build --rm -T scanner-offline-check
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: docker compose -p outscan-lifecycle-check -f deploy/compose/compose.yaml --profile scanner-check build scanner-offline-check
+      - run: node scripts/verify-scanner-lifecycle.mjs
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.19.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @outscan/api build
+      - run: node scripts/verify-offline-launcher.mjs
+      - if: always()
+        run: docker compose -p outscan-ci-baseline -f deploy/compose/compose.yaml --profile baseline --profile scanner-check down
+      - if: always()
+        run: docker compose -p outscan-lifecycle-check -f deploy/compose/compose.yaml --profile scanner-check down
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -53,5 +78,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
+      - run: pnpm exec eslint "deploy/compose/*-smoke.mjs"
+      - run: pnpm exec eslint scripts/verify-scanner-lifecycle.mjs
+      - run: pnpm exec eslint scripts/verify-offline-launcher.mjs
       - run: pnpm verify:db
       - run: pnpm verify:queue

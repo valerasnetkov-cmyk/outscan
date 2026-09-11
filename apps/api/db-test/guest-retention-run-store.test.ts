@@ -30,6 +30,7 @@ function record(runId: string, finished = FINISHED): GuestRetentionRunRecord {
     scans_deleted: 1,
     active_counter_decrements: 2,
     stale_windows_deleted: 3,
+    session_revocations_deleted: 4,
     inconsistencies: 0,
     more_work: false,
     failure_code: null,
@@ -82,7 +83,7 @@ describe("PostgreSQL Guest retention run store", () => {
          SELECT 'oversized_run', started_at, finished_at, status, observed_at,
            batch_count, 1001, scans_deleted, active_counter_decrements,
            stale_windows_deleted, inconsistencies, more_work, failure_code,
-           alert_code, retention_deadline
+           alert_code, retention_deadline, 0
          FROM platform_guest_retention_runs WHERE run_id = 'run_01'`,
       ),
     ).rejects.toMatchObject({ code: "23514" });

@@ -4,6 +4,7 @@ import {
 } from "../guest-abuse/index.js";
 import { authenticateGuestSessionCookieHeader } from "../guest-crypto/index.js";
 import type { PersistGuestScanResult } from "../guest-persistence/index.js";
+import { snapshotGuestSessionKeyState } from "../guest-session/index.js";
 import { canonicalizeHostname } from "../target/index.js";
 import type {
   GuestScanCreationDependencies,
@@ -108,7 +109,8 @@ function dependencies(
 ): Readonly<GuestScanCreationDependencies> | null {
   if (typeof value !== "object" || value === null) return null;
   try {
-    const guestSessionKeyring = value.guest_session_keyring;
+    const guestSessionKeyProvider = value.guest_session_key_provider;
+    const getGuestSessionKeys = guestSessionKeyProvider?.get_current_keys;
     const isGuestSessionRevoked = value.is_guest_session_revoked;
     const trustedProxyCidrs = value.trusted_proxy_cidrs;
     const networkHmacKeyring = value.network_hmac_keyring;
@@ -117,7 +119,7 @@ function dependencies(
     const queue = value.queue;
     const nowUnixSeconds = value.now_unix_seconds;
     if (
-      typeof guestSessionKeyring?.get !== "function" ||
+      typeof getGuestSessionKeys !== "function" ||
       typeof isGuestSessionRevoked !== "function" ||
       !Array.isArray(trustedProxyCidrs) ||
       trustedProxyCidrs.length > 64 ||
@@ -148,7 +150,9 @@ function dependencies(
     }
     if (!networkKeys.has(activeNetworkKeyVersion)) return null;
     return Object.freeze({
-      guest_session_keyring: guestSessionKeyring,
+      guest_session_key_provider: {
+        get_current_keys: getGuestSessionKeys.bind(guestSessionKeyProvider),
+      },
       is_guest_session_revoked: isGuestSessionRevoked.bind(value),
       trusted_proxy_cidrs: Object.freeze([...trustedProxyCidrs]),
       network_hmac_keyring: networkKeys,
@@ -289,10 +293,18 @@ export function createGuestScanCreationService(
     const domain = (input.body as { domain: unknown }).domain;
     const host = canonicalizeHostname(domain);
     if (!host.ok) return failure(400, "INVALID_SCAN_REQUEST");
+    let guestSessionKeys;
+    try {
+      guestSessionKeys = snapshotGuestSessionKeyState(
+        await deps.guest_session_key_provider.get_current_keys(),
+      );
+    } catch {
+      guestSessionKeys = null;
+    }
+    if (!guestSessionKeys) return failure(503, "GUEST_SCAN_UNAVAILABLE");
     const session = authenticateGuestSessionCookieHeader(
       input.cookie_header,
-      deps.guest_session_keyring,
-      deps.is_guest_session_revoked,
+      guestSessionKeys.keys,
     );
     if (!session.ok) {
       return failure(
@@ -302,6 +314,18 @@ export function createGuestScanCreationService(
           : "GUEST_SESSION_INVALID",
       );
     }
+    let revoked: unknown;
+    try {
+      revoked = await deps.is_guest_session_revoked(
+        session.session.guest_session_scope,
+      );
+    } catch {
+      return failure(503, "GUEST_SCAN_UNAVAILABLE");
+    }
+    if (typeof revoked !== "boolean") {
+      return failure(503, "GUEST_SCAN_UNAVAILABLE");
+    }
+    if (revoked) return failure(401, "GUEST_SESSION_INVALID");
     const ingress = resolveTrustedIngressAddress({
       socket_remote_address: input.socket_remote_address,
       x_forwarded_for: input.x_forwarded_for,

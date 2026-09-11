@@ -2,9 +2,46 @@
 
 ## [Unreleased] — consistency closure
 
+- **Ubuntu/Compose baseline**: accepted the deployment target with later scanner-worker migration to Kubernetes; added pinned builds, offline frozen production dependencies, restricted build context, hardened no-network Compose checks and Ubuntu CI. The detached host-side offline launcher now binds an immutable image to approved scanner input and controls container-owned stop/cleanup; runtime checks cover real IPC, DNS-unavailable coverage, malformed input, failure/TERM-to-KILL and cleanup. See [deployment target](docs/DEPLOYMENT_TARGET.md); privilege review, production image/egress/worker binding, reconciliation, target-server deployment and Gate B1 remain pending.
+
+- **Guest HTTP boundaries and composition evidence**: result responses are rebuilt through the canonical view builder; unknown/nested fields, cross-scan results, inconsistent coverage and invalid time deny. Five scenarios connect real bootstrap/creation services to detached routes, covering issued-cookie admission, no-refresh reuse, tampering, key removal, revocation/provider failure and enqueue/replay recovery with controlled persistence/queue adapters. Routes remain detached.
+
+### Guest bootstrap parser boundary
+
+- Added a 1 KiB defensive body ceiling and route-local redacted parser errors with privacy headers to detached Guest bootstrap. Invalid/empty/oversized JSON and unsupported media types cannot issue a cookie or invoke bootstrap.
+
+### Bounded mounted-file reads
+
+- Replaced unbounded key/approval file reads with fixed-size positional reads plus a one-byte growth sentinel and post-read metadata validation. Concurrent growth, truncation and observed modification fail closed; partial reads are supported and handles close on failure.
+- Added deterministic race/byte-budget regression tests. Public routes and Gate status are unchanged.
+
+### Fresh-read Guest-session admission keys
+
+- Replaced the scan-creation service's process-lifetime Guest-session key Map with the same injected fresh-read key provider used by bootstrap. Every admission now snapshots and validates one active plus at most two retained exact 32-byte keys before cookie authentication.
+- Retained-key removal takes effect on the next scan request: an old cookie is denied before revocation lookup, persistence or queue access. Missing, malformed, throwing or ambiguous provider state collapses to the existing redacted unavailable response.
+- Full verification passed with 994 API tests plus 23 registry and 3 web tests; PostgreSQL 18.6 passed 12 files / 81 tests. No route, scanner capability or deployment state changed, and Gate B1 remains in progress.
+
+### Detached Guest scan creation HTTP boundary
+
+- Added an unregistered `POST /v1/public/scans` Fastify plugin over the existing Guest creation service. It requires one canonical HTTPS Origin, a bounded JSON body and single sensitive headers, forwards only the socket peer plus raw forwarding value to trusted-ingress evaluation, and returns fixed privacy headers.
+- Added a second fail-closed projection over service outcomes: only the documented `200/202/400/401/409/429/503` combinations can cross the HTTP boundary, `Retry-After` is canonical and bounded, and unknown fields, headers, codes or malformed success bodies collapse to a redacted 503.
+- Twenty-five focused route cases pass, including parser/body limits, cross-origin/query/content-type denial, duplicate headers, optional bounded `Retry-After`, hostile service decisions and production-app route absence. Gate B1 remains in progress and no endpoint was exposed.
+
+### Guest-session keyring and retention integration
+
+- Added a fresh-read mounted Guest-session MAC keyring provider over the shared hardened JSON-file reader. It accepts one active plus at most two retained canonical 32-byte keys, rejects duplicate/unknown fields and versions, and contains missing, malformed, oversized, symlink/TOCTOU and unsafe POSIX-permission failures.
+- Integrated bounded expired Guest-session revocation pruning into the existing non-overlapping retention cycle rather than creating another scheduler. Migration `0008_guest_retention_revocations.sql` adds an immutable minimized deletion counter to 30-day PLATFORM telemetry; cleanup uncertainty produces the existing closed unavailable alert.
+- Full repository verification passed with 968 API tests plus 23 registry and 3 web tests; PostgreSQL 18.6 verification passed 12 files / 81 tests. No Guest route or scanner capability was exposed, and Gate B1 remains in progress.
+
+### Durable Guest-session revocation
+
+- Added `0007_guest_session_revocations.sql` and a PostgreSQL store keyed only by the 32-byte Guest-session scope digest. Revocation is idempotent, lasts exactly 24 hours, expires at the exact boundary and supports bounded `SKIP LOCKED` pruning without storing raw cookie/session, network or tenant identity.
+- Guest scan creation now awaits the same revocation provider used by bootstrap: a confirmed revoke returns the bounded session denial, while provider failure or non-boolean state returns unavailable before persistence or queue access. Real PostgreSQL tests cover storage, expiry replacement, pruning and scan denial; no public revoke route was added.
+
 ### Detached Guest session bootstrap boundary
 
 - Added an unregistered Fastify plugin for `POST /v1/public/guest-session`. It requires the exact configured HTTPS Origin, rejects query/body and duplicate raw headers, returns no session material in the body, and emits only a canonical host-only Secure/HttpOnly cookie or a no-refresh reuse response.
+- Added the server-owned bootstrap service over fresh active/retained key and revocation providers. It reuses a valid non-revoked session without extending lifetime, issues with the active key for missing/invalid/revoked input, honors retained-key removal immediately and fails closed on malformed or unavailable provider state.
 - Hostile bootstrap decisions, unsafe Set-Cookie values and provider failures collapse to a redacted 503. Route tests also prove the endpoint remains absent from production `buildApp()`; Gate B1 remains open and no browser receives the cookie yet.
 
 ### Detached Guest result HTTP boundary

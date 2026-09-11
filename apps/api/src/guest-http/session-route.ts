@@ -1,6 +1,15 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 
 import { isGuestSessionSetCookieHeader } from "../guest-crypto/index.js";
+import type {
+  GuestSessionBootstrapDecision,
+  GuestSessionBootstrapper,
+} from "../guest-session/index.js";
+
+export type {
+  GuestSessionBootstrapDecision,
+  GuestSessionBootstrapper,
+} from "../guest-session/index.js";
 
 const ROUTE = "/v1/public/guest-session";
 const SECURITY_HEADERS = Object.freeze({
@@ -8,14 +17,6 @@ const SECURITY_HEADERS = Object.freeze({
   "referrer-policy": "no-referrer",
   "x-content-type-options": "nosniff",
 });
-
-export type GuestSessionBootstrapDecision =
-  | Readonly<{ ok: true; action: "REUSED" }>
-  | Readonly<{ ok: true; action: "ISSUED"; set_cookie: string }>;
-
-export type GuestSessionBootstrapper = (
-  request: Readonly<{ cookie_header: string | undefined }>,
-) => Promise<GuestSessionBootstrapDecision>;
 
 export interface GuestSessionRouteDependencies {
   allowed_origin: string;
@@ -107,7 +108,14 @@ function validDecision(value: unknown): value is GuestSessionBootstrapDecision {
     return false;
   }
   try {
-    if (Reflect.get(value, "ok") !== true) return false;
+    const ok = Reflect.get(value, "ok");
+    if (ok === false) {
+      return (
+        exactKeys(value, ["ok", "code"]) &&
+        Reflect.get(value, "code") === "GUEST_SESSION_UNAVAILABLE"
+      );
+    }
+    if (ok !== true) return false;
     const action = Reflect.get(value, "action");
     if (action === "REUSED") return exactKeys(value, ["ok", "action"]);
     return (
@@ -142,6 +150,14 @@ export function createGuestSessionRoutePlugin(
     app.route<{ Querystring: Record<string, unknown> }>({
       method: "POST",
       url: ROUTE,
+      bodyLimit: 1_024,
+      errorHandler(failure, _request, reply) {
+        const status = (failure as { statusCode?: number }).statusCode;
+        return error(
+          reply,
+          status === 400 || status === 413 || status === 415 ? 400 : 503,
+        );
+      },
       async handler(request, reply) {
         const origin = singleRawHeader(request, "origin");
         const cookie = singleRawHeader(request, "cookie");
@@ -164,6 +180,7 @@ export function createGuestSessionRoutePlugin(
           return error(reply, 503);
         }
         if (!validDecision(decision)) return error(reply, 503);
+        if (!decision.ok) return error(reply, 503);
 
         if (decision.action === "ISSUED") {
           reply.header("set-cookie", decision.set_cookie);

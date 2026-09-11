@@ -4,10 +4,14 @@
 
 local, test/CI, staging, production.
 
+Current deployment target is an Ubuntu server with Docker Compose (owner accepted 2026-09-10). Staging/B1 evidence must exercise this target; Windows development or local Docker tests alone are insufficient. Kubernetes is a later destination for scanner execution workers, not a prerequisite for the current release. See [deployment target and B1 delivery order](DEPLOYMENT_TARGET.md).
+
 Scanner/template promotion:
 `staging → tests → owned canary → approval → production`.
 
 ## Runtime V1
+
+The initial API-only container baseline and local commands are documented in [deployment target](DEPLOYMENT_TARGET.md#local-api-container-baseline). It publishes no ports and runs no worker/scanner/database; it is packaging/runtime-hardening evidence only, not the approved production topology.
 
 web, admin, API, PostgreSQL, Redis/BullMQ, trusted supervisor, disposable scanners, TI jobs.
 
@@ -67,6 +71,8 @@ Deletion job has metrics/alert and verification test.
 The runtime scheduler invokes the transactional `SKIP LOCKED` worker in bounded, non-overlapping cycles. Every completed cycle must be written before it is acknowledged to immutable `GuestRetentionRun` telemetry with `SUCCEEDED`, `PARTIAL` or `FAILED`, bounded counters, closed inconsistency/unavailable alert code and exact 30-day expiry. It contains no Guest ID, target, session/network digest, tenant field or scanner data. Store failure is a closed `RETENTION_RUN_STORE_UNAVAILABLE` process outcome. After a build, `pnpm --filter @outscan/api start:retention` runs the dedicated process with the same required TLS-explicit database environment; it never migrates automatically. The CLI emits only bounded status/counters; deployment and connection to an external Ops alert collector remain Gate B1 work.
 
 Guest abuse counters are reserved atomically for new/replacement scans and released idempotently on accepted result, expired replacement, trusted internal cancellation, retry failure or access expiry. Cancellation locks the job/current attempt, invalidates a LEASED attempt as `SUPERSEDED` or a RUNNING attempt as `CANCELLED`, terminalizes the job and releases its reservation in one transaction; duplicate cancellation acknowledges without another decrement. This persistence command is not a public authorization boundary and has no route. Fixed V1 limits are 3/10m, 10/day and 1 concurrent per session scope; 20/10m, 100/day and 4 concurrent per pseudonymous network signal. `0002` stores only fixed digests/counters/reservations; `0003` adds the distinct `EXPIRED` release reason. Trusted ingress uses a closed proxy CIDR list and bounded forwarding chain. Normal network-HMAC rotation is two-stage: deploy the active+retained multi-digest reader everywhere, then select the new active key; keep old keys for at least 24 hours plus clock/deployment skew. Cleanup telemetry and public 429/cancellation mapping remain pending.
+
+Guest-session MAC keys are a separate purpose/keyring from network HMAC, result-token and ResultEnvelope keys. Bootstrap and scan admission each read and copy a maximum of three 32-byte active/retained keys per request. The mounted-file adapter freshly reads a strict private JSON keyring and shares the regular-file, symlink/TOCTOU, size, UTF-8 and POSIX permission checks used by supervisor secrets. Normal rotation installs the new key plus retained prior keys before selecting it active and retains old keys through the 24-hour cookie lifetime plus skew; emergency removal takes effect on the next bootstrap/admission, causing a new scope through bootstrap while old-scope admission is denied. The PostgreSQL revocation store retains only a scope digest for exactly 24 hours; the existing retention scheduler performs its bounded expiry pruning and records only a deletion count. Provider/cleanup uncertainty returns the closed unavailable outcome. Managed key provisioning and deployment wiring remain Gate B1 work.
 
 ## Backups
 

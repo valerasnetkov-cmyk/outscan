@@ -12,13 +12,13 @@ const RECORD_SQL = `
     INSERT INTO platform_guest_retention_runs (
       run_id, started_at, finished_at, status, observed_at, batch_count,
       due_scans_selected, scans_deleted, active_counter_decrements,
-      stale_windows_deleted, inconsistencies, more_work, failure_code,
-      alert_code, retention_deadline
+      stale_windows_deleted, session_revocations_deleted, inconsistencies,
+      more_work, failure_code, alert_code, retention_deadline
     ) VALUES (
       $1, to_timestamp($2::double precision), to_timestamp($3::double precision),
       $4, CASE WHEN $5::text IS NULL THEN NULL
         ELSE to_timestamp($5::double precision) END,
-      $6, $7, $8, $9, $10, $11, $12, $13, $14,
+      $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
       to_timestamp($3::double precision) + interval '30 days'
     )
     ON CONFLICT (run_id) DO NOTHING
@@ -36,10 +36,11 @@ const RECORD_SQL = `
             THEN NULL ELSE to_timestamp($5::double precision) END
           AND batch_count = $6 AND due_scans_selected = $7
           AND scans_deleted = $8 AND active_counter_decrements = $9
-          AND stale_windows_deleted = $10 AND inconsistencies = $11
-          AND more_work IS NOT DISTINCT FROM $12::boolean
-          AND failure_code IS NOT DISTINCT FROM $13::text
-          AND alert_code IS NOT DISTINCT FROM $14::text
+          AND stale_windows_deleted = $10
+          AND session_revocations_deleted = $11 AND inconsistencies = $12
+          AND more_work IS NOT DISTINCT FROM $13::boolean
+          AND failure_code IS NOT DISTINCT FROM $14::text
+          AND alert_code IS NOT DISTINCT FROM $15::text
       ) AS matches`;
 
 function parameters(record: Readonly<GuestRetentionRunRecord>): unknown[] {
@@ -54,6 +55,7 @@ function parameters(record: Readonly<GuestRetentionRunRecord>): unknown[] {
     record.scans_deleted,
     record.active_counter_decrements,
     record.stale_windows_deleted,
+    record.session_revocations_deleted,
     record.inconsistencies,
     record.more_work,
     record.failure_code,

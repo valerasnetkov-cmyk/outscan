@@ -12,9 +12,13 @@ import {
 import { migrateDatabase } from "../src/db/index.js";
 import {
   createGuestSessionCookie,
+  deriveGuestSessionScope,
   GUEST_SESSION_COOKIE_NAME,
 } from "../src/guest-crypto/index.js";
-import { createPostgresGuestScanPersistence } from "../src/guest-persistence/index.js";
+import {
+  createPostgresGuestScanPersistence,
+  createPostgresGuestSessionRevocationStore,
+} from "../src/guest-persistence/index.js";
 import {
   createGuestScanCreationService,
   type GuestScanCreationDependencies,
@@ -51,7 +55,10 @@ function request(
   };
 }
 
-function harness() {
+function harness(
+  isGuestSessionRevoked: GuestScanCreationDependencies["is_guest_session_revoked"] = () =>
+    false,
+) {
   const enqueue = vi.fn(async (guestScanId: unknown) => ({
     schema_version: 1,
     guest_scan_id: guestScanId,
@@ -64,8 +71,13 @@ function harness() {
     create_token_nonce: () => Buffer.alloc(32, sequence),
   });
   const dependencies: GuestScanCreationDependencies = {
-    guest_session_keyring: new Map([[7, SESSION_KEY]]),
-    is_guest_session_revoked: () => false,
+    guest_session_key_provider: {
+      get_current_keys: async () => ({
+        active_key_version: 7,
+        keys: new Map([[7, SESSION_KEY]]),
+      }),
+    },
+    is_guest_session_revoked: isGuestSessionRevoked,
     trusted_proxy_cidrs: [],
     network_hmac_keyring: new Map([[4, NETWORK_KEY]]),
     active_network_hmac_key_version: 4,
@@ -87,7 +99,8 @@ beforeEach(async () => {
   sequence = 0;
   await pool.query(
     `TRUNCATE guest_results, guest_scan_attempts, guest_abuse_reservations,
-      guest_abuse_active_counters, guest_abuse_window_counters, guest_scans
+      guest_abuse_active_counters, guest_abuse_window_counters,
+      guest_session_revocations, guest_scans
      CASCADE`,
   );
   await pool.query(
@@ -133,6 +146,21 @@ describe("Guest scan creation with PostgreSQL", () => {
       body: { error: { code: "IDEMPOTENCY_KEY_REUSED" } },
     });
     expect(test.enqueue).toHaveBeenCalledTimes(1);
+  });
+
+  it("denies a session revoked by the PostgreSQL provider", async () => {
+    const revocations = createPostgresGuestSessionRevocationStore(pool);
+    await revocations.revoke({
+      guest_session_scope: deriveGuestSessionScope(SESSION_ID),
+    });
+    const test = harness(revocations.is_revoked);
+
+    await expect(test.create(request("revoked-key"))).resolves.toMatchObject({
+      ok: false,
+      status_code: 401,
+      body: { error: { code: "GUEST_SESSION_INVALID" } },
+    });
+    expect(test.enqueue).not.toHaveBeenCalled();
   });
 
   it("maps transactional concurrency denial to a minimized 429", async () => {

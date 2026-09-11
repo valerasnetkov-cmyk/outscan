@@ -67,6 +67,7 @@
 | TenantAuditLog               | TENANT             | RESTRICTED  | organization_id                 |
 | GuestScan                    | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestScanAttempt             | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestSessionRevocation       | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestAbuseCounter            | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestResultRejectionEvent    | PUBLIC_GUEST       | RESTRICTED  | forbidden                       |
 | GuestRetentionRun            | PLATFORM           | INTERNAL    | none                            |
@@ -84,6 +85,8 @@
 Any new persistent entity must enter this matrix before schema migration.
 
 `GuestAbuseCounter` contains only bounded session-scope/network-signal digests, policy dimension/window, count/reset and concurrency state. It contains no raw IP/cookie/User-Agent/fingerprint, expires within the 24-hour abuse window and grants no Guest ownership, replay or result access.
+
+`GuestSessionRevocation` is a PUBLIC_GUEST operational denial keyed only by the derived 32-byte session-scope digest. It contains no raw cookie/session, target, network or tenant identity, expires exactly 24 hours after revoke and is checked independently before Guest scan admission.
 
 `GuestResultRejectionEvent` is an append-only, attempt/fence-bound closed-code record. It contains no target, payload, digest, token, scanner output or tenant field and is deleted with its GuestScan aggregate.
 

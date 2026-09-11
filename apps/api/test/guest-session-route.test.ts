@@ -129,6 +129,10 @@ describe("detached Guest session bootstrap HTTP boundary", () => {
       set_cookie: `${COOKIE.set_cookie}\r\nX-Injected: yes`,
     }),
     async () => ({ ok: true as const, action: "REUSED" as const, extra: true }),
+    async () => ({
+      ok: false as const,
+      code: "GUEST_SESSION_UNAVAILABLE" as const,
+    }),
   ])("contains provider failure and hostile decisions", async (bootstrap) => {
     const response = await (
       await detachedApp(bootstrap as GuestSessionBootstrapper)
@@ -143,6 +147,34 @@ describe("detached Guest session bootstrap HTTP boundary", () => {
     });
     expect(response.headers["set-cookie"]).toBeUndefined();
     expect(response.body).not.toMatch(/secret|provider|injected/iu);
+  });
+
+  it.each([
+    ["application/json", '{"private":"parser-canary"'],
+    ["application/json", ""],
+    ["application/json", JSON.stringify({ private: "x".repeat(1_024) })],
+    ["application/octet-stream", "parser-canary"],
+  ])("redacts parser failures for %s", async (contentType, payload) => {
+    const bootstrap = vi.fn<GuestSessionBootstrapper>();
+    const response = await (
+      await detachedApp(bootstrap)
+    ).inject({
+      method: "POST",
+      url: "/v1/public/guest-session",
+      headers: { origin: ORIGIN, "content-type": contentType },
+      payload,
+    });
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toEqual({
+      error: { code: "INVALID_GUEST_SESSION_REQUEST" },
+    });
+    expect(response.headers).toMatchObject({
+      "cache-control": "no-store",
+      "referrer-policy": "no-referrer",
+      "x-content-type-options": "nosniff",
+    });
+    expect(response.headers["set-cookie"]).toBeUndefined();
+    expect(bootstrap).not.toHaveBeenCalled();
   });
 
   it("remains absent from the production app", async () => {

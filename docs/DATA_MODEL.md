@@ -64,6 +64,7 @@ Sensitivity:
 | TenantAuditLog                | TENANT             | RESTRICTED  | organization_id                 |
 | GuestScan                     | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestScanAttempt              | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
+| GuestSessionRevocation        | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestAbuseCounter/Reservation | PUBLIC_GUEST       | SENSITIVE   | forbidden                       |
 | GuestResultRejectionEvent     | PUBLIC_GUEST       | RESTRICTED  | forbidden                       |
 | GuestRetentionRun             | PLATFORM           | INTERNAL    | none                            |
@@ -178,6 +179,8 @@ The server issues a 256-bit random `guest_session_id` and derives a non-secret p
 
 Raw Guest session cookie/identifier is not persisted or logged.
 IP, User-Agent and browser fingerprint are abuse signals only and never substitute for Guest-session ownership.
+
+`GuestSessionRevocation` is a bounded operational record, not a persistent Guest identity. It stores only the 32-byte `guest_session_scope` digest plus second-aligned revoke/expiry timestamps, expires exactly 24 hours after revoke and has no raw cookie/session ID, target, network or tenant field. Exact-boundary expiry grants no denial; the existing retention cycle prunes bounded batches and records only `session_revocations_deleted` in immutable 30-day PLATFORM telemetry. Cleanup never controls correctness.
 
 `GuestAbuseWindowCounter`, `GuestAbuseActiveCounter` and `GuestAbuseReservation` are bounded operational records keyed only by authenticated Guest-session scope digest or a server-derived HMAC network-signal digest plus closed policy dimension. They store counts/reset/release state, never raw IP, cookie/session ID, User-Agent or browser fingerprint. During staged HMAC rotation, PostgreSQL locks and sums live rows for the active and retained digests, writes new usage only to the active digest and captures that digest on the reservation for exact release. Retired keys remain available for the 24-hour maximum counter window plus skew. Counter check+increment and GuestScan create/replace share one atomic boundary; terminal processing and expired replacement release concurrency idempotently. Stale window rows remain cleanup-due no later than their applicable 24-hour window and grant no replay/result authority.
 

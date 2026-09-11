@@ -1,5 +1,6 @@
 import type {
   GuestRetentionBatchResult,
+  GuestSessionRevocationStore,
   GuestRetentionWorker,
 } from "../guest-persistence/index.js";
 import type {
@@ -13,6 +14,7 @@ const MAX_BATCHES_PER_CYCLE = 100;
 
 export interface GuestRetentionRuntimeDependencies {
   worker: GuestRetentionWorker;
+  revocation_pruner: Pick<GuestSessionRevocationStore, "pruneExpired">;
   run_store: GuestRetentionRunStore;
   create_run_id(): string;
   now_unix_seconds(): number;
@@ -100,6 +102,29 @@ function validSuccessResult(
   }
 }
 
+function validPruneResult(
+  value: unknown,
+  batchSize: number,
+): value is { ok: true; deleted: number; more_work: boolean } {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  try {
+    const keys = Reflect.ownKeys(value);
+    return (
+      keys.length === 3 &&
+      keys.includes("ok") &&
+      keys.includes("deleted") &&
+      keys.includes("more_work") &&
+      Reflect.get(value, "ok") === true &&
+      integer(Reflect.get(value, "deleted"), 0, batchSize) &&
+      typeof Reflect.get(value, "more_work") === "boolean"
+    );
+  } catch {
+    return false;
+  }
+}
+
 function validDependencies(
   value: GuestRetentionRuntimeDependencies,
 ): value is GuestRetentionRuntimeDependencies {
@@ -108,6 +133,7 @@ function validDependencies(
       typeof value === "object" &&
       value !== null &&
       typeof value.worker?.runBatch === "function" &&
+      typeof value.revocation_pruner?.pruneExpired === "function" &&
       typeof value.run_store?.recordAndPrune === "function" &&
       typeof value.create_run_id === "function" &&
       typeof value.now_unix_seconds === "function"
@@ -143,6 +169,7 @@ function emptyRecord(
     scans_deleted: 0,
     active_counter_decrements: 0,
     stale_windows_deleted: 0,
+    session_revocations_deleted: 0,
     inconsistencies: 0,
     more_work: null,
     failure_code: "GUEST_RETENTION_UNAVAILABLE",
@@ -203,12 +230,30 @@ export async function runGuestRetentionCycle(
     record.active_counter_decrements += result.active_counter_decrements;
     record.stale_windows_deleted += result.stale_windows_deleted;
     record.inconsistencies += result.inconsistencies;
-    record.more_work = result.more_work;
+    let pruned: Awaited<
+      ReturnType<GuestSessionRevocationStore["pruneExpired"]>
+    >;
+    try {
+      pruned = await dependencies.revocation_pruner.pruneExpired({
+        batch_size: options.batch_size,
+      });
+    } catch {
+      pruned = { ok: false, code: "GUEST_REVOCATION_UNAVAILABLE" };
+    }
+    if (!validPruneResult(pruned, options.batch_size)) {
+      record.status = "FAILED";
+      record.more_work = null;
+      record.failure_code = "GUEST_RETENTION_UNAVAILABLE";
+      record.alert_code = "GUEST_RETENTION_UNAVAILABLE";
+      break;
+    }
+    record.session_revocations_deleted += pruned.deleted;
+    record.more_work = result.more_work || pruned.more_work;
     record.failure_code = null;
     record.alert_code =
       record.inconsistencies > 0 ? "GUEST_RETENTION_INCONSISTENCY" : null;
-    record.status = result.more_work ? "PARTIAL" : "SUCCEEDED";
-    if (!result.more_work) break;
+    record.status = record.more_work ? "PARTIAL" : "SUCCEEDED";
+    if (!record.more_work) break;
   }
   const finishedAt = trustedSecond(dependencies.now_unix_seconds);
   if (

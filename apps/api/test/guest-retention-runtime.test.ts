@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import type { GuestRetentionWorker } from "../src/guest-persistence/index.js";
+import type {
+  GuestRetentionWorker,
+  GuestSessionRevocationStore,
+} from "../src/guest-persistence/index.js";
 import {
   runGuestRetentionCycle,
   startGuestRetentionScheduler,
@@ -29,9 +32,15 @@ function runtime(
   worker: GuestRetentionWorker,
   store: GuestRetentionRunStore,
   now = () => Number(OBSERVED),
+  pruneExpired: GuestSessionRevocationStore["pruneExpired"] = async () => ({
+    ok: true,
+    deleted: 1,
+    more_work: false,
+  }),
 ) {
   return {
     worker,
+    revocation_pruner: { pruneExpired },
     run_store: store,
     create_run_id: () => "retention_run_01",
     now_unix_seconds: now,
@@ -77,6 +86,7 @@ describe("Guest retention runtime", () => {
       batch_count: 2,
       scans_deleted: 4,
       stale_windows_deleted: 6,
+      session_revocations_deleted: 2,
       more_work: false,
       alert_code: null,
     });
@@ -134,6 +144,40 @@ describe("Guest retention runtime", () => {
       status: "SUCCEEDED",
       inconsistencies: 1,
       alert_code: "GUEST_RETENTION_INCONSISTENCY",
+    });
+  });
+
+  it("drains revocation backlog and fails closed when pruning is unavailable", async () => {
+    const records: GuestRetentionRunRecord[] = [];
+    const worker = { runBatch: vi.fn().mockResolvedValue(success(false)) };
+    const prune = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: true, deleted: 100, more_work: true })
+      .mockResolvedValueOnce({ ok: true, deleted: 2, more_work: false });
+    await runGuestRetentionCycle(
+      runtime(worker, memoryStore(records), undefined, prune),
+      { batch_size: 100, max_batches: 10 },
+    );
+    expect(records[0]).toMatchObject({
+      status: "SUCCEEDED",
+      batch_count: 2,
+      session_revocations_deleted: 102,
+      more_work: false,
+    });
+
+    const failed: GuestRetentionRunRecord[] = [];
+    await runGuestRetentionCycle(
+      runtime(worker, memoryStore(failed), undefined, async () => ({
+        ok: false as const,
+        code: "GUEST_REVOCATION_UNAVAILABLE" as const,
+      })),
+      { batch_size: 100, max_batches: 1 },
+    );
+    expect(failed[0]).toMatchObject({
+      status: "FAILED",
+      scans_deleted: 2,
+      session_revocations_deleted: 0,
+      alert_code: "GUEST_RETENTION_UNAVAILABLE",
     });
   });
 
@@ -223,6 +267,7 @@ describe("Guest retention runtime", () => {
       scans_deleted: 0,
       active_counter_decrements: 0,
       stale_windows_deleted: 0,
+      session_revocations_deleted: 0,
       inconsistencies: 0,
       more_work: false,
       failure_code: null,

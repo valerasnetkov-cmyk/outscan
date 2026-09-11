@@ -172,6 +172,8 @@ describe("PostgreSQL Guest persistence", () => {
       "0004_guest_result_rejection_events.sql",
       "0005_guest_retention_runs.sql",
       "0006_guest_queue_telemetry.sql",
+      "0007_guest_session_revocations.sql",
+      "0008_guest_retention_revocations.sql",
     ]);
   });
 
@@ -200,7 +202,7 @@ describe("PostgreSQL Guest persistence", () => {
        WHERE table_schema = 'public'
          AND table_name IN (
            'guest_scans', 'guest_scan_attempts', 'guest_results',
-           'guest_result_rejection_events'
+           'guest_result_rejection_events', 'guest_session_revocations'
          )
          AND column_name = 'organization_id'`,
     );

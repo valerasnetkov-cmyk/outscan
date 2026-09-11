@@ -214,7 +214,7 @@ Guest input, progress, token result/expiry, full posture/coverage, registration 
 - The async read service queries only the route GuestScan ID, denies malformed bearer input before lookup, then reuses canonical token authorization and sanitized view projection over one validated snapshot.
 - Missing, hostile, inconsistent, cross-target, expired, revoked, delete-due and unavailable-key inputs return the same access denial; raw persisted identity/token/digest/execution fields are absent from success output.
 - Targeted Guest snapshot/read evidence remains 2 files / 44 tests; the detached result HTTP adapter adds 6 passing cases for sanitized success, 400/404/503 mapping, privacy headers, query and implicit-HEAD rejection, dependency containment and production-app route absence.
-- ADR-0017 supplies the PostgreSQL adapter and `guest-http` supplies unregistered bootstrap/result Fastify plugins. `buildApp()` and browsers still have no Guest route, so Gate B1 stays open.
+- ADR-0017 supplies the PostgreSQL adapter and `guest-http` supplies unregistered bootstrap/creation/result Fastify plugins. `buildApp()` and browsers still have no Guest route, so Gate B1 stays open.
 
 ## Implemented PostgreSQL Guest schema evidence
 
@@ -255,10 +255,10 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 
 - `apps/api/src/guest-crypto/guest-session-http.ts` emits and validates one deterministic Set-Cookie header contract: `__Host-outscan_guest_session`, `Max-Age=86400`, `Path=/`, `Secure`, `HttpOnly`, `SameSite=Lax` and no Domain attribute.
 - Cookie authentication accepts a bounded header with at most 64 syntactically valid pairs, treats names case-sensitively and rejects control bytes, merged/invalid syntax and duplicate Guest cookie names before MAC verification.
-- Success returns only `key_version` and `guest_session_scope`; the raw 256-bit session identifier is not returned by the HTTP boundary. Scope-based revocation, retained rotation keys, removed-key emergency invalidation and hostile dependency failures are covered.
-- The detached bootstrap plugin requires one exact configured HTTPS Origin, rejects query/body and malformed/extra service decisions, emits only `204` plus a validated cookie when issued, and does not refresh a reused session.
-- Full `npm run verify`: PASS, including 60 API files / 938 passed and 1 Windows-inapplicable skip; 19 new boundary/validator cases pass.
-- `buildApp()` still has no bootstrap route, browser cookie, persistence or public Guest Scan exposure. Concrete bootstrap/revocation providers and registration remain pending B1 work.
+- Success returns only `key_version` and `guest_session_scope`; the raw 256-bit session identifier is not returned. Bootstrap and scan admission independently fresh-read and copy 1–3 exact keys before MAC authentication; removed retained keys deny the next admission before persistence/queue, and bootstrap replacement cannot restore old ownership.
+- The detached plugin requires one exact configured HTTPS Origin, rejects query/body and malformed/extra service decisions, emits only `204` plus a validated cookie when issued, and maps key/revocation ambiguity to one unavailable response.
+- Full `npm run verify`: PASS, including 63 API files / 994 passed and 2 Windows-inapplicable skips, registry 23 and web 3. `npm run verify:db`: PASS, 12 files / 81 tests against PostgreSQL 18.6 after the DB creation harness adopted the provider contract; SQL and queue transport were unchanged.
+- Mounted-keyring and creation tests cover fresh rotation/removal, active/retained selection, canonical 32-byte keys, malformed/throwing providers, duplicate/unknown fields and versions, size/path/file failures and POSIX-only symlink/permission denial. Shared-reader tests simulate partial reads, concurrent growth/truncation, post-read metadata changes and read failure to verify bounded allocation and handle cleanup. `buildApp()` still has no Guest route; managed production key provisioning, process deployment and registration remain pending B1 work.
 
 ## Implemented Guest idempotency decision evidence
 
@@ -373,7 +373,7 @@ Automated + manual contrast, keyboard, focus, labels/errors, live announcements,
 - `0002_guest_abuse_counters.sql` stores fixed digest-only window/active rows, server pause state and a per-scan release record; no raw network/browser identifier column exists.
 - Real PostgreSQL tests cover six-dimension atomic reservation, replay non-consumption, concurrent same-session admission, idempotent release, retained burst usage, pause, terminal-result release and rotation-safe aggregation where old+new digest usage reaches one shared limit while only the active digest is incremented.
 - Bounded retention tests prove exact-deadline aggregate deletion, cascade cleanup, one-time active-counter reconciliation, expired-window pruning and `SKIP LOCKED` continuation. Runtime tests prove a bounded non-overlapping scheduler, partial drain, strict outcome validation and fail-closed storage; PostgreSQL tests prove immutable minimized 30-day run telemetry, exact replay, conflicting-ID denial and pruning.
-- PostgreSQL cancellation tests cover QUEUED, LEASED and RUNNING jobs, exact attempt terminalization, one-time concurrency release, duplicate/concurrent convergence and strict malformed-input rejection. Public cancellation authorization/route, production retention deployment/alert export and public 429/Retry-After behavior remain pending.
+- PostgreSQL cancellation tests cover QUEUED, LEASED and RUNNING jobs, exact attempt terminalization, one-time concurrency release, duplicate/concurrent convergence and strict malformed-input rejection. Twenty-five detached POST cases prove closed statuses, optional bounded `Retry-After`, privacy headers, origin/query/JSON/header limits, hostile-decision containment and production route absence; public registration, cancellation authorization and retention deployment/export remain pending.
 
 ## Proposed Weekly Digest blocking suite
 

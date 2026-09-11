@@ -69,13 +69,31 @@
 
 ## Phase 1 — Guest / B1
 
+- [x] Owner fixed Ubuntu + Docker Compose as the current deployment target; later migrate scanner execution workers to Kubernetes without changing security/job contracts. See [deployment target](docs/DEPLOYMENT_TARGET.md).
+- [ ] Implement the Ubuntu/Compose baseline, separately isolated scanner launcher, enforced IPv4/IPv6 egress and target-environment negative tests in the order defined by the deployment target document.
+- [x] Add a detached, no-network API Compose baseline with pinned multi-stage build, runtime hardening smoke and an Ubuntu CI job; full service topology, isolated scanner launch and target-server evidence remain pending.
+- [x] Add opt-in offline scanner CLI container tests for bounded stdin/IPC, IPv4/IPv6 DNS-unavailable coverage and invalid-input denial; keep the production launch/egress integration pending.
+- [x] Verify offline container failure/TERM-to-KILL/cleanup with run-owned IDs and labels; production supervisor-to-container lifecycle binding remains pending.
+- [x] Implement and verify a detached host-side offline `ScannerProcessLauncher` with immutable image binding, fixed isolation, scanner-only stdin and container-owned stop/cleanup; no worker/egress activation.
+
+- [x] Verify detached bootstrap → cookie → scan HTTP composition with real services and controlled persistence/queue outcomes, including key removal, revocation and enqueue/replay recovery.
+
+- [x] Independently rebuild/validate result responses at the HTTP boundary, enforcing scan identity, time window, exact public fields and canonical coverage without exposing service objects.
+
+- [x] Contain bootstrap parser/body-limit errors in the closed public error schema with privacy headers and no session issuance.
+
+- [x] Bound mounted key/approval reads during concurrent file growth, reject observed mutation and test partial reads/cleanup without live credentials.
+
 - [x] strict Guest-session Set-Cookie issuance and Cookie-header authentication primitives.
+- [x] compose a fresh-read active/retained Guest-session keyring and revocation-backed bootstrap/admission services with no-refresh reuse and fail-closed provider handling; add a hardened mounted-file keyring provider for deployment composition.
+- [x] persist digest-only Guest-session revocations for exactly 24 hours, require the async provider in bootstrap and scan creation, and run bounded expiry pruning in the existing retention cycle.
 - [x] implement a detached same-origin Guest-session bootstrap Fastify plugin with strict request/decision/cookie/error semantics while keeping it unregistered from `buildApp()`.
-- [ ] wire the Guest-session bootstrap route after remaining B1 controls pass.
+- [ ] wire the Guest-session bootstrap and Guest scan creation routes after remaining B1 controls pass.
 - [x] Guest-session cookie MAC codec and authenticated scope derivation primitives.
 - [x] pure Guest idempotency decision scoped by authenticated session digest, never IP/fingerprint.
 - [x] transactional Guest idempotency persistence with SERIALIZABLE bounded retry, unique-key winner reread and atomic expired replacement.
 - [x] compose strict internal Guest scan creation across authenticated session, hostname canonicalization, trusted ingress/network HMAC, transactional admission and replay-safe enqueue; keep the Fastify route unregistered.
+- [x] implement a detached same-origin Guest scan creation Fastify plugin with strict JSON/header/query/result/error projection while keeping it unregistered from `buildApp()`.
 - [x] canonical ADR-0011 Guest result-token derivation/test vectors.
 - [x] strict hostname parser + IDNA/Punycode canonicalization with negative tests.
 - [x] full-set A/AAAA normalization, deduplication and fail-closed destination classification.
@@ -100,7 +118,7 @@
 - [x] pure sanitized Guest result view with five stable posture sections, a complete coverage inventory and explicit limitations.
 - [x] pure Guest retention decision enforcing the original 30m access window and fixed 24h deletion deadline.
 - [x] Return machine-readable deletion/window/quota-inconsistency counters and alert-required state from each retention batch.
-- [x] Schedule bounded non-overlapping Guest retention cycles and persist minimized 30-day PLATFORM run metrics plus closed inconsistency/unavailable alert state.
+- [x] Schedule bounded non-overlapping Guest retention cycles, prune expired session revocations in the same cycle, and persist minimized 30-day PLATFORM metrics plus closed inconsistency/unavailable alert state.
 - [ ] Deploy the retention process and export its closed alerts to the approved Ops collector before exposure.
 - [x] closed Guest burst/daily/concurrency admission policy separated from ownership/idempotency.
 - [x] versioned HMAC Guest network-signal derivation from a trusted ingress address with IPv4 `/32`, IPv6 `/64` and mapped-address normalization.
@@ -108,7 +126,7 @@
 - [x] bounded network-HMAC keyring projection plus transactional active/retained-digest aggregation without quota reset; require staged rotation and 24h+skew retained-key lifetime.
 - [x] transactional abuse-counter reservation/release integrated with Guest persistence.
 - [x] trusted internal Guest cancellation with attempt invalidation, idempotent replay and atomic abuse-concurrency release; keep public cancellation absent until ownership authorization is composed.
-- [ ] public abuse-denial 429/Retry-After route wiring.
+- [x] map bounded abuse denial to `429` with an optional canonical `Retry-After` inside the detached scan adapter; public registration remains pending above.
 - [x] GUEST_SAFE capability policy and budgets enforced before launch and through output handling.
 - [x] bounded Guest scanner-output JSON projection with strict schema and disclosure minimization.
 - [x] authenticated ResultEnvelope header/MAC/digest/size validation.

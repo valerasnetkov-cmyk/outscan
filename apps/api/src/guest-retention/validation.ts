@@ -35,6 +35,7 @@ export function validateGuestRetentionRunRecord(
       "scans_deleted",
       "active_counter_decrements",
       "stale_windows_deleted",
+      "session_revocations_deleted",
       "inconsistencies",
       "more_work",
       "failure_code",
@@ -59,6 +60,7 @@ export function validateGuestRetentionRunRecord(
       !count(record.scans_deleted) ||
       !count(record.active_counter_decrements) ||
       !count(record.stale_windows_deleted) ||
+      !count(record.session_revocations_deleted) ||
       !count(record.inconsistencies)
     ) {
       return null;
