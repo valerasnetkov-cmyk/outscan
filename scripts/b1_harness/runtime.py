@@ -31,7 +31,7 @@ def inspect_hardening(info, network):
     if (info["Config"]["User"] != "1000:1000" or info["Mounts"] or
             host.get("PortBindings") or host.get("CapAdd") or host.get("Devices") or
             host.get("PidMode") or host.get("RestartPolicy", {}).get("Name") != "no" or
-            host.get("CapDrop") != ["ALL"] or
+            host.get("CapDrop") != ["ALL"] or info.get("AppArmorProfile") != "docker-default" or
             "no-new-privileges:true" not in host.get("SecurityOpt", [])):
         raise RuntimeError("CONTAINER_BOUNDARY")
     env = info["Config"].get("Env", [])
@@ -76,6 +76,11 @@ def verify_image(execute, reference):
 def launch(journal, execute, image, role, anchor=None, mode="hold", parameters=()):
     if role == "probe" and journal.data["phase"] != "POLICY_VERIFIED":
         raise RuntimeError("POLICY_NOT_READY")
+    pending = journal.data.setdefault("pendingContainers", [])
+    if role in pending:
+        raise RuntimeError("CONTAINER_CREATE_ALREADY_PENDING")
+    pending.append(role)
+    journal.save()
     ident = docker(execute, *create_args(image, journal.run, role, anchor, mode, parameters))
     info = json.loads(docker(execute, "inspect", ident))[0]
     from .state import owned_container
@@ -83,6 +88,7 @@ def launch(journal, execute, image, role, anchor=None, mode="hold", parameters=(
         raise RuntimeError("OWNERSHIP")
     inspect_hardening(info, "none" if role == "anchor" else "container:" + anchor)
     journal.data["containers"][role] = ident
+    pending.remove(role)
     journal.save()
     docker(execute, "start", ident)
     info = json.loads(docker(execute, "inspect", ident))[0]
