@@ -6,7 +6,7 @@ from .config import ENV
 BIN = {"docker": "/usr/bin/docker", "ip": "/usr/sbin/ip", "nsenter": "/usr/bin/nsenter",
        "iptables": "/usr/sbin/iptables", "ip6tables": "/usr/sbin/ip6tables",
        "iptables-save": "/usr/sbin/iptables-save", "ip6tables-save": "/usr/sbin/ip6tables-save",
-       "systemd-run": "/usr/bin/systemd-run", "systemctl": "/usr/bin/systemctl",
+       "nft": "/usr/sbin/nft", "systemd-run": "/usr/bin/systemd-run", "systemctl": "/usr/bin/systemctl",
        "python": "/usr/bin/python3", "sysctl": "/usr/sbin/sysctl", "ss": "/usr/bin/ss"}
 
 
