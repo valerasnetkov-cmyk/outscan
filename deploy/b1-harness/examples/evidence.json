@@ -8,5 +8,12 @@
   "policyVersion": "outscan-special-use-v1",
   "manifestSha256": "11eeaafa6f8e7c7bc5c73a002177a80487b494cc4a8de5160100bc3a6dfc67c4",
   "cleanup": "NOT_YET_RUN",
+  "profile": {
+    "name": "b1-isolation-v1",
+    "complete": false,
+    "missingCases": [],
+    "duplicateCases": [],
+    "unexpectedCases": []
+  },
   "cases": []
 }
