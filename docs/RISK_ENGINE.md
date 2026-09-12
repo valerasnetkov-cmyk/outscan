@@ -100,3 +100,9 @@ Action workflow status, reported remediation, triage declaration and MonitoringR
 ## Explainability
 
 UI explains major factors, recurrence/change, confirmed vs inferred, missing coverage, intelligence freshness and next action.
+
+[Finding provenance](FINDING_PROVENANCE_CONTRACT.md) specifies the future safe projection:
+model version, evaluated time, major factors, canonical confidence/basis, TI freshness and
+coverage limitations. Trust computes no alternate score and does not expose restricted
+weights/thresholds. Editorial confirmed/inferred labels require evidence-based mapping;
+CVSS alone does not confirm a finding. Historical report decisions remain frozen.

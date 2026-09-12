@@ -1,5 +1,7 @@
 # OUTSCAN Reporting Codex Package
 
+Status: historical Reporting package reference, reconciled 2026-09-12. Implementation instructions below are deferred; [current Reporting scope](docs/REPORTING.md), [Proposed ADR 0018](docs/adr/0018-report-engine.md) and accepted repository ADRs/gates take precedence. This file is not an instruction to start runtime work or acceptance evidence.
+
 ## Purpose
 
 Documentation package for implementing Reporting V1 in OUTSCAN.
@@ -38,7 +40,7 @@ The package formalizes the confirmed product model:
 
 ### Architecture decision
 
-- `docs/adr/ADR-NEXT-report-engine.md` - accepted decision; Codex must assign the next free ADR number after inspecting the repository.
+- `docs/adr/0018-report-engine.md` - Proposed; normalized from the imported placeholder, with owner acceptance and data classification still pending.
 
 ### Repository integration
 
@@ -72,7 +74,7 @@ The package formalizes the confirmed product model:
 - reporting does not grant scan permissions;
 - AI evidence is untrusted;
 - no secret values in AI export;
-- `FIX_REPORTED != RESOLVED`;
+- `RemediationAction.REPORTED_COMPLETE != Finding.RESOLVED`; automatic resolution stays disabled under ADR-0013 until compatible-coverage evidence;
 - historical state is not silently replaced by current state.
 
 ## Recommended Codex instruction

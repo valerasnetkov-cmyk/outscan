@@ -1,5 +1,7 @@
 # Repository Integration - Reporting V1
 
+Status: historical Reporting package reference, reconciled 2026-09-12. Implementation instructions below are deferred; [current Reporting scope](docs/REPORTING.md), [Proposed ADR 0018](docs/adr/0018-report-engine.md) and accepted repository ADRs/gates take precedence. This file is not an instruction to start runtime work or acceptance evidence.
+
 ## 1. Цель
 
 Этот файл не задает фиксированные пути исходного кода. Он описывает, какие существующие документы и domain boundaries Codex должен синхронизировать при внедрении Reporting V1.
@@ -20,7 +22,7 @@
 - authorization helpers;
 - queue/job abstraction;
 - object storage abstraction;
-- Audit Log;
+- TenantAuditLog / separately scoped PlatformAuditLog;
 - Capability Registry;
 - Notifications, если позднее reports доставляются по расписанию.
 
@@ -266,23 +268,13 @@ Branding/localization renderer layer должен позволить поздн�
 
 Reporting содержит долговременное архитектурное решение: immutable canonical snapshot + renderer projections + safe AI projection.
 
-Пакет включает `docs/adr/ADR-NEXT-report-engine.md`.
-
-Codex обязан:
-
-1. найти следующий свободный ADR number;
-2. проверить project ADR naming/status rules;
-3. переименовать `NEXT`;
-4. сохранить смысл решения;
-5. не создавать duplicate ADR, если аналогичное решение уже принято.
-
-Пользователь подтвердил модель Reporting; если governance проекта допускает такую фиксацию, ADR можно сохранить как `Accepted`. Иначе применить статус, требуемый repository policy, и явно сообщить отличие.
+The imported placeholder was normalized to `docs/adr/0018-report-engine.md` as Proposed. No separate acceptance evidence was found in the reviewed repository records; approval of documentation synchronization is not acceptance of this persistence decision. Complete owner acceptance, ADR-0010 classification/retention and B2/durable Finding/Risk prerequisites before implementation. Do not add a duplicate ADR.
 
 ## 21. Documentation boundaries
 
 Durable details хранить в `/docs`, а не раздувать README.
 
-Каждый authored MD <=400 строк согласно действующему project gate.
+Keep authored source <=400 physical lines under AGENTS.md and these documentation files <=400 lines; split cohesive topics if needed rather than discarding requirements.
 
 ## 22. Suggested implementation order
 

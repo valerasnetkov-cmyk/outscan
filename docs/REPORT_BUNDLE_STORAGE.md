@@ -1,5 +1,7 @@
 # Report Bundle and Artifact Storage
 
+Status: proposed post-B2 design/tests; no runtime or release evidence. [Reporting scope and prerequisites](REPORTING.md) and accepted ADRs govern this document.
+
 ## 1. Назначение
 
 Report Bundle объединяет V1 artifacts одного Report Snapshot в переносимый проверяемый пакет.

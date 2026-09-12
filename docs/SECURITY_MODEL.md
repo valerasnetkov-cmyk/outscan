@@ -194,7 +194,29 @@ Before production: MFA, step-up, PlatformAuditLog, scoped/expiring SupportAccess
 
 Runtime/public content follows CLAIM_INVENTORY.
 
-## Release
+## Future AI, Reporting and deployment-event boundaries
+
+Scanned HTML/title/headers/JavaScript/API responses/banners/robots.txt/security.txt/errors are untrusted data, never instructions. Model output cannot create DomainVerification, VerifiedScope, entitlement, MonitoringEnrollment, ScanAuthorization, confidence confirmation, remediation proof or Finding/Risk/Score state. [AI Handoff](AI_HANDOFF_SECURITY.md) first exports a bounded deterministic projection of canonical data, with secrets/raw hostile content excluded; it invokes no model, scanner, shell, repository or deployment action.
+
+Reporting remains planned after B2/durable Finding/Risk and proposed persistence acceptance. Tenant report/snapshot/artifact access needs current membership, organization keys, composite FKs and RLS. Report generation only reads canonical state; automatic RESOLVED remains disabled until ADR-0013 compatible-coverage policy and negative tests exist.
+
+A future deployment flow is `DEPLOY → authenticated event → server-resolved existing Asset → current authorization → targeted recheck`. The server re-evaluates organization/member context, entitlement, current EXACT_HOST VerifiedScope, ScanAuthorization, consent and ADR-0012 policy. Provider payload cannot choose arbitrary hostname/IP, profile, capability, template, scanner arguments or desired Finding state. This sync creates no webhook or scheduler.
+
+Creator/promo/referral/discovery metadata grants no verification or scan authority. Telegram acquisition defaults to a web link; direct bot scanning remains proposed until a channel/security decision proves canonical Guest-session binding, abuse/idempotency and result privacy. Telegram user/chat IDs cannot replace ADR-0011 server-authenticated cookies. Progressive disclosure never exposes hidden Guest fields or bypasses tenant authorization.
+
+## Release gates
 
 A before scaffold, B1 Guest, B2 Workspace, C production.
 Production FAIL for Critical/High, tenant/RLS failure, SSRF/pinning failure, scanner boundary failure, result integrity failure, unsafe output, Admin control failure or uncontained secret.
+
+[Production readiness](PRODUCTION_READINESS.md) and its checklist are an evidence profile of existing Gate C; no additional production gate or status change is created.
+
+## Proposed Trust boundary
+
+[Trust](TRUST_METHODOLOGY_AND_EVIDENCE.md) is a projection over untrusted scanner/TI
+inputs after validation, normalization and redaction. Tenant-safe provenance is not
+anonymous data; Guest restrictions remain intact. Public source status is not internal
+observability. Proof grants only contribute to entitlement, never verification or scan
+authority; current consent/EXACT_HOST/ScanAuthorization remain required. Demo lab data
+must be isolated from customers, and accuracy claims require reproducible validation.
+See [security tests](TRUST_SECURITY_TESTING.md) and [integration decisions](TRUST_PACKAGE_INTEGRATION.md).

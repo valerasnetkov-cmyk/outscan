@@ -2,6 +2,7 @@ node_modules/
 .pnpm-store/
 .next/
 dist/
+scanner-dist/
 coverage/
 *.tsbuildinfo
 .env
@@ -9,4 +10,3 @@ coverage/
 !.env.example
 .DS_Store
 Thumbs.db
-

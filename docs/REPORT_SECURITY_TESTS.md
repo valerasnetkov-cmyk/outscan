@@ -1,5 +1,7 @@
 # Reporting Security Test Suite
 
+Status: proposed post-B2 design/tests; no runtime or release evidence. [Reporting scope and prerequisites](REPORTING.md) and accepted ADRs govern this document.
+
 This file continues the mandatory security, authorization, storage, concurrency and abuse tests from `REPORT_ACCEPTANCE_TESTS.md`.
 
 ## 10. AI Handoff security tests
@@ -46,9 +48,9 @@ Expected: not rendered as active link.
 
 ### RPT-AI-007 - certainty escalation
 
-Finding confidence = POTENTIAL.
+Use a canonical source confidence value and its uncertainty/provenance.
 
-Expected: AI document cannot label it CONFIRMED through renderer logic.
+Expected: the exact value/type is preserved; the renderer cannot invent a confidence enum, increase certainty or label the finding confirmed without canonical evidence.
 
 ### RPT-AI-008 - no autonomous action
 
@@ -161,19 +163,21 @@ Different renderer version can create a new artifact without changing snapshot.
 
 ### RPT-LIFE-001
 
-User marks finding fixed -> state is not RESOLVED automatically; use existing equivalent of FIX_REPORTED.
+User reports completion -> RemediationAction REPORTED_COMPLETE; Finding condition/disposition remain unchanged under ACTION_CHANGE/ADR-0013.
 
 ### RPT-LIFE-002
 
-Recheck starts -> RECHECKING or existing equivalent.
+Recheck starts -> canonical ScanRequest/ScanJob/ScanAttempt workflow changes; no new RECHECKING Finding state is introduced.
 
 ### RPT-LIFE-003
 
-Successful deterministic recheck -> RESOLVED with verified_fixed_at.
+While ADR-0013 automatic resolution is disabled, even a successful recheck cannot automatically set RESOLVED or verified_fixed_at. Future resolution needs accepted compatible scope/detector/profile/fingerprint policy and SUCCESS/COMPLETE coverage tests. Reporting only displays the resulting canonical state.
 
 ### RPT-LIFE-004
 
 Failed recheck -> finding remains/reverts open according to existing lifecycle; never falsely resolved.
+
+Also reject resolution with mismatched scope, detector/profile/fingerprint version, PARTIAL/UNKNOWN coverage or absent proof; export generation never performs a state transition.
 
 ### RPT-LIFE-005
 
@@ -183,7 +187,7 @@ Accepted risk is not shown as resolved.
 
 ### RPT-SCAN-001
 
-Report generation never triggers Naabu/Nuclei/Katana or another scan automatically unless an existing explicit recheck action was separately authorized.
+Report generation never triggers a scanner. An explicit recheck is a separate action using the server-resolved Asset and current VerifiedScope/entitlement/consent/ScanAuthorization/ADR-0012 policy, never export format or report contents.
 
 ### RPT-SCAN-002
 
@@ -220,3 +224,10 @@ Confirm logs do not contain:
 - private keys;
 - raw secret values;
 - full sensitive evidence by default.
+
+## Proposed Trust snapshot suite
+
+[Trust tests](TRUST_SECURITY_TESTING.md) P-01–P-10 and RS-01–RS-05 extend the future
+report suite: tenant-safe evidence, unchanged identity, frozen TI/confidence/model,
+renderer parity, no live-state substitution and lab-only public demo projection.
+These are required automated cases for implementation, not executed test evidence.

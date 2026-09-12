@@ -1,8 +1,10 @@
 # Report Engine Acceptance and Security Tests
 
+Status: proposed post-B2 design/tests; no runtime or release evidence. [Reporting scope and prerequisites](REPORTING.md) and accepted ADRs govern this document.
+
 ## 1. Назначение
 
-Этот документ задает минимальный release gate для Reporting V1.
+Этот документ задаёт функциональные критерии будущего Reporting; они входят в существующие B2/C, а не создают дополнительный release gate.
 
 Нельзя считать функцию готовой только потому, что PDF визуально открывается.
 

@@ -9,6 +9,7 @@ export default defineConfig(
   globalIgnores([
     "**/.next/**",
     "**/dist/**",
+    "**/scanner-dist/**",
     "**/coverage/**",
     "node_modules/**",
   ]),

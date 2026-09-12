@@ -1,5 +1,7 @@
 # OUTSCAN Reporting - Codex handoff
 
+Status: historical Reporting package reference, reconciled 2026-09-12. Implementation instructions below are deferred; [current Reporting scope](docs/REPORTING.md), [Proposed ADR 0018](docs/adr/0018-report-engine.md) and accepted repository ADRs/gates take precedence. This file is not an instruction to start runtime work or acceptance evidence.
+
 ## Цель
 
 Реализовать подсистему отчетности OUTSCAN поверх существующих сущностей Scan, Asset, Finding, Risk Engine и Monitoring, не создавая параллельную модель данных и не расширяя права сканирования.
@@ -132,13 +134,7 @@ JSON реализовать первым renderer-ом.
 
 ## Finding lifecycle
 
-Поддержать как минимум следующую продуктовую семантику, если она согласуется с фактической моделью:
-
-`OPEN -> ACKNOWLEDGED -> IN_PROGRESS -> FIX_REPORTED -> RECHECKING -> RESOLVED`
-
-Дополнительные состояния проекта, например `ACCEPTED_RISK` и `FALSE_POSITIVE`, сохранить и не ломать.
-
-Не переводить finding в RESOLVED только по пользовательскому заявлению. `FIX_REPORTED` означает только заявление об исправлении. `RESOLVED` требует результата recheck либо другого уже утвержденного deterministic proof.
+Use the existing independent axes: Finding condition OPEN/RESOLVED, ADR-0013 disposition, and ACTION_CHANGE RemediationAction workflow including REPORTED_COMPLETE. Do not combine them into a new Finding FSM. Automatic RESOLVED stays disabled until compatible-coverage policy and negative tests exist; user/AI completion claims and successful execution alone never resolve a Finding. Report generation only reads canonical state.
 
 ## Security requirements
 

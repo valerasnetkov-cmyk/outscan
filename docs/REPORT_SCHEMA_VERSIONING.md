@@ -1,5 +1,7 @@
 # Report Schema and Versioning
 
+Status: proposed post-B2 design/tests; no runtime or release evidence. [Reporting scope and prerequisites](REPORTING.md) and accepted ADRs govern this document.
+
 ## 1. Цель
 
 Определить стабильный машинно-читаемый контракт Report Snapshot и правила его эволюции. Схема должна позволять:
@@ -139,6 +141,8 @@ Scope должен позволять ответить:
 
 Если в проекте score имеет отдельную модель/версию, использовать ее canonical identifier.
 
+Asset Security Score is absent unless `SufficientBaselineV1` was true for the snapshot. Organization Security Score includes only explicitly monitored assets. Previous/delta require compatible canonical baselines; missing or incompatible coverage is not zero risk.
+
 ## 8. Finding schema
 
 Минимум:
@@ -151,7 +155,7 @@ Scope должен позволять ответить:
   "asset_display": "api.company.ru",
   "category": "VULNERABILITY",
   "severity": "HIGH",
-  "confidence": "CONFIRMED",
+  "confidence": 80,
   "lifecycle_status": "OPEN",
   "title": "...",
   "description": "...",
@@ -165,7 +169,7 @@ Scope должен позволять ответить:
 }
 ```
 
-Не считать этот пример готовой ORM schema. Codex должен адаптировать поля к существующим моделям.
+This is a proposed projection example, not a new persistence schema. The numeric confidence illustrates existing scanner data, not a newly accepted tenant confidence model. Source adapters must preserve the accepted canonical type and values; they cannot silently replace it with an editorial enum. Finding condition/disposition and RemediationAction remain separate axes under ADR-0013 and ACTION_CHANGE.
 
 ## 9. Stable Finding ID
 
@@ -200,15 +204,9 @@ Fingerprint должен использовать минимальный наб�
 
 ## 11. Confidence
 
-Использовать каноническую терминологию OUTSCAN:
+Preserve the canonical source confidence type/value and provenance. The existing scanner input uses integer confidence; no Reporting enum or threshold is introduced here. Any future domain-to-report mapping requires an explicit accepted contract and parity tests.
 
-- `POTENTIAL`;
-- `PROBABLE`;
-- `CONFIRMED`.
-
-Renderer переводит labels, но enum остается стабильным.
-
-Нельзя автоматически переводить `POTENTIAL` в `CONFIRMED` ради более убедительного PDF.
+Potential/probable/confirmed are editorial descriptions only, not machine states. Renderers and AI cannot increase certainty or infer exploitability from a label or a high numeric value.
 
 ## 12. Severity и priority
 
@@ -292,6 +290,8 @@ Remediation может быть локализовано, но acceptance criter
 
 Исторический snapshot фиксирует значения на момент отчета.
 
+`verified_fixed_at` can only project canonical domain evidence; automatic RESOLVED is disabled until the ADR-0013 compatible-coverage policy and negative tests exist. Recheck success alone cannot set it.
+
 ## 17. Changes
 
 Change entry должна отвечать:
@@ -311,6 +311,8 @@ Change entry должна отвечать:
 
 Renderer не должен вычислять change diff из текущих live tables.
 
+Full change sections wait for V1.5 under ADR-0007 and use compatible snapshots/canonical MonitoringEvent; no parallel generic ChangeEvent is introduced.
+
 ## 18. Coverage
 
 Пример:
@@ -318,14 +320,15 @@ Renderer не должен вычислять change diff из текущих li
 ```json
 {
   "capability_id": "domain-security",
-  "status": "COMPLETED",
+  "execution_status": "SUCCESS",
+  "completeness": "COMPLETE",
   "checks_total": 12,
   "checks_completed": 12,
   "checks_failed": 0
 }
 ```
 
-Допустимые состояния следует согласовать с текущей Scan/Capability моделью.
+Use separate ADR-0013 execution/completeness fields with detector/profile/scope/fingerprint provenance as applicable. Product capability labels cannot replace canonical coverage or prove execution/authorization.
 
 ## 19. Limitations
 

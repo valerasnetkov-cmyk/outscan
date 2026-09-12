@@ -2,7 +2,10 @@
 
 ## [Unreleased] — consistency closure
 
-- **Ubuntu/Compose baseline**: accepted Ubuntu/Compose with later scanner-worker migration to Kubernetes; added pinned builds, offline production dependencies, restricted build context, hardened no-network checks and Ubuntu CI. The detached launcher binds an immutable image to approved scanner input and controls container-owned stop/cleanup. Closure tests/builds passed; today's full verify is limited by unrelated Markdown formatting and the Docker rerun by an unavailable daemon. See [closure audit](docs/audit-2026-09-12.md) and [deployment target](docs/DEPLOYMENT_TARGET.md); privilege review, production image/egress/worker binding, reconciliation and Gate B1 remain pending.
+- **Trust documentation (2026-09-12)**: integrated methodology, safe provenance and source freshness; Proof Scan remains a proposed verified-baseline entitlement, demo/accuracy claims are gated, and ADR 0019 is Proposed. No runtime authorization or public surface changed.
+- **Documentation sync / Creator direction**: merged mission, AI-era and Creator acquisition strategy, product-simplicity UX, DRAFT glossary seed and promo-game planning. Reconciled the detailed Reporting suite with canonical confidence/lifecycle/tenant boundaries, normalized Proposed ADR 0018 and mapped production readiness to Gate C while preserving PR-* criteria. No runtime, pricing, bot, campaign, Guest exposure or deployment was activated; see [sync audit](docs/audit-2026-09-12.md).
+
+- **Ubuntu/Compose baseline**: accepted Ubuntu/Compose with later scanner-worker migration to Kubernetes; added pinned builds, offline production dependencies, restricted build context, hardened no-network checks and Ubuntu CI. The detached launcher binds an immutable image to approved scanner input, rejects inspected privilege/resource/namespace/command/environment drift before stdin, verifies active cgroup-v2 limits with negative Docker fixtures and bounded OOM/PID/CPU enforcement, and controls container-owned stop/cleanup. Added read-only Ubuntu preflight with explicit version pins and closed resource/seccomp checks. Closure tests/builds passed; the earlier closure verify stopped on incoming Markdown formatting and its local Docker rerun on an unavailable daemon. See [closure and subsequent sync audit](docs/audit-2026-09-12.md) and [deployment target](docs/DEPLOYMENT_TARGET.md); privilege review, production image/egress/worker binding, reconciliation and Gate B1 remain pending.
 
 - **Guest HTTP boundaries and composition evidence**: result responses are rebuilt through the canonical view builder; unknown/nested fields, cross-scan results, inconsistent coverage and invalid time deny. Five scenarios connect real bootstrap/creation services to detached routes, covering issued-cookie admission, no-refresh reuse, tampering, key removal, revocation/provider failure and enqueue/replay recovery with controlled persistence/queue adapters. Routes remain detached.
 
@@ -394,7 +397,4 @@
 - `passive` reserved for genuinely passive sources.
 - Runtime claims governed by Claim Inventory.
 
-### Status
-
-Previous synchronized package was applied before this revision.
-Current package/security/content consistency review PASS. Gate A PASS; minimal source scaffold and CI/test harness may begin.
+Historical Gate A closure is recorded above; current gate status lives in `docs/PRE_SCAFFOLD_GATE.md`.

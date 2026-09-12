@@ -29,6 +29,83 @@ const RUNTIME = JSON.stringify({
   configured_internal_cidrs: [],
 });
 
+function emptyList(value: unknown): boolean {
+  return value === null || (Array.isArray(value) && value.length === 0);
+}
+
+function fixedEnvironment(value: unknown): boolean {
+  if (!Array.isArray(value) || value.length !== 4) return false;
+  const expected = [
+    /^PATH=\/usr\/local\/sbin:\/usr\/local\/bin:\/usr\/sbin:\/usr\/bin:\/sbin:\/bin$/u,
+    /^NODE_VERSION=[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/u,
+    /^YARN_VERSION=[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/u,
+    /^NODE_ENV=production$/u,
+  ];
+  return expected.every(
+    (pattern) =>
+      value.filter((item) => typeof item === "string" && pattern.test(item))
+        .length === 1,
+  );
+}
+
+// Validate Docker's effective configuration before start/attach or scanner stdin.
+// Unknown/missing required evidence denies; identity-only cleanup remains separate.
+function isolated(value: unknown, image: string): boolean {
+  try {
+    const record = value as Record<string, unknown>;
+    const config = record.Config as Record<string, unknown>;
+    const host = record.HostConfig as Record<string, unknown>;
+    const state = record.State as Record<string, unknown>;
+    return (
+      record.Image === image &&
+      Array.isArray(record.Mounts) &&
+      record.Mounts.length === 0 &&
+      state.Status === "created" &&
+      state.Running === false &&
+      state.Restarting === false &&
+      state.Dead === false &&
+      config.User === "1000:1000" &&
+      config.WorkingDir === "/app" &&
+      config.OpenStdin === true &&
+      config.Tty === false &&
+      fixedEnvironment(config.Env) &&
+      JSON.stringify(config.Entrypoint) === '["/usr/local/bin/node"]' &&
+      JSON.stringify(config.Cmd) ===
+        JSON.stringify(["/app/apps/api/dist/guest-scanner-cli.js", RUNTIME]) &&
+      host.NetworkMode === "none" &&
+      host.ReadonlyRootfs === true &&
+      host.Privileged === false &&
+      host.Init === true &&
+      host.Memory === 256 * 1024 * 1024 &&
+      host.MemorySwap === 256 * 1024 * 1024 &&
+      host.NanoCpus === 500_000_000 &&
+      host.PidsLimit === 64 &&
+      host.PidMode === "" &&
+      host.IpcMode === "private" &&
+      host.UTSMode === "" &&
+      host.CgroupnsMode === "private" &&
+      host.PublishAllPorts === false &&
+      JSON.stringify(host.CapDrop) === '["ALL"]' &&
+      emptyList(host.CapAdd) &&
+      JSON.stringify(host.SecurityOpt) === '["no-new-privileges:true"]' &&
+      (host.RestartPolicy as Record<string, unknown>).Name === "no" &&
+      (host.RestartPolicy as Record<string, unknown>).MaximumRetryCount === 0 &&
+      (host.LogConfig as Record<string, unknown>).Type === "none" &&
+      emptyList(host.Binds) &&
+      emptyList(host.VolumesFrom) &&
+      emptyList(host.Devices) &&
+      emptyList(host.DeviceRequests) &&
+      emptyList(host.GroupAdd) &&
+      (host.Tmpfs === undefined ||
+        host.Tmpfs === null ||
+        JSON.stringify(host.Tmpfs) === "{}") &&
+      JSON.stringify(host.PortBindings) === "{}"
+    );
+  } catch {
+    return false;
+  }
+}
+
 export interface OfflineContainerConfiguration {
   docker_executable: string;
   working_directory: string;
@@ -172,6 +249,12 @@ export function createOfflineContainerLauncher(
           "64",
           "--memory",
           "256m",
+          "--memory-swap",
+          "256m",
+          "--ipc",
+          "private",
+          "--cgroupns",
+          "private",
           "--cpus",
           "0.5",
           "--restart",
@@ -190,14 +273,12 @@ export function createOfflineContainerLauncher(
         id = created;
         const record = await owned();
         if (
-          record.Image !==
-            configuration.artifact_identity.scanner_image_digest ||
-          record.HostConfig.NetworkMode !== "none" ||
-          record.HostConfig.ReadonlyRootfs !== true ||
-          record.Config.User !== "1000:1000" ||
-          record.Mounts.length !== 0
+          !isolated(
+            record,
+            configuration.artifact_identity.scanner_image_digest,
+          )
         )
-          throw new Error();
+          throw new Error("OFFLINE_CONTAINER_ISOLATION_DENIED");
         timer = setTimeout(() => {
           void remove().catch(() => {});
           void attached?.stop("KILL");

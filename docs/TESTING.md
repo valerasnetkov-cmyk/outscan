@@ -395,6 +395,6 @@ Deferred slices must pass `ACTION_CHANGE_TESTING.md`: tenant/action transition a
 
 Future implementation must pass `PROMOTIONS_ACCESS_GRANTS_TESTING.md`: tenant/platform authz, secret handling, transactional capacity/idempotency, deterministic entitlement composition, expiry/revoke, safe API/UI/notification/analytics projection and strict separation from verification, consent, MonitoringEnrollment and scanner policy. `ADMIN_ATTESTED` remains a denied input unless a separate ADR is accepted.
 
-## Release
+## Release verification
 
-Gate C requires lint, typecheck, tests, security negative suite, build, migrations, dependency/secret review and no unresolved Critical/High.
+Gate C requires lint, typecheck, tests, security negative suite, build, migrations, dependency/secret review and no unresolved Critical/High. Future [Trust/Proof/provenance](TRUST_SECURITY_TESTING.md), [Reporting](REPORTING_TESTING.md), [Creator channel/privacy](CREATOR_VIBE_CODING_GTM.md) and [UX](PRODUCT_SIMPLICITY_UX.md) suites are planned, not executed evidence; each must preserve canonical state, tenancy, Guest-cookie ownership and disclosure.

@@ -155,3 +155,12 @@ The GUEST_SAFE canonical producer runs only after strict hostile-output validati
 The implemented local IPC protocol accepts exactly one `OUTSCAN:SCANNER_RESULT:v1\0 || U32BE(payload_length) || payload || EOF` frame. Declared length is checked against the active profile ceiling before payload allocation. Invalid magic/version/zero length, incomplete frames, trailing bytes, multiple frames, excessive chunk fragmentation, stream errors, abort and one overall deadline fail with stable codes. The reader cancels the iterator best-effort on failure and returns only copy-on-read bytes.
 
 The Guest supervisor orchestration composes authorization, an injected launcher, IPC, process-exit validation, canonical GUEST_SAFE output and authenticated ResultEnvelope signing. One deadline and AbortSignal govern the run; failed streams or unknown process state request TERM and then KILL after a bounded grace. The launch plan contains no job ID, authorization reference, result credential or signing key. The key provider is consulted only after a clean exit and accepted canonical target-bound output. The internal BullMQ consumer derives this context from the current PostgreSQL lease and approved artifact, renews the lease every five seconds, aborts on renewal loss and commits only the authenticated result; Redis never carries target, policy, attempt, fence or credential data. Production process/container isolation, secret-manager provisioning and durable telemetry remain required Gate B1 work.
+
+## Proposed Proof Scan intent
+
+[Proof Scan](PROOF_SCAN_AND_DEMO_REPORT.md) is entitlement/orchestration only, after
+B2 prerequisites and accepted grant/data decisions. It uses existing VERIFIED_BASELINE,
+current EXACT_HOST DNS verification, consent and fresh ScanAuthorization. Server derives
+target/profile/capabilities; no arbitrary templates, CONTROLLED_DEEP, ACTIVE or V1-denied
+capability is enabled. A grant neither extends verification nor creates MonitoringEnrollment.
+[Trust metadata](TRUST_METHODOLOGY_AND_EVIDENCE.md) never activates a feed or scanner.

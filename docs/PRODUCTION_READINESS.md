@@ -1,16 +1,16 @@
-# OUTSCAN Production Readiness Gate
+# OUTSCAN Production Readiness — Gate C evidence profile
 
-Status: Proposed for repository integration
+Status: evidence profile for existing Gate C; no release PASS asserted
 Scope: OUTSCAN production releases
 Owner: Platform / Security / Engineering
 
 ## 1. Purpose
 
-Production Readiness Gate is the release gate that answers one question:
+This profile supplies evidence for the existing Gate C in [PRE_SCAFFOLD_GATE](PRE_SCAFFOLD_GATE.md). It answers:
 
 > Is the implemented OUTSCAN release safe, recoverable, observable and operable in production?
 
-It is separate from architecture/documentation gates. A design can be accepted while its implementation is not yet ready for production.
+A design can be accepted while its implementation is not ready. This document creates no additional release gate and cannot advance A/B1/B2/C.
 
 Canonical sequence:
 
@@ -18,13 +18,14 @@ Canonical sequence:
 Architecture / documentation accepted
     -> implementation
     -> tests
-    -> Production Readiness Gate
+    -> applicable B1/B2 PASS
+    -> Gate C evidence review
     -> production release
     -> monitoring
     -> post-release review
 ```
 
-For the current project this gate does not replace Gate A or existing ADR acceptance. It evaluates the deployed implementation and its operational evidence.
+Gate A governs scaffold, B1 any Guest exposure, B2 Workspace and C production. Evidence must match the exact commit, lockfile, artifact/migration/configuration identity and deployment realm. Ubuntu + Docker Compose is the current target; local offline tests or a different realm cannot substitute for target-runtime evidence.
 
 ## 2. Core principle
 
@@ -64,10 +65,10 @@ Each criterion has one of four states:
 
 `N/A` must never be used merely because implementation is inconvenient.
 
-Overall gate state is intentionally binary:
+The profile assessment is binary; the canonical gate matrix alone records actual gate status:
 
-- `PRODUCTION READINESS: PASS`
-- `PRODUCTION READINESS: FAIL`
+- `GATE C EVIDENCE PROFILE: PASS`
+- `GATE C EVIDENCE PROFILE: FAIL`
 
 There is no `conditional PASS` state.
 
@@ -78,7 +79,9 @@ Overall result is `FAIL` when any of the following is true:
 - a `BLOCKER` criterion is `FAIL`;
 - a `BLOCKER` criterion has no evidence;
 - a required security negative test fails;
-- an unresolved critical production defect is known;
+- an unresolved Critical/High defect is known in release scope;
+- required B1/B2 evidence is absent or the release-candidate CI/build/security stages fail or were skipped;
+- required privacy/legal/disclosure, retention/export/delete, privileged MFA/step-up or public-claim evidence is absent;
 - release scope changed after the gate without re-evaluation of affected criteria.
 
 A non-blocking `WARN` is allowed only when all are recorded:
@@ -109,7 +112,7 @@ Tests must cover direct object references, guessed identifiers and background jo
 
 ### 6.3 Scanner isolation is insufficient
 
-Scanner workers must not have unnecessary access to:
+The disposable scanner must have no DB/Redis/result-ingress/admin credentials, Docker socket, privileged mode or host-network authority. Only the trusted supervisor may own scoped persistence/queue/result credentials. The scanner cannot reach:
 
 - primary application database;
 - platform secrets;
@@ -117,13 +120,13 @@ Scanner workers must not have unnecessary access to:
 - cloud metadata endpoints;
 - management interfaces.
 
-Workers require explicit resource and network restrictions appropriate to the deployed architecture.
+Prove read-only/minimal filesystem, CPU/memory/PID/time/request limits, artifact approval/revocation, cancellation/TERM-to-KILL/cleanup and crash/orphan reconciliation. This applies to the effective runtime, not just Compose syntax.
 
 ### 6.4 SSRF / target validation protections are incomplete
 
 Target canonicalization and public-address validation must be enforced server-side.
 
-Private, loopback, link-local, reserved and metadata destinations must be rejected. Destination validation must be repeated after redirects and after relevant DNS resolution changes.
+Resolve the complete A/AAAA set and fail closed on any forbidden/ambiguous candidate, including configured internal IPv4/IPv6. Pin actual connections to validated IPs while preserving Host/SNI/certificate checks; re-resolve and revalidate every retry/redirect under ADR-0009. DNS/egress policy must be enforced on the deployment target.
 
 ### 6.5 Production secrets are handled insecurely
 
@@ -262,7 +265,7 @@ Shared code can reuse automated evidence, but realm-specific infrastructure, dat
 
 ## 11. Guest Scan release rule
 
-Before public Guest Scan is enabled for unrestricted internet traffic, at minimum the following domains must be `PASS`:
+Before any Guest exposure, Gate B1 must be PASS; before production, Gate C must pass all applicable criteria. The following priority domains are not an alternative or reduced launch gate:
 
 - Security Boundaries;
 - Scanner Isolation;
@@ -272,6 +275,8 @@ Before public Guest Scan is enabled for unrestricted internet traffic, at minimu
 - Recovery & Resilience.
 
 Particular attention is required for target canonicalization, DNS/redirect revalidation, public-IP enforcement, rate limiting, worker egress, queue pressure and abuse telemetry.
+
+Creator/referral/Telegram entry points inherit the same boundaries. Direct bot execution requires its own reviewed authenticated Guest-session binding; chat/user IDs cannot replace the cookie-based ADR-0011 ownership model. Progressive disclosure follows PRODUCT_SIMPLICITY_UX within authorized data access, preserves coverage/uncertainty and needs runtime WCAG evidence. The 10s/30s target is a usability goal, not an SLA or Gate shortcut.
 
 ## 12. Non-goals
 
@@ -310,7 +315,7 @@ Recommended related updates:
 - `OPERATIONS.md` - restore, rollback, alerts and runbooks;
 - `SECURITY_MODEL.md` - reference blocking trust-boundary criteria;
 - `SCANNING_POLICY.md` - reference scan-authorization and target-validation blockers;
-- `plan.md` - add Production Readiness Gate before public production launch;
+- `plan.md` - reference this evidence profile within existing Gate C before production;
 - `CHANGELOG.md` - record documentation integration.
 
 Do not create a new ADR solely because this checklist exists unless the repository's actual ADR policy or current architecture review determines that a new architectural decision is required.

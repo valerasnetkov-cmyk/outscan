@@ -324,3 +324,15 @@ Result processing:
 ## Error examples
 
 `INVALID_TARGET`, `FORBIDDEN_DESTINATION`, `IDEMPOTENCY_KEY_REUSED`, `VERIFICATION_EXPIRED`, `SCOPE_STALE`, `SCAN_NOT_AUTHORIZED`, `STALE_ATTEMPT`, `LEASE_EXPIRED`, `ATTEMPT_DEADLINE_EXCEEDED`, `RESULT_DIGEST_CONFLICT`, `PROFILE_DISABLED`.
+
+## Trust and Proof Scan — proposed, no routes implemented
+
+[Finding provenance](FINDING_PROVENANCE_CONTRACT.md) extends future authenticated finding
+views through a closed tenant-safe projection, not anonymous raw evidence. Guest schema
+is unchanged. Optional `GET /v1/public/trust/status` requires public gate/claim review:
+read-only, bounded source/methodology fields, honest cache-bounded freshness, no tenant
+IDs/private diagnostics. [Public surface](TRUST_PUBLIC_SURFACE.md) specifies negatives.
+Proof Scan has no route until B2 Organization/verification/entitlement/verified-baseline
+prerequisites. Server derives organization, asset and profile; request cannot select
+arbitrary target/template/capability. Grant reservation/result consumption must obey
+ADR-0011 atomic commit and no-write terminal replay semantics.

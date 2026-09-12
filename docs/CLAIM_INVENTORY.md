@@ -40,7 +40,40 @@
 | `100% безопасно` / `защищено от взлома`                           | Security/Legal         | absolute assurance impossible                                                                 | BLOCKED       | 2026-09-03 |
 | `Полный автоматический пентест`                                   | Security/Legal         | outside product assurance/scope                                                               | BLOCKED       | 2026-09-03 |
 
-## Design acceptance
+## Strategy and Creator candidates — 2026-09-12
+
+These entries record candidates and restrictions, not publication approval. Mission/AI-era/Creator strategy and PRODUCT_SIMPLICITY_UX do not activate capabilities or override the inventory above. Editorial potential/probable/confirmed wording never creates machine states.
+
+| Claim / content                                                                                                  | Owner                | Evidence / condition                                                                                   | Status       | Review     |
+| ---------------------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------ | ------------ | ---------- |
+| `Создать можно автоматически. Контролировать нужно независимо.`                                                  | Product/Security     | Narrative candidate; final publication review without implying implemented continuous control          | FUTURE_LABEL | 2026-09-12 |
+| `Вы создаёте быстрее. Контроль не должен отставать.` / `Код меняется за минуты. Периметр меняется вместе с ним.` | Product/Security     | Strategy copy; any implied change/monitoring behavior needs actual gated evidence                      | FUTURE_LABEL | 2026-09-12 |
+| `OUTSCAN следит за тем, что реально стало доступно снаружи.`                                                     | Product/Security/Ops | Discovery/monitoring implementation and scope/availability evidence required                           | BLOCKED      | 2026-09-12 |
+| `Сделал. Запустил. Проверь.` / Creator campaign claims                                                           | Product/Legal        | Candidate campaign wording; implemented B1 flow and publication review required                        | FUTURE_LABEL | 2026-09-12 |
+| `AI написал код. OUTSCAN проверяет то, что реально оказалось доступно снаружи.`                                  | Product/Security     | Must not imply source-code audit or application assurance; implemented scope and claim review required | BLOCKED      | 2026-09-12 |
+| `Исправить с AI`, AI Handoff, deployment-triggered recheck                                                       | Product/Security     | Deterministic export/recheck prerequisites, authorization, runtime and UX evidence required            | BLOCKED      | 2026-09-12 |
+| Telegram Guest Scan integration                                                                                  | Product/Security     | B1 plus separate channel/session/abuse/privacy decision and runtime evidence                           | BLOCKED      | 2026-09-12 |
+| Creator `490–990 ₽/мес.`, referral rewards, package limits                                                       | Product/Legal        | Unapproved commercial hypotheses; unit economics, terms and actual entitlements required               | BLOCKED      | 2026-09-12 |
+| `Enterprise-возможности без enterprise-сложности`                                                                | Product/Security     | Internal positioning direction only; no unsupported enterprise/continuous-control claim                | FUTURE_LABEL | 2026-09-12 |
+| `10s state / 30s action / deep-dive evidence`                                                                    | Product/Design       | Internal usability target only; never an advertised performance/security SLA without evidence          | FUTURE_LABEL | 2026-09-12 |
+
+## Trust candidates — 2026-09-12
+
+Documentation review only; none of these conditions is runtime/publication approval.
+
+| Claim                                      | Owner            | Evidence / condition                                                                         | Status      | Review     |
+| ------------------------------------------ | ---------------- | -------------------------------------------------------------------------------------------- | ----------- | ---------- |
+| Методология OUTSCAN                        | Product/Security | Implemented scope, methodology version and public review                                     | CONDITIONAL | 2026-09-12 |
+| Источники знаний OUTSCAN                   | Product/Security | Actual supported sources and production provenance                                           | CONDITIONAL | 2026-09-12 |
+| Source freshness / last update             | Ops/Security     | Canonical watermarks, bounded cache and honest stale/unknown tests                           | CONDITIONAL | 2026-09-12 |
+| Почему OUTSCAN так считает?                | Product/Security | Tenant-safe provenance, canonical confidence and disclosure tests                            | CONDITIONAL | 2026-09-12 |
+| Proof Scan до оплаты                       | Product/Security | B2 prerequisites, accepted eligibility/grant model and atomic authorization tests            | CONDITIONAL | 2026-09-12 |
+| Реальный Demo Report                       | Product/Security | Owned lab, immutable Report Engine snapshot and reviewed public projection                   | CONDITIONAL | 2026-09-12 |
+| Detection / false-positive percentages     | Security/Product | Reproducible Validation Lab, versioned corpus/methodology and reviewed measurements required | BLOCKED     | 2026-09-12 |
+| Полное покрытие / все CVE / все уязвимости | Security/Product | Unsupported completeness/assurance claim                                                     | BLOCKED     | 2026-09-12 |
+| External certification                     | Security/Legal   | Actual certification and approved scope/wording required                                     | BLOCKED     | 2026-09-12 |
+
+## Design acceptance rules
 
 Gate A design evidence is valid only if:
 

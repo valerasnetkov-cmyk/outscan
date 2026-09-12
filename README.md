@@ -97,6 +97,14 @@ Organization Security Score includes explicitly monitored assets only.
 V1 stores snapshots/provenance.
 V1.5 adds full diff/significance/timeline/alerts.
 
+## Strategy and planned product surfaces
+
+The [mission](docs/OUTSCAN_MISSION.md), [positioning](docs/COMPETITIVE_POSITIONING_AND_OBJECTIONS.md) and [AI-era strategy](docs/AI_ERA_PRODUCT_STRATEGY.md) retain the product loop `Assets → Changes → Risks → Priority → Remediation → Recheck → Monitoring`. Strategic P0 does not move V1.5/Discovery work into B1.
+
+[Creator / AI Builder GTM](docs/CREATOR_VIBE_CODING_GTM.md) describes early self-service acquisition without limiting the Agency/SMB/EASM trajectory. Creator packaging/prices remain hypotheses; no bot, campaign, tariff or claim is activated. [Product simplicity](docs/PRODUCT_SIMPLICITY_UX.md) puts state/action before technical taxonomy within existing permissions and Guest disclosure limits.
+
+[Reporting](docs/REPORTING.md) is planned after B2/durable Finding/Risk prerequisites. [Proposed ADR 0018](docs/adr/0018-report-engine.md) reconciles the imported snapshot design; [AI Handoff](docs/AI_HANDOFF_SECURITY.md) is deterministic export only. [Production readiness](docs/PRODUCTION_READINESS.md) and its [checklist](docs/PRODUCTION_READINESS_CHECKLIST.md) supply evidence for existing Gate C. [Glossary seed review](docs/GLOSSARY_SEED_REVIEW.md) remains DRAFT and the [promo game](docs/game/GAME_PRODUCT_SPEC.md) remains documentation-only.
+
 ## Claims / design
 
 Public copy follows `docs/CLAIM_INVENTORY.md`.
@@ -160,3 +168,12 @@ pnpm verify:db
 Database verification requires an isolated PostgreSQL 18 test database in `OUTSCAN_TEST_DATABASE_URL`. Schema changes are applied explicitly with `OUTSCAN_DATABASE_URL` and `OUTSCAN_DATABASE_SSL=disable|require` via `pnpm --filter @outscan/api db:migrate`; the API never migrates automatically at startup.
 
 The public scan control is intentionally disabled. No Guest Scan endpoint or outbound scanner is exposed before Gate B1.
+
+## Trust and evidence — planned
+
+[Trust methodology](docs/TRUST_METHODOLOGY_AND_EVIDENCE.md) separates observations,
+intelligence, confidence and Risk decisions. [Provenance](docs/FINDING_PROVENANCE_CONTRACT.md)
+will explain authorized findings and immutable reports. Public `/trust` requires
+claim/release evidence; [Proof Scan](docs/PROOF_SCAN_AND_DEMO_REPORT.md) is a future
+bounded verified baseline after Workspace/verification/entitlement prerequisites.
+[ADR 0019](docs/adr/0019-trust-methodology-evidence.md) remains Proposed; B1 stays the critical path.

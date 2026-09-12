@@ -74,6 +74,12 @@
 - [x] Add a detached, no-network API Compose baseline with pinned multi-stage build, runtime hardening smoke and an Ubuntu CI job; full service topology, isolated scanner launch and target-server evidence remain pending.
 - [x] Add opt-in offline scanner CLI container tests for bounded stdin/IPC, IPv4/IPv6 DNS-unavailable coverage and invalid-input denial; keep the production launch/egress integration pending.
 - [x] Verify offline container failure/TERM-to-KILL/cleanup with run-owned IDs and labels; production supervisor-to-container lifecycle binding remains pending.
+- [x] Add read-only Ubuntu host preflight with explicit version pins, local-daemon/cgroup/resource/seccomp checks and closed errors; real target-host execution remains pending deployment inputs.
+- [x] Verify local PID exhaustion (EAGAIN plus cgroup denial counter and child cleanup) and bounded CPU pressure (throttling counter growth); repeat platform-specific checks on the deployment host.
+- [x] Prove local container memory enforcement with a bounded allocation fixture, exit 137 plus Docker OOMKilled evidence and run-owned cleanup; target-host evidence remains pending.
+- [x] Verify active cgroup-v2 memory/swap/PID/CPU ceilings inside offline containers and reject four deliberately changed resource configurations; target-server enforcement and live-egress evidence remain pending.
+- [x] Fail closed before offline container attach/stdin on inspected privilege/resource/namespace/mount/environment/entrypoint drift; verify denial cleanup and unchanged run-owned identity checks.
+- [x] Build a separate offline scanner image from the CLI-only TypeScript import closure, with exact application inventory and no API/supervisor/application dependencies; production promotion and live egress remain pending.
 - [x] Implement and verify a detached host-side offline `ScannerProcessLauncher` with immutable image binding, fixed isolation, scanner-only stdin and container-owned stop/cleanup; no worker/egress activation. Closure evidence and verification limitations: [audit 2026-09-12](docs/audit-2026-09-12.md).
 
 - [x] Verify detached bootstrap → cookie → scan HTTP composition with real services and controlled persistence/queue outcomes, including key removal, revocation and enqueue/replay recovery.
@@ -150,7 +156,8 @@
 
 - [x] Document the code-first glossary, search/API/UI/SEO boundary and blocking tests for later implementation.
 - [x] Keep V1 metadata-only with no new ADR; require a separate decision for CMS/database, external ingestion, AI production copy or external search.
-- [ ] Correct and security-review the supplied seed: blank `monitoring` slug, stale 84/90 count, nine category mismatches and V1 product-policy wording.
+- [x] Store the structurally corrected 91-term glossary seed as DRAFT: monitoring slug and nine categories corrected; no public/review defaults or runtime import.
+- [ ] Complete term-level security/product/claim review and registry-reference validation before any public glossary import.
 - [ ] Add dependency-free `@outscan/glossary` with exact types, review state, strict validation and fail-closed public/hint projections.
 - [ ] Add bounded deterministic Russian/English/abbreviation/alias search without Redis, database, fuzzy engine or external service.
 - [ ] Add read-only `GET /v1/public/glossary` and canonical-slug detail API with safe cache/error behavior.
@@ -168,7 +175,20 @@
 - [ ] Verify semantic headings, readable line length, WCAG 2.2 AA, keyboard behavior, 320px reflow, metadata and canonical URL before activation.
 - [ ] Keep Gate B1 as the critical path; the stored draft is not B1/B2/C evidence and creates no route, API or scanner capability.
 
-## Phase 2 — Workspace foundation
+## Documentation sync and strategic overlay — 2026-09-12
+
+- [x] Merge the 2026-09-11 sync and 2026-09-12 Creator/UX additions as documentation, preserving current security/job/runtime evidence.
+- [x] Add mission, AI-era/Creator strategy, product simplicity, guarded positioning, Reporting entry/testing maps, DRAFT glossary seed and documentation-only game.
+- [x] Preserve detailed Reporting/AI/export requirements and stable PR-* readiness criteria; bind readiness to existing Gate C.
+- [x] Normalize the imported Reporting placeholder to Proposed ADR 0018; preserve canonical confidence, separate Finding/remediation axes and disabled automatic RESOLVED.
+- [ ] Complete term-by-term glossary content/security review and public claim approval; stored seed is not an approved runtime registry.
+- [ ] Validate Creator commercial hypotheses and consent-aware attribution before any pricing, campaign or collection rollout; outreach needs separate authorization.
+- [ ] After B1, evaluate web Guest acquisition; direct Telegram scanning also requires a reviewed ADR-0011 session binding and ADR-0015 channel/abuse/privacy design.
+- [ ] Verify PRODUCT_SIMPLICITY_UX with runtime usability/accessibility evidence when each gated surface exists; never reveal hidden Guest data.
+
+Strategic P0: Change Intelligence, New Asset Detection, remediation/recheck and immutable reporting. P1: deployment-triggered recheck, Emerging CVE, deterministic AI Handoff and historical comparison. P2+: CI/CD, AI/Agent Exposure and MCP/agent integration. These priorities do not move full Change Intelligence out of V1.5 or broad discovery out of its EASM prerequisites; Gate B1 stays the critical path.
+
+## Phase 2 — Workspace implementation
 
 - [x] Add provider-neutral External Asset Source/candidate/provenance contracts.
 - [x] Add closed Yandex Metrika foundation: `metrika:read` OAuth state/PKCE request, bounded counter pagination/parser, public-host normalization and deterministic deduplication.
@@ -224,7 +244,16 @@
 - [ ] Add bounded tenant Action list/detail/create/update/recheck API and action-oriented Workspace projection.
 - [ ] Pass tenant, membership, concurrency/idempotency, recheck authorization and Finding/Risk/Score isolation suites.
 
-## Phase 4 — TI/Risk/Monitoring
+## Phase 3E — Reporting after B2 and durable Finding/Risk
+
+- [ ] Owner-accept Proposed ADR 0018 and add ReportSnapshot/ReportArtifact classification, retention/export/delete and privilege rules to ADR-0010 before migrations.
+- [ ] Build immutable organization-keyed snapshots from canonical Finding/Occurrence/Event/Coverage/Risk without new confidence or Finding FSM.
+- [ ] Add JSON first, then RU/EN Markdown and deterministic AI Handoff with parity, redaction and bounded hostile-content tests.
+- [ ] Add private PDF/artifact storage and bounded complete-only ZIP bundles with current access checks and tenant composite FK/RLS tests.
+- [ ] Add authorized Workspace history/export UX, keeping historical/live facts distinct and current Guest disclosure unchanged.
+- [ ] Pass REPORTING_TESTING and existing detailed Reporting acceptance/security suites before capability/claim activation; exports never run scans/models/tools or change domain truth.
+
+## Phase 4 — TI/Risk/Monitoring implementation
 
 - [ ] NVD/KEV/EPSS.
 - [ ] recurrence-aware Risk Engine.
@@ -277,6 +306,8 @@ Marketing consent/campaign email, EASM/Asset Graph, Agency/API, dedicated IP/CID
 
 ## Gate C
 
+Use [Production readiness](docs/PRODUCTION_READINESS.md) and its [PR-* checklist](docs/PRODUCTION_READINESS_CHECKLIST.md) as evidence for this gate; no parallel gate is created. Documentation sync does not advance A/B1/B2/C.
+
 - [ ] security suites/build.
 - [ ] retention/export/delete/residency.
 - [ ] backup+restore.
@@ -285,3 +316,12 @@ Marketing consent/campaign email, EASM/Asset Graph, Agency/API, dedicated IP/CID
 - [ ] disclosure contact.
 - [ ] privacy/terms/РФ legal review.
 - [ ] production claim inventory approval.
+
+## Trust and evidence — staged proposal, B1 remains critical
+
+- [x] Integrate methodology, provenance, public disclosure/freshness, Proof Scan and demo/validation documentation; ADR 0019 remains Proposed.
+- [ ] After B1, implement `/trust` only for reviewed evidenced claims; source health waits for canonical TI runtime and scanner identity for stable production egress.
+- [ ] After B2 prerequisites, implement tenant-safe provenance, frozen Report Snapshot integration and accessible explainability using canonical confidence/coverage.
+- [ ] Accept entitlement/data/eligibility/retry decisions before one-result EXACT_HOST VERIFIED_BASELINE Proof Scan; automate race/replay/fence/tenant/scope/profile negatives.
+- [ ] Build owned Demo Lab/real Report Engine export after required runtime and disclosure evidence; keep customer data private.
+- [ ] Later build reproducible Validation Lab before measured accuracy claims. See [Trust test matrix](docs/TRUST_SECURITY_TESTING.md).

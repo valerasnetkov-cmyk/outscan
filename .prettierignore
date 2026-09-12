@@ -1,6 +1,7 @@
 node_modules
 .next
 dist
+scanner-dist
 coverage
 pnpm-lock.yaml
 public/maket.png

@@ -310,7 +310,7 @@ TENANT immutable-oriented positive observation:
 - confidence;
 - observed_at.
 
-Used for recurrence analysis.
+Used for recurrence analysis and proposed [provenance](FINDING_PROVENANCE_CONTRACT.md): reuse occurrence/evidence/coverage/TI/Risk references, not a new table by default. Any grant or snapshot schema extension needs ADR-0010 classification, tenant keys/composite FKs/RLS and retention before migration; see [integration decisions](TRUST_PACKAGE_INTEGRATION.md).
 
 ### FindingEvent
 
@@ -394,4 +394,6 @@ Future Promotions propose PLATFORM `Promotion`, RESTRICTED `PromoCode`, TENANT `
 
 ## Tenant integrity
 
-TENANT lookups use trusted organization context, composite tenant constraints where practical and PostgreSQL RLS. Client-supplied ownership is never authoritative.
+Proposed [ADR 0018](adr/0018-report-engine.md) adds future `ReportSnapshot`/`ReportArtifact` concepts to the existing TENANT/RESTRICTED Report boundary. Both require non-null organization keys, composite Report/snapshot FKs, default-deny RLS and separately accepted metadata/binary retention, export/delete and privilege rules. They are not accepted ADR-0010 matrix rows or migrations yet. Snapshots freeze bounded canonical facts; artifacts are private projections, not duplicate live Finding/Risk models.
+
+TENANT lookups use trusted organization context, composite tenant constraints and PostgreSQL RLS. Client-supplied ownership is never authoritative.

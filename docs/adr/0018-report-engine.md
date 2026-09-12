@@ -1,8 +1,11 @@
-# ADR-NEXT: Canonical Report Snapshot and Safe Export Projections
+# ADR 0018: Canonical Report Snapshot and Safe Export Projections
 
-- Status: Accepted
+- Status: Proposed
 - Date: 2026-09-11
+- Reconciled: 2026-09-12
 - Decision scope: OUTSCAN Reporting
+
+The imported placeholder asserted Accepted; no separate acceptance evidence was found in the reviewed plan/changelog/audits. Documentation-sync approval does not accept this persistence decision. This is the same proposal with the next free number, not a second Reporting ADR. Implementation waits for applicable B2, durable Finding/Risk data and owner acceptance including the ADR-0010 matrix and retention decisions.
 
 ## Context
 
@@ -21,6 +24,8 @@ OUTSCAN должен формировать отчеты для разных п�
 Кроме того, scanner обрабатывает недоверенный внешний контент. Передача raw scanner output в AI document создает риск indirect prompt injection и утечки секретоподобных значений.
 
 ## Decision
+
+Proposed decision; no source, migration, API or scanner capability is enabled by this document.
 
 OUTSCAN использует один immutable canonical Report Snapshot для каждого финализированного отчета.
 
@@ -47,7 +52,11 @@ Reports используют canonical stable Finding ID из Finding domain.
 
 Finding identity не зависит от severity, языка, report date, ordering или renderer-а.
 
-Если текущая Finding model не имеет stable fingerprint, versioned identity mechanism создается в Finding domain до завершения Reporting V1.
+Использовать fingerprint/version, scope и detector/profile provenance по ADR-0013; Reporting не создаёт параллельную identity-модель. Confidence сохраняется в каноническом типе; редакционные Potential/Probable/Confirmed не определяют новые машинные enum.
+
+## Proposed persistence classification
+
+`Report` already has TENANT/RESTRICTED classification in ADR-0010. Proposed `ReportSnapshot` and `ReportArtifact` are also TENANT/RESTRICTED, with mandatory `organization_id`, server-owned identity, composite tenant FKs through Report/snapshot and default-deny RLS. Binary object keys do not grant access. Before migration, owner acceptance must add the new rows to ADR-0010 and define snapshot/artifact retention, deletion/export and privilege rules. No nullable tenant or generic AuditLog is introduced; tenant actions use TenantAuditLog and platform actions use separately scoped PlatformAuditLog.
 
 ## Immutability
 
@@ -126,7 +135,7 @@ Reports отражают finding lifecycle.
 
 Заявление пользователя об исправлении не равно подтвержденному устранению.
 
-`RESOLVED` требует успешного OUTSCAN recheck или другого уже утвержденного deterministic proof.
+Finding condition and disposition remain those of ADR-0013; RemediationAction `REPORTED_COMPLETE` is a separate user workflow under ACTION_CHANGE. Automatic RESOLVED stays disabled until the compatible-coverage policy is implemented and negative-tested. Future resolution must prove scope, detector/profile and fingerprint-version compatibility plus SUCCESS/COMPLETE coverage. Report generation only projects canonical state and never causes a transition.
 
 ## Consequences
 
@@ -184,7 +193,7 @@ Rejected: factual state должен формироваться Normalizer/Risk 
 
 ## Verification
 
-Implementation must pass acceptance and negative tests defined in `REPORT_ACCEPTANCE_TESTS.md` before Reporting V1 is considered production-ready.
+Implementation must pass [Reporting prerequisites and tests](../REPORTING_TESTING.md), including [acceptance](../REPORT_ACCEPTANCE_TESTS.md) and [security cases](../REPORT_SECURITY_TESTS.md). Reporting evidence contributes to existing B2/C; it is not a new release gate.
 
 ## Future
 

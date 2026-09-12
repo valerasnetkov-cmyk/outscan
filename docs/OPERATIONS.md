@@ -106,6 +106,22 @@ Runbooks:
 
 Availability/latency/notification claims require production metrics and claim-inventory approval.
 
-## Disclosure
+## Planned Reporting and Creator operations
+
+Reporting/AI export remain post-B2 proposals; use [Reporting](REPORTING.md) and [AI Handoff Security](AI_HANDOFF_SECURITY.md) for bounded render/queue/storage budgets, current download authorization, private artifacts, separate snapshot/artifact retention and minimized audit. No raw report, credential or hostile evidence belongs in logs. Deterministic export has no external model or privileged tool call; a future direct AI provider requires separate consent/privacy/residency approval.
+
+Creator campaign identifiers are attribution-only, never Guest-session/result-token/verification authority. Any future bot/channel needs its own abuse, replay/session, privacy and outage review; customer technical notifications remain separate from marketing consent and Ops delivery. Strategy does not authorize outreach, campaign spending or data collection.
+
+[Gate C readiness](PRODUCTION_READINESS.md) and [stable PR-* checklist](PRODUCTION_READINESS_CHECKLIST.md) require exact release/artifact/configuration identity, current CI, effective Ubuntu/Compose isolation/egress, restore/rollback evidence and tested Ops delivery. A configured backup or successful offline CI job alone is insufficient.
+
+## Disclosure contact
 
 Configure official security contact and consider `/.well-known/security.txt` before public production.
+
+## Proposed Trust operations
+
+Before [Trust/Proof](TRUST_PACKAGE_INTEGRATION.md) rollout, define canonical source
+watermarks and stale/outage alerts/runbooks, safe status caching, production scanner
+egress identity ownership, demo lab owner/reset/refresh policy and proof-grant abuse/
+recovery metrics. No customer data or production credentials in lab exports. These are
+future deployment requirements, not evidence that feeds, endpoints or labs are live.

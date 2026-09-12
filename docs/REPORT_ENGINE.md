@@ -1,5 +1,7 @@
 # Report Engine
 
+Status: proposed post-B2 design/tests; no runtime or release evidence. [Reporting scope and prerequisites](REPORTING.md) and accepted ADRs govern this document.
+
 ## 1. Назначение
 
 Report Engine превращает подтвержденные данные OUTSCAN в воспроизводимый, неизменяемый отчетный snapshot и затем строит из него пользовательские и машинные представления.
@@ -55,6 +57,8 @@ Immutable Report Snapshot
 
 Неизменяемая factual projection результатов scan на момент генерации.
 
+Proposed TENANT/RESTRICTED: mandatory `organization_id`, `id`, `report_id` and composite organization/report relationship; persistence waits for ADR 0018 and ADR-0010 classification/retention acceptance.
+
 Snapshot должен хранить достаточно данных, чтобы historical report не менялся вслед за текущими Asset/Finding/ThreatIntel records.
 
 ### ReportArtifact
@@ -64,7 +68,9 @@ Snapshot должен хранить достаточно данных, чтоб
 Рекомендуемые поля:
 
 - `id`;
+- `organization_id`;
 - `report_id`;
+- `snapshot_id` with a composite organization/report/snapshot FK;
 - `format`;
 - `locale`;
 - `renderer_version`;
@@ -77,6 +83,8 @@ Snapshot должен хранить достаточно данных, чтоб
 - `expires_at`, только если политика хранения это требует.
 
 Artifact не является источником истины. Его допустимо регенерировать из snapshot.
+
+Proposed TENANT/RESTRICTED classification, organization-keyed lookup and default-deny RLS apply to both metadata and artifact authorization. IDs/storage URLs do not replace current membership/permission checks. No migration exists or is authorized by this proposal.
 
 ## 4. Состояния
 
@@ -129,6 +137,8 @@ PENDING -> RENDERING -> READY
 Если требуется исправить ошибку формирования отчета, создается новая revision/export artifact либо новый Report Snapshot согласно принятой модели. Исторический объект не переписывается незаметно.
 
 ## 7. Snapshot versus live state
+
+RESOLVED examples below describe future canonical state after accepted compatible-coverage evidence; report generation never performs resolution and ADR-0013 automatic resolution remains disabled meanwhile.
 
 Workspace может показывать одновременно:
 
@@ -320,3 +330,12 @@ Report generation должен fail safely.
 ## 20. Acceptance summary
 
 Report Engine готов к V1, когда один завершенный scan создает один валидный immutable snapshot, а все обязательные renderer-ы строят согласованные артефакты без чтения live state в обход snapshot.
+
+## Proposed Trust provenance integration
+
+[Finding provenance](FINDING_PROVENANCE_CONTRACT.md) adds no parallel identity or Risk
+engine. A versioned snapshot freezes observed time, safe evidence summary, approved
+source record identifiers/dates, CVSS source/value, dated EPSS/KEV state, canonical
+confidence/basis, Risk model/priority/factors, coverage and limitations when applicable.
+Unknown remains unknown. Renderers use the frozen snapshot exclusively. New schema fields
+follow existing [versioning](REPORT_SCHEMA_VERSIONING.md) and ADR-0010 tenant rules.

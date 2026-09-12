@@ -83,6 +83,21 @@ Before V1.5, any Change Intelligence diff shown in a concept/prototype must be l
 
 Actual CSS/DOM/keyboard/screen-reader conformance is Gate B1/B2 evidence, not something a PNG can prove.
 
-## Current reference decision
+## Information hierarchy
+
+Follow [Product Simplicity](PRODUCT_SIMPLICITY_UX.md): conclusion → why it matters → action → authorized technical detail/evidence. Curate the canonical public capability projection rather than dumping internal taxonomy. Review critical surfaces against 10s state / 30s action / deep-dive understanding as usability targets, not measured SLAs or current evidence.
+
+Progressive disclosure operates within existing permissions. Guest still omits CVE details, discovered subdomains/endpoints/versions/raw evidence; no expandable panel may reveal them. Uncertainty, coverage and limitations stay visible. Future Workspace actions/changes and Creator/AI copy require their own gates, implementation and claim review; design documentation does not enable them.
+
+## Current reference handling
 
 The current `public/maket.png` does not satisfy this contract and must not be treated as accepted design evidence. It may remain temporarily as reference-only material for the first-screen build; blocked claims/nonconforming elements must not be copied, and it must be removed/excluded from served assets before Gate B1/public deployment if still present.
+
+## Planned Trust and Proof UX
+
+[Trust surface](TRUST_PUBLIC_SURFACE.md) stays outside the Guest critical form.
+“Почему OUTSCAN так считает?” uses keyboard-accessible disclosure, textual freshness/
+unknown labels, visible coverage/limitations and mobile-readable dates without hover-only
+interaction. Guest cannot reveal hidden evidence. Proof Scan explains included/excluded
+scope and separate monitoring without fake urgency. These require future WCAG/browser
+checks, not documentation acceptance as runtime evidence.

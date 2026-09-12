@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Buffer } from "node:buffer";
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { networkInterfaces } from "node:os";
@@ -9,7 +10,7 @@ import {
   BUDGET_CEILINGS,
 } from "./apps/api/dist/scanner-policy/index.js";
 import { readScannerIpcFrame } from "./apps/api/dist/scanner-ipc/index.js";
-import { projectGuestScannerOutput } from "./apps/api/dist/scanner-output/index.js";
+import "./scanner-artifact.mjs";
 
 const maximum = BUDGET_CEILINGS.GUEST_SAFE.max_output_bytes;
 const input = {
@@ -70,6 +71,7 @@ async function run(payload, server) {
 }
 
 try {
+  await import("./scanner-resources.mjs");
   assert.equal(process.getuid(), 1000);
   assert.ok(
     Object.values(networkInterfaces())
@@ -79,25 +81,36 @@ try {
   const status = await readFile("/proc/self/status", "utf8");
   assert.match(status, /^CapEff:\s+0+$/m);
   assert.match(status, /^NoNewPrivs:\s+1$/m);
+  const mounts = await readFile("/proc/mounts", "utf8");
+  assert.ok(
+    mounts.split("\n").some((line) => {
+      const fields = line.split(" ");
+      return fields[1] === "/" && fields[3].split(",").includes("ro");
+    }),
+  );
   for (const resolver of ["127.0.0.1:9", "[::1]:9"]) {
     const result = await run(JSON.stringify(input), resolver);
     assert.deepEqual(result.outcome, { code: 0, signal: null });
     assert.equal(result.stderr, "");
     assert.equal(result.frame.ok, true);
-    const projected = projectGuestScannerOutput(
-      result.frame.result.read_payload(),
-      maximum,
+    // Fixture assertions only; the host launcher checks canonical projection.
+    const output = JSON.parse(
+      Buffer.from(result.frame.result.read_payload()).toString("utf8"),
     );
-    assert.equal(projected.ok, true);
-    assert.equal(projected.projection.canonical_host, input.canonical_target);
-    assert.equal(projected.projection.potential_risk_count, 0);
+    assert.equal(
+      output.execution_metadata.canonical_host,
+      input.canonical_target,
+    );
+    assert.deepEqual(output.candidate_findings, []);
+    assert.equal(output.coverage.length, 8);
     assert.ok(
-      projected.projection.coverage.every(
+      output.coverage.every(
         (item) =>
           item.execution_status === "FAILED" && item.completeness === "UNKNOWN",
       ),
     );
-    assert.equal(projected.projection.execution.request_count, 2);
+    assert.ok(output.observations.every((item) => item.outcome === "UNKNOWN"));
+    assert.equal(output.execution_metadata.request_count, 2);
   }
   for (const payload of [
     "{",

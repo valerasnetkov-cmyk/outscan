@@ -104,3 +104,14 @@ All feeds are untrusted input:
 - no interpolation into shell commands;
 - no execution of data fields;
 - logs sanitized.
+
+## Proposed public freshness projection
+
+[Trust source health](TRUST_PUBLIC_SURFACE.md) derives CURRENT/STALE/UNAVAILABLE/UNKNOWN
+from canonical normalized provenance and source-specific watermarks. Support/rollout
+state is separate; planned sources are not ACTIVE. Cache lifetime must respect freshness
+boundaries. Missing EPSS is unknown, not zero. A stale positive KEV record remains dated
+historical evidence; absence means only not listed in a complete current applicable
+dataset, never no exploitation. No source error or stale dataset establishes KEV: No.
+Public status excludes importer diagnostics/private URLs; snapshots freeze source values
+and dates. See [integration semantics](TRUST_PACKAGE_INTEGRATION.md).

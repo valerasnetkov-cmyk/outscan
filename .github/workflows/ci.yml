@@ -78,8 +78,10 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
-      - run: pnpm exec eslint "deploy/compose/*-smoke.mjs"
-      - run: pnpm exec eslint scripts/verify-scanner-lifecycle.mjs
+      - run: node --test scripts/ubuntu-host-policy.test.mjs
+      - run: pnpm exec eslint scripts/ubuntu-host-policy.mjs scripts/ubuntu-host-policy.test.mjs scripts/verify-ubuntu-host.mjs
+      - run: pnpm exec eslint "deploy/compose/*.mjs"
+      - run: pnpm exec eslint scripts/verify-scanner-lifecycle.mjs scripts/scanner-pressure-probes.mjs
       - run: pnpm exec eslint scripts/verify-offline-launcher.mjs
       - run: pnpm verify:db
       - run: pnpm verify:queue

@@ -5,6 +5,7 @@ services:
     build:
       context: ../..
       dockerfile: deploy/compose/api.Dockerfile
+      target: scanner-runtime
     command: [node, scanner-smoke.mjs]
     init: true
     user: "1000:1000"
@@ -14,6 +15,9 @@ services:
     security_opt: [no-new-privileges:true]
     pids_limit: 64
     mem_limit: 256m
+    memswap_limit: 256m
+    cgroup: private
+    ipc: private
     cpus: 0.5
     restart: "no"
     stop_grace_period: 10s

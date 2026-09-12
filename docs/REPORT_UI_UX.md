@@ -1,5 +1,7 @@
 # Reports UI/UX
 
+Status: proposed post-B2 design/tests; no runtime or release evidence. [Reporting scope and prerequisites](REPORTING.md) and accepted ADRs govern this document.
+
 ## 1. Цель
 
 Интерфейс Reports должен отвечать на два разных вопроса:

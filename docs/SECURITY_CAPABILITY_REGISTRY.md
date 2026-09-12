@@ -379,3 +379,11 @@ A tariff claiming a capability is available does not itself authorize a scan.
 Operational Admin, claim/evidence, caching, observability, compatibility, non-goals and completion rules are defined in:
 
 `docs/SECURITY_CAPABILITY_REGISTRY_OPERATIONS.md`
+
+## Proposed Trust relationship
+
+ProductCapability → reviewed claim/evidence → [Trust methodology](TRUST_METHODOLOGY_AND_EVIDENCE.md).
+Reuse `required_evidence_class`; do not create parallel evidence metadata. Public source/
+engine descriptions require runtime evidence and cannot change policy or authorization:
+ProductCapability != ScannerCapability != ScanAuthorization. Coverage still records actual
+execution; PLANNED source metadata is never live source-health evidence.

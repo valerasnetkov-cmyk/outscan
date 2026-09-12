@@ -94,7 +94,8 @@ topology remain subsequent B1 work; do not attach scanners to this API container
 The separate `scanner-check` profile runs `scanner-offline-check` as a one-shot
 test with no network, ports, mounts or platform credentials. It invokes the real
 scanner CLI through stdin with an empty child environment and validates the real
-bounded IPC frame/projection. IPv4/IPv6 loopback resolvers are intentionally absent;
+bounded IPC frame and fixture output. Canonical projection validation runs on the
+host in `verify-offline-launcher.mjs`. IPv4/IPv6 loopback resolvers are intentionally absent;
 failed DNS must produce unavailable coverage, never successful posture/coverage.
 Malformed JSON, URL targets and oversized input must fail with no result frame.
 
@@ -102,11 +103,19 @@ Malformed JSON, URL targets and oversized input must fail with no result frame.
 docker compose -p outscan-scanner-check -f deploy/compose/compose.yaml --profile scanner-check run --build --rm -T scanner-offline-check
 ```
 
-This test reuses the API build artifact without running the API or supervisor. It
-does not establish a minimal production scanner image, a trusted launch broker,
-termination of containers by supervisor, private-network separation under live
-egress, or permission to deploy scanner workers. No host Docker authority is passed
-inside the test container. These remain separate implementation/review work.
+The profile builds the separate `scanner-runtime` target. `tsconfig.scanner.json`
+compiles only the CLI import closure: 23 JavaScript modules, no source maps or
+application dependencies. The image contains no API/server/supervisor, DB/Redis
+clients, application source, key files or Docker socket. An exact `/app` inventory
+runs during build and smoke; unexpected files and symlinks fail the check.
+The pinned Node/Debian base still includes OS/runtime tooling: this is a reduced
+application image, not a distroless or vulnerability-approved production artifact.
+Smoke verifies UID, capabilities, no-new-privileges, read-only root and network none.
+The three check scripts are test fixtures included in this offline candidate.
+
+The candidate does not establish artifact promotion, a trusted launch broker,
+private-network separation under live egress or permission to deploy scanner workers.
+No host Docker authority is passed inside the test container.
 
 ## Host-side container lifecycle verification
 
@@ -142,7 +151,16 @@ Before creation it reuses the existing approved-artifact/policy/hostname input
 encoder. A content-addressed local Docker image ID must equal the configured
 artifact digest. Network none, UID 1000, read-only root, no capabilities, fixed
 resources, no restart/log driver and fixed scanner entrypoint/DNS settings cannot
-be overridden. It rejects unexpected mounted volumes or inspected identity drift.
+be overridden. Before start/attach or stdin, it checks the effective Docker record: created/stopped
+state, image, fixed entrypoint/arguments/workdir and four allowlisted base-image
+environment entries; root user, injected credentials/NODE_OPTIONS or command drift deny.
+It also requires init, no privilege/capability gain, no-new-privileges, private IPC/
+cgroup namespaces, no shared PID/UTS mode, no mounts/devices/extra groups/ports,
+256 MiB memory+swap ceiling, 0.5 CPU, 64 PIDs, no restart and no logging.
+Missing/malformed required fields fail closed. Denial cleanup checks ownership
+separately, so unsafe owned containers can be removed while foreign ones are untouched.
+These inspect assertions detect configuration drift; they do not by themselves prove
+effective kernel resource/egress enforcement on the target Ubuntu host.
 Only validated scanner input crosses stdin; application credentials are not supplied.
 
 Attach uses the existing bounded process adapter. Stop targets the run-owned
@@ -154,8 +172,9 @@ require reconciliation before production use; no exactly-once cleanup is claimed
 After the API build and lifecycle-check image build above, run
 `node scripts/verify-offline-launcher.mjs` for actual host → container → scanner IPC
 → cleanup verification. The test uses synthetic approval metadata and the local
-image ID; it is not artifact promotion/production approval evidence. A minimal
-scanner image, privileged broker review, live egress and worker binding remain pending.
+image ID; it is not artifact promotion/production approval evidence. Production
+image review/promotion, privileged broker review, live egress and worker binding
+remain pending.
 
 ## Kubernetes migration (subsequent)
 
@@ -166,3 +185,73 @@ credential separation, policy checks and authenticated supervisor-owned results.
 Re-run platform-specific isolation, egress and cancellation evidence before
 cutover. Kubernetes manifests, cluster provisioning and a whole-platform migration
 are outside the current Compose slice.
+
+## Offline cgroup-v2 evidence
+
+`scanner-resources.mjs` verifies cgroup-v2 filesystem identity and private root
+membership before reading the current container's memory.max, memory.swap.max,
+pids.max and cpu.max. Required values are 256 MiB, zero swap, 64 tasks and a quota/
+period ratio of 0.5. Missing/unlimited/incompatible values fail the smoke check;
+there is no cgroup-v1 or host-root fallback. The scanner-check Compose profile now
+explicitly sets memory+swap to 256 MiB and private cgroup/IPC namespaces.
+
+The existing lifecycle harness additionally creates five run-owned offline fixtures:
+a positive case and changed memory, swap, PID and CPU cases. Each change uses the
+exact verified container ID. A fixed in-container probe must accept the baseline
+and reject every changed limit. Cleanup retains name/project/run-label checks.
+Existing CI invokes this harness, so these are executable release checks.
+
+The control-file probe tests detection of limit drift. The bounded pressure probes
+below separately test local memory/PID/CPU enforcement. Neither proves live egress
+or deployment-server enforcement. Local Docker Desktop Linux
+results cannot replace the required Ubuntu target-host checks. Production launch
+still requires reviewed authority, egress, secrets and worker/reconciliation binding.
+
+The lifecycle harness also runs a finite OOM fixture: it first validates cgroup
+limits, then retains at most 32 touched 16 MiB buffers. The expected outcome is
+exit 137 with Docker `State.OOMKilled=true`, stopped state and the successful
+pre-allocation cgroup marker. Exit 137 alone is insufficient; reaching all 512 MiB
+or hitting the command timeout fails. No test-issued kill occurs before observation.
+Cleanup runs afterward against the verified run-owned ID/name/label. This provides
+local memory-exhaustion evidence without an unbounded allocation loop; repeat it on
+the deployment host before accepting target-specific enforcement.
+
+The host-owned `scripts/scanner-pressure-probes.mjs` fixtures are passed as fixed
+programs by the lifecycle harness, never as scanner/target input. They are not
+shipped in the scanner image. Each first validates the existing cgroup-v2 limits.
+The PID probe makes at most 80 direct `/bin/sleep 10` spawn attempts with empty
+environment and no shell. It requires EAGAIN, an increased pids.events max counter
+and pids.current <=64; all direct children are killed/reaped and the task count
+returns to no more than baseline before success. There is no recursive spawn loop.
+The CPU probe runs one bounded loop for at most two monotonic seconds/100 million
+iterations and requires growth in both nr_throttled and throttled_usec. This is
+throttling evidence, not a CPU throughput benchmark or timing SLA.
+
+Both fixtures must exit zero, without OOM, with exact success markers. Existing
+20-second Docker-command bounds and run-owned finally cleanup apply. CI runs the
+same harness and lints both host files. Local Docker Desktop Linux results passed;
+Ubuntu deployment-host repetition remains required before B1 exposure.
+
+## Read-only Ubuntu host preflight
+
+Before live tests, run on the intended host:
+
+```text
+node scripts/verify-ubuntu-host.mjs <ubuntu-release> <docker-engine-version> <compose-version>
+```
+
+All three pins must be explicit numeric release versions chosen for that deployment;
+there are no defaults and no inferred production versions. The command uses only
+`/usr/bin/docker --host unix:///var/run/docker.sock` with a fixed minimal PATH,
+no inherited Docker context/credentials and bounded command output/time. It reads
+os-release, local kernel, Docker info and Compose version; it creates no container,
+changes no firewall/service and never writes daemon configuration.
+
+It requires Ubuntu/Linux, matching local/daemon kernel, exact version pins,
+cgroup v2, memory/swap/CPU/PID support, builtin seccomp and no daemon warnings.
+Malformed/missing evidence fails with closed codes. Output contains only version
+pins/cgroup/seccomp and configuration-only scope, not hostname/topology/diagnostics.
+A passing preflight is not artifact/privilege/egress/Ops approval and cannot advance
+a gate. Windows/Docker Desktop cannot substitute for this Ubuntu host result.
+The pure policy's negative fixtures run in CI; actual target-host preflight still
+requires the owner-provided server and reviewed version pins.

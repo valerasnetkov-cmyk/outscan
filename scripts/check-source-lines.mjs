@@ -7,6 +7,7 @@ const ignoredDirectories = new Set([
   ".next",
   "coverage",
   "dist",
+  "scanner-dist",
   "node_modules",
 ]);
 const authoredExtensions = new Set([

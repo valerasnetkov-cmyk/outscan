@@ -59,7 +59,15 @@ const plan: ScannerLaunchPlan = {
   },
 };
 
-function harness(mode = "OK") {
+function harness(
+  mode = "OK",
+  mutate?: (record: {
+    Config: Record<string, unknown>;
+    HostConfig: Record<string, unknown>;
+    State: Record<string, unknown>;
+    Mounts: unknown[];
+  }) => void,
+) {
   let present = false;
   let name = "";
   let run = "";
@@ -76,12 +84,23 @@ function harness(mode = "OK") {
       present = true;
       stdout = id;
     } else if (operation === "inspect") {
-      stdout = JSON.stringify({
+      const record = {
         Id: id,
         Name: `/${name}`,
         Image: artifact.scanner_image_digest,
         Config: {
           User: "1000:1000",
+          WorkingDir: "/app",
+          OpenStdin: true,
+          Tty: false,
+          Env: [
+            "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+            "NODE_VERSION=24.21.0",
+            "YARN_VERSION=1.22.22",
+            "NODE_ENV=production",
+          ],
+          Entrypoint: ["/usr/local/bin/node"],
+          Cmd: calls.find((call) => call[2] === "create")!.slice(-2),
           Labels: {
             "outscan.offline-launch": mode === "FOREIGN" ? "wrong" : run,
           },
@@ -89,9 +108,40 @@ function harness(mode = "OK") {
         HostConfig: {
           NetworkMode: mode === "NETWORK" ? "host" : "none",
           ReadonlyRootfs: true,
+          Privileged: false,
+          Init: true,
+          Memory: 268435456,
+          MemorySwap: 268435456,
+          NanoCpus: 500000000,
+          PidsLimit: 64,
+          PidMode: "",
+          IpcMode: "private",
+          UTSMode: "",
+          CgroupnsMode: "private",
+          PublishAllPorts: false,
+          CapDrop: ["ALL"],
+          CapAdd: null,
+          SecurityOpt: ["no-new-privileges:true"],
+          RestartPolicy: { Name: "no", MaximumRetryCount: 0 },
+          LogConfig: { Type: "none" },
+          Binds: null,
+          VolumesFrom: null,
+          Devices: [],
+          DeviceRequests: null,
+          GroupAdd: null,
+          Tmpfs: null,
+          PortBindings: {},
+        },
+        State: {
+          Status: "created",
+          Running: false,
+          Restarting: false,
+          Dead: false,
         },
         Mounts: [],
-      });
+      };
+      mutate?.(record);
+      stdout = JSON.stringify(record);
     } else if (operation === "ps") stdout = present ? id : "";
     else if (operation === "rm") {
       if (mode === "CLEANUP_ERROR")
@@ -155,6 +205,93 @@ describe("offline container launcher", () => {
         expect(calls.some((args) => args[2] === "rm")).toBe(false);
     },
   );
+  it.each([
+    ["HostConfig", "Privileged", true],
+    ["HostConfig", "Init", false],
+    ["HostConfig", "ReadonlyRootfs", false],
+    ["HostConfig", "Memory", 0],
+    ["HostConfig", "MemorySwap", -1],
+    ["HostConfig", "NanoCpus", 0],
+    ["HostConfig", "PidsLimit", 0],
+    ["HostConfig", "PidMode", "host"],
+    ["HostConfig", "IpcMode", "host"],
+    ["HostConfig", "UTSMode", "host"],
+    ["HostConfig", "CgroupnsMode", "host"],
+    ["HostConfig", "PublishAllPorts", true],
+    ["HostConfig", "CapDrop", []],
+    ["HostConfig", "CapAdd", ["SYS_ADMIN"]],
+    ["HostConfig", "SecurityOpt", ["seccomp=unconfined"]],
+    ["HostConfig", "RestartPolicy", { Name: "always", MaximumRetryCount: 0 }],
+    ["HostConfig", "LogConfig", { Type: "json-file" }],
+    ["HostConfig", "Binds", ["/secret:/secret"]],
+    ["HostConfig", "VolumesFrom", ["trusted-api"]],
+    ["HostConfig", "Devices", [{ PathOnHost: "/dev/sda" }]],
+    ["HostConfig", "DeviceRequests", [{ Count: -1 }]],
+    ["HostConfig", "GroupAdd", ["0"]],
+    ["HostConfig", "Tmpfs", { "/secrets": "rw" }],
+    ["HostConfig", "PortBindings", { "80/tcp": [{ HostPort: "80" }] }],
+    ["HostConfig", "Memory", undefined],
+    ["Config", "User", "0"],
+    ["Config", "WorkingDir", "/"],
+    ["Config", "OpenStdin", false],
+    ["Config", "Tty", true],
+    ["Config", "Entrypoint", ["/bin/sh"]],
+    ["Config", "Cmd", ["/app/apps/api/dist/server.js"]],
+    ["Config", "Env", ["DATABASE_URL=private-canary"]],
+    ["State", "Status", "running"],
+    ["State", "Running", true],
+    ["State", "Restarting", true],
+    ["State", "Dead", true],
+  ])(
+    "denies effective %s.%s drift and cleans up before stdin",
+    async (section, key, value) => {
+      const calls = harness("OK", (record) => {
+        record[section as "Config" | "HostConfig" | "State"][key as string] =
+          value;
+      });
+      await expect(
+        createOfflineContainerLauncher(configuration).launch(plan),
+      ).rejects.toThrow("OFFLINE_CONTAINER_LAUNCH_FAILED");
+      expect(fake.attach).not.toHaveBeenCalled();
+      expect(calls.some((args) => args[2] === "rm" && args.at(-1) === id)).toBe(
+        true,
+      );
+    },
+  );
+  it.each(["credential", "duplicate", "node-options", "mount"])(
+    "denies hidden %s injection",
+    async (mode) => {
+      harness("OK", (record) => {
+        if (mode === "mount") record.Mounts = [{ Destination: "/secret" }];
+        else {
+          const environment = record.Config.Env as string[];
+          if (mode === "duplicate") environment[2] = environment[1]!;
+          else
+            environment.push(
+              mode === "credential"
+                ? "REDIS_URL=private-canary"
+                : "NODE_OPTIONS=--inspect",
+            );
+        }
+      });
+      await expect(
+        createOfflineContainerLauncher(configuration).launch(plan),
+      ).rejects.toThrow("OFFLINE_CONTAINER_LAUNCH_FAILED");
+      expect(fake.attach).not.toHaveBeenCalled();
+    },
+  );
+  it("accepts Docker omission of optional empty Tmpfs while mounts remain checked", async () => {
+    harness("OK", (record) => {
+      delete record.HostConfig.Tmpfs;
+    });
+    const handle = (await createOfflineContainerLauncher(configuration).launch(
+      plan,
+    )) as { wait(): Promise<unknown> };
+    await expect(handle.wait()).resolves.toEqual({
+      exit_code: 0,
+      signal: null,
+    });
+  });
   it("cleans up attach failure without exposing errors", async () => {
     const calls = harness();
     fake.attach.mockRejectedValueOnce(new Error("private-canary"));

@@ -1,5 +1,7 @@
 # Report Schema Compatibility and Serialization
 
+Status: proposed post-B2 design/tests; no runtime or release evidence. [Reporting scope and prerequisites](REPORTING.md) and accepted ADRs govern this document.
+
 This file continues `REPORT_SCHEMA_VERSIONING.md` with provenance, serialization, validation and compatibility rules.
 
 ## 20. Provenance

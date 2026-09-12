@@ -64,3 +64,24 @@ Brand Protection, DMARC aggregate-report ingestion and credential exposure requi
 ## Sequencing
 
 Advance scanner classes only with demand/revenue/coverage/operational evidence and required security/legal decisions.
+
+## Strategic priorities and UX
+
+[AI-era strategy](AI_ERA_PRODUCT_STRATEGY.md) is an overlay, not release sequencing: P0 is Change Intelligence, New Asset Detection, remediation/recheck and immutable reporting; P1 is deployment-triggered recheck, Emerging CVE checks, deterministic AI Handoff and historical comparison; P2+ is CI/CD, AI/Agent Exposure and MCP/agent integration. Gate B1 remains the critical path; full Change Intelligence remains V1.5, broad discovery remains V2/EASM and no discovered asset gains scan authority.
+
+[Product Simplicity](PRODUCT_SIMPLICITY_UX.md) applies to each future surface: state/action before taxonomy, authorized evidence accessible, no hidden limitations or Guest disclosure expansion. The 10s/30s goal requires usability review and is not an SLA.
+
+## Creator GTM overlay
+
+[Creator / AI Builder](CREATOR_VIBE_CODING_GTM.md) is the first self-service acquisition segment, with the existing Agency/SMB/EASM growth path.
+
+- Before B1: strategy/content/channel research and campaign design only; outreach is a separate authorized activity, no public scan execution.
+- After B1: web Guest campaigns/links can be evaluated; direct Telegram scans additionally need an accepted channel/security/session design under ADR-0011/0015.
+- After B2 and relevant phases: Workspace packaging, explicit Monitoring, authenticated technical notifications and remediation workflow.
+- After Reporting prerequisites: deterministic AI Handoff and separately authorized recheck, with claim/UX review before an AI-related CTA.
+
+Creator price ranges, CAC/payback, referral rewards and attribution are hypotheses. Future analytics require minimized consent-aware data and cannot turn campaign/chat IDs into session ownership, verification or authorization.
+
+## Reporting and production
+
+[Reporting](REPORTING.md) waits for durable Findings/Risk, B2, ADR 0018 acceptance and ADR-0010 classification/retention. Implement snapshot/JSON parity before other formats and history UI. [Production readiness](PRODUCTION_READINESS.md) is the existing Gate C evidence profile; documentation adds no gate or runtime evidence.

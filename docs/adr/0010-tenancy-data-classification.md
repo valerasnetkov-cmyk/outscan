@@ -187,6 +187,8 @@ Use TenantAuditLog and PlatformAuditLog. Do not keep ambiguous generic AuditLog 
 
 ## Required tests
 
+Future Reporting extension: [Proposed ADR 0018](0018-report-engine.md) describes TENANT/RESTRICTED ReportSnapshot and ReportArtifact with organization keys, composite FKs and RLS. These are proposals, not accepted matrix rows. Owner acceptance of classification, retention and export/delete/privilege rules is required before migration; existing Report classification is unchanged.
+
 - Organization TENANT_ROOT list/get/mutate isolation;
 - wrong-tenant child FK rejected;
 - child-row RLS default deny;

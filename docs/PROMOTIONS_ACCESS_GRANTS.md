@@ -121,3 +121,11 @@ No public trial, plan, limit, duration, conversion or availability claim is appr
 7. Pass [Promotions and Access Grants testing](PROMOTIONS_ACCESS_GRANTS_TESTING.md) and claim/legal review before rollout.
 
 The administrative verification exception remains absent unless a later separate ADR is accepted.
+
+## Proposed Proof Scan relationship
+
+[Proof Scan](PROOF_SCAN_AND_DEMO_REPORT.md) proposes one organization/asset-bound accepted
+VERIFIED_BASELINE result. Reuse this entitlement model only after its accepted design can
+express reservation, atomic result consumption, retry/replay and revocation safely.
+A separate boolean payment bypass or reusable promo code is insufficient. Proposed
+[ADR 0019](adr/0019-trust-methodology-evidence.md) does not accept this grant model.

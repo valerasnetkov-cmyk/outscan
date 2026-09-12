@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "outDir": "scanner-dist",
+    "sourceMap": false,
+    "types": ["node"]
+  },
+  "files": ["src/guest-scanner-cli.ts"],
+  "include": []
+}

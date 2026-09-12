@@ -19,3 +19,7 @@
 !deploy/compose/
 !deploy/compose/api-smoke.mjs
 !deploy/compose/scanner-smoke.mjs
+
+!deploy/compose/scanner-package.json
+!deploy/compose/scanner-artifact.mjs
+!deploy/compose/scanner-resources.mjs

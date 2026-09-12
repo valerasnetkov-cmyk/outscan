@@ -6,6 +6,18 @@
 
 OUTSCAN shows external digital posture, meaningful risks and changes without promising absolute security.
 
+The [mission](OUTSCAN_MISSION.md), [positioning](COMPETITIVE_POSITIONING_AND_OBJECTIONS.md) and [AI-era strategy](AI_ERA_PRODUCT_STRATEGY.md) preserve `Assets → Changes → Risks → Priority → Remediation → Recheck → Monitoring`. The system that created a change must not be the only source assessing its safety: **Создать можно автоматически. Контролировать нужно независимо.** These are planning principles, not production claims.
+
+## Audience and Creator acquisition
+
+AI-enabled Builders include entrepreneurs, designers/vibe coders, product managers, freelancers, studios, agencies and small teams without a dedicated security engineer. [Creator GTM](CREATOR_VIBE_CODING_GTM.md) is the early self-service acquisition focus, with a path toward Studio/Agency/MSP/SMB/EASM; it does not replace the long-term market.
+
+Telegram/YouTube partnerships, referral attribution and possible Creator packaging are commercial hypotheses, not active channels/pricing or scan authority. There is no separate AI tariff. Web Guest campaigns wait for B1; direct Telegram scans additionally require reviewed channel/session/abuse controls. Workspace/Monitoring/AI Handoff wait for their own B2/phase prerequisites.
+
+## Product simplicity
+
+[Product Simplicity](PRODUCT_SIMPLICITY_UX.md) keeps complexity inside OUTSCAN: state → importance → action → authorized technical detail → evidence. The 10s state / 30s action / deep-dive target is a UX goal, not a performance SLA. Preserve uncertainty, coverage and Guest redaction. Product Capability Registry stays canonical, with curated user-oriented presentation instead of an automatic feature wall.
+
 ## Canonical user journey
 
 ```text
@@ -111,6 +123,8 @@ Any pre-V1.5 hero diff is labelled `Концепт будущей возможн
 
 ## Claims
 
+[Reporting](REPORTING.md) is a proposed post-B2 projection of immutable canonical data, with JSON first, then MD/AI Handoff, PDF/bundle and Workspace history. It cannot start scans, change Finding/Risk/Score, resolve remediation or grant tools. Automatic RESOLVED and score gating remain governed by ADR-0013; full change presentation remains V1.5. The promo game and glossary seed are documentation-only/DRAFT.
+
 Canonical public claims: CLAIM_INVENTORY.md.
 Blocked claims/customer logos must not appear in accepted runtime design.
 
@@ -143,3 +157,12 @@ Forbidden:
 - `защищено от взлома`;
 - guaranteed protection;
 - full automatic pentest claim.
+
+## Trust and pre-payment evidence — proposed
+
+Users should be able to evaluate methodology before payment and, after the required
+Workspace/verification/entitlement foundations, run one bounded verified Proof Scan.
+[Trust](TRUST_METHODOLOGY_AND_EVIDENCE.md) explains observation, confidence, TI freshness,
+coverage and Risk without granting authority. [Proof Scan and Demo Report](PROOF_SCAN_AND_DEMO_REPORT.md)
+remain future; paid value remains explicit monitoring, history, changes and remediation
+workflow. No pricing, monitoring enrollment or publication is activated by this design.
