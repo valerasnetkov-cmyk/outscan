@@ -104,7 +104,8 @@ def reconcile(journal, execute):
     """Do not interpret daemon/namespace uncertainty as absence."""
     run = journal.run
     records = discover_owned(journal, execute)
-    if journal.data.get("pendingContainers"):
+    pending = list(journal.data.get("pendingContainers", []))
+    if pending:
         # A timed-out docker create may still commit asynchronously. Re-read before
         # declaring cleanup complete; unresolved create intent is fail-closed.
         for _ in range(3):
@@ -112,8 +113,13 @@ def reconcile(journal, execute):
             again = discover_owned(journal, execute)
             by_id = {item["Id"]: item for item in [*records, *again]}
             records = list(by_id.values())
-        if not records:
+        discovered_roles = {item["Config"].get("Labels", {}).get("outscan.verification.role")
+                            for item in records}
+        unresolved = [role for role in pending if role not in discovered_roles]
+        if unresolved:
             raise RuntimeError("UNACKNOWLEDGED_CONTAINER_CREATE")
+        journal.data["pendingContainers"] = []
+        journal.save()
     history = journal.data.setdefault("reconciliation", [])
     if len(history) >= 16:
         raise RuntimeError("RECONCILIATION_HISTORY_BOUND")
