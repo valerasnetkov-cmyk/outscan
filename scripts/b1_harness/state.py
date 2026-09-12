@@ -1,6 +1,7 @@
 """Root-owned journals, locking and conservative identity-bound reconciliation."""
 import json
 import os
+import secrets
 import stat
 import time
 from pathlib import Path
@@ -41,18 +42,19 @@ class Journal:
             self.data = {"run": run, "owner": OWNER, "deadline": time.monotonic() + 600,
                          "bootId": Path("/proc/sys/kernel/random/boot_id").read_text().strip(),
                          "phase": "ALLOCATED", "namespaces": {}, "containers": {},
-                         "units": [], "pending": [], "results": []}
+                         "pendingContainers": [], "units": [], "pending": [], "results": []}
             self.save()
         else:
             trusted(self.path / "state.json")
             self.data = read_json(self.path / "state.json", 4194304)
             if self.data.get("run") != run or self.data.get("owner") != OWNER:
                 raise ValueError("JOURNAL_IDENTITY")
+            self.data.setdefault("pendingContainers", [])
 
     def save(self):
         if len(json.dumps(self.data)) > 4194304:
             raise RuntimeError("JOURNAL_BOUND")
-        target = self.path / "state.new"
+        target = self.path / ("state." + str(os.getpid()) + "." + secrets.token_hex(8) + ".new")
         fd = os.open(target, os.O_CREAT | os.O_EXCL | os.O_WRONLY | os.O_NOFOLLOW, 0o600)
         try:
             with os.fdopen(fd, "w") as handle:
@@ -88,14 +90,30 @@ def owned_container(info, run):
             len(info["Id"]) == 64)
 
 
-def reconcile(journal, execute):
-    """Do not interpret daemon/namespace uncertainty as absence."""
+def discover_owned(journal, execute):
     run = journal.run
     found = docker(execute, "ps", "-aq", "--no-trunc", "--filter",
                    "label=outscan.verification.run=" + run).splitlines()
     records = [json.loads(docker(execute, "inspect", ident))[0] for ident in found]
     if any(not owned_container(item, run) for item in records):
         raise RuntimeError("OWNERSHIP_CONFLICT")
+    return records
+
+
+def reconcile(journal, execute):
+    """Do not interpret daemon/namespace uncertainty as absence."""
+    run = journal.run
+    records = discover_owned(journal, execute)
+    if journal.data.get("pendingContainers"):
+        # A timed-out docker create may still commit asynchronously. Re-read before
+        # declaring cleanup complete; unresolved create intent is fail-closed.
+        for _ in range(3):
+            time.sleep(0.2)
+            again = discover_owned(journal, execute)
+            by_id = {item["Id"]: item for item in [*records, *again]}
+            records = list(by_id.values())
+        if not records:
+            raise RuntimeError("UNACKNOWLEDGED_CONTAINER_CREATE")
     history = journal.data.setdefault("reconciliation", [])
     if len(history) >= 16:
         raise RuntimeError("RECONCILIATION_HISTORY_BOUND")
@@ -136,5 +154,7 @@ def reconcile(journal, execute):
     remaining = docker(execute, "ps", "-aq", "--filter", "label=outscan.verification.run=" + run)
     if remaining:
         raise RuntimeError("CLEANUP_INCOMPLETE")
+    if journal.data.get("pendingContainers"):
+        raise RuntimeError("PENDING_CONTAINER_CREATE")
     journal.data["cleanup"] = "PASS"
     journal.save()
