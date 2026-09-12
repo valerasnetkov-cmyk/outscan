@@ -38,11 +38,11 @@ export async function pressure(mode) {
   }
   if (mode === "cpu") {
     const before = await counters("cpu.stat");
-    const deadline = process.hrtime.bigint() + 2_000_000_000n;
+    const deadline = process.hrtime.bigint() + 5_000_000_000n;
     let checksum = 1;
     for (
       let i = 0;
-      i < 100_000_000 && process.hrtime.bigint() < deadline;
+      i < 300_000_000 && process.hrtime.bigint() < deadline;
       i++
     ) {
       checksum = Math.imul(checksum ^ i, 1664525) + 1013904223;
