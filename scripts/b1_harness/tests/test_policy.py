@@ -1,14 +1,14 @@
-import copy
 import ipaddress
-import json
 import re
 import tempfile
 import unittest
 from pathlib import Path
 from scripts.b1_harness.config import DATA, ROOT, read_json, validate
-from scripts.b1_harness.policy import REGISTRY, classify, deny_result, rules
+from scripts.b1_harness.policy import (REGISTRY, classify, deny_counter_result, deny_result,
+                                       expected_deny_keys, rules)
 from scripts.b1_harness.listener import answer
 from scripts.b1_harness.evidence import report, result
+from scripts.b1_harness.scenarios import expected_case_ids
 
 
 class PolicyTests(unittest.TestCase):
@@ -102,7 +102,7 @@ class PolicyTests(unittest.TestCase):
             table = next(t for t in rules(self.manifest)["tables"] if t["family"] == ip.version)
             for row in table["rules"]:
                 args = row["args"]
-                if row["id"] == "controller-control" or row["id"] == "reply" or row["id"].startswith("nd-"):
+                if row["id"] == "controller-control" or row["id"].startswith("nd-"):
                     continue
                 if "-d" in args and ip not in ipaddress.ip_network(args[args.index("-d") + 1]):
                     continue
@@ -119,6 +119,17 @@ class PolicyTests(unittest.TestCase):
                     expected = "ACCEPT" if address == "198.18.18.18" and port == 53 else "DROP"
                     self.assertEqual(decision(address, port, protocol), expected)
 
+    def test_deny_evidence_requires_destination_specific_counter(self):
+        keys = expected_deny_keys("10.1.2.3", self.manifest)
+        self.assertEqual(len(keys), 1)
+        before = {keys[0]: 4, "4:b1:deny-rest": 10}
+        unrelated = {keys[0]: 4, "4:b1:deny-rest": 11}
+        expected = {keys[0]: 5, "4:b1:deny-rest": 10}
+        self.assertEqual(deny_counter_result(before, unrelated, keys, 0, 0, True, [True]), "INCONCLUSIVE")
+        self.assertEqual(deny_counter_result(before, expected, keys, 0, 0, True, [True]), "PASS")
+        mapped = expected_deny_keys("::ffff:10.1.2.3", self.manifest)
+        self.assertEqual(len(mapped), 2)
+
     def test_timeout_and_broken_ipv6_never_pass(self):
         self.assertEqual(deny_result(0, 0, 0, 0, True, [True]), "INCONCLUSIVE")
         self.assertEqual(deny_result(0, 1, 0, 0, True, [False]), "INCONCLUSIVE")
@@ -131,6 +142,21 @@ class PolicyTests(unittest.TestCase):
         self.assertIsNotNone(answer(query, True))
         self.assertIsNone(answer(query.replace(b"test", b"evil"), True))
         self.assertIsNone(answer(b"bad", True))
+
+    def test_report_requires_complete_unique_profile(self):
+        required = ("a", "b")
+        incomplete = report("example", self.manifest, [result("a", "PASS", {})], "PASS", required)
+        self.assertEqual(incomplete["status"], "FAIL")
+        self.assertEqual(incomplete["profile"]["missingCases"], ["b"])
+        duplicate = report("example", self.manifest,
+                           [result("a", "PASS", {}), result("a", "PASS", {}), result("b", "PASS", {})],
+                           "PASS", required)
+        self.assertEqual(duplicate["status"], "FAIL")
+        complete = report("example", self.manifest,
+                          [result("a", "PASS", {}), result("b", "PASS", {})], "PASS", required)
+        self.assertEqual(complete["status"], "PASS")
+        self.assertTrue(complete["profile"]["complete"])
+        self.assertIn("host-unchanged", expected_case_ids())
 
     def test_report_preserves_unrun_and_gate(self):
         r = report("example", self.manifest, [], "NOT_YET_RUN")
