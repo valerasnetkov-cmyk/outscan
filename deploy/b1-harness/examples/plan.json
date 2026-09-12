@@ -1,0 +1,290 @@
+{
+  "manifest": {
+    "schemaVersion": "b1-harness-v1",
+    "policyVersion": "outscan-special-use-v1",
+    "image": null,
+    "internalCidrs": ["100.100.1.1/32"]
+  },
+  "ruleset": {
+    "version": "outscan-special-use-v1",
+    "scope": "namespace-local-only",
+    "tables": [
+      {
+        "family": 4,
+        "namespace": "anchor",
+        "chain": "B1_OUT",
+        "rules": [
+          {
+            "id": "controller-control",
+            "args": ["-m", "mark", "--mark", "0xb3", "-j", "ACCEPT"]
+          },
+          {
+            "id": "dns-udp",
+            "args": [
+              "-d",
+              "198.18.18.18/32",
+              "-p",
+              "udp",
+              "--dport",
+              "53",
+              "-j",
+              "ACCEPT"
+            ]
+          },
+          {
+            "id": "dns-tcp",
+            "args": [
+              "-d",
+              "198.18.18.18/32",
+              "-p",
+              "tcp",
+              "--dport",
+              "53",
+              "-j",
+              "ACCEPT"
+            ]
+          },
+          {
+            "id": "deny-0",
+            "class": "internal",
+            "args": ["-d", "100.100.1.1/32", "-j", "DROP"]
+          },
+          {
+            "id": "deny-1",
+            "class": "THIS_NETWORK",
+            "args": ["-d", "0.0.0.0/8", "-j", "DROP"]
+          },
+          {
+            "id": "deny-2",
+            "class": "PRIVATE",
+            "args": ["-d", "10.0.0.0/8", "-j", "DROP"]
+          },
+          {
+            "id": "deny-3",
+            "class": "SHARED",
+            "args": ["-d", "100.64.0.0/10", "-j", "DROP"]
+          },
+          {
+            "id": "deny-4",
+            "class": "LOOPBACK",
+            "args": ["-d", "127.0.0.0/8", "-j", "DROP"]
+          },
+          {
+            "id": "deny-5",
+            "class": "METADATA",
+            "args": ["-d", "168.63.129.16/32", "-j", "DROP"]
+          },
+          {
+            "id": "deny-6",
+            "class": "LINK_LOCAL",
+            "args": ["-d", "169.254.0.0/16", "-j", "DROP"]
+          },
+          {
+            "id": "deny-7",
+            "class": "PRIVATE",
+            "args": ["-d", "172.16.0.0/12", "-j", "DROP"]
+          },
+          {
+            "id": "deny-8",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "192.0.0.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-9",
+            "class": "DOCUMENTATION",
+            "args": ["-d", "192.0.2.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-10",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "192.31.196.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-11",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "192.52.193.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-12",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "192.88.99.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-13",
+            "class": "PRIVATE",
+            "args": ["-d", "192.168.0.0/16", "-j", "DROP"]
+          },
+          {
+            "id": "deny-14",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "192.175.48.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-15",
+            "class": "BENCHMARK",
+            "args": ["-d", "198.18.0.0/15", "-j", "DROP"]
+          },
+          {
+            "id": "deny-16",
+            "class": "DOCUMENTATION",
+            "args": ["-d", "198.51.100.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-17",
+            "class": "DOCUMENTATION",
+            "args": ["-d", "203.0.113.0/24", "-j", "DROP"]
+          },
+          {
+            "id": "deny-18",
+            "class": "MULTICAST",
+            "args": ["-d", "224.0.0.0/4", "-j", "DROP"]
+          },
+          {
+            "id": "deny-19",
+            "class": "RESERVED",
+            "args": ["-d", "240.0.0.0/4", "-j", "DROP"]
+          },
+          {
+            "id": "deny-rest",
+            "args": ["-j", "DROP"]
+          }
+        ]
+      },
+      {
+        "family": 6,
+        "namespace": "anchor",
+        "chain": "B1_OUT",
+        "rules": [
+          {
+            "id": "controller-control",
+            "args": ["-m", "mark", "--mark", "0xb3", "-j", "ACCEPT"]
+          },
+          {
+            "id": "nd-135",
+            "args": [
+              "-o",
+              "b1p",
+              "-p",
+              "ipv6-icmp",
+              "--icmpv6-type",
+              "135",
+              "-m",
+              "hl",
+              "--hl-eq",
+              "255",
+              "-j",
+              "ACCEPT"
+            ]
+          },
+          {
+            "id": "nd-136",
+            "args": [
+              "-o",
+              "b1p",
+              "-p",
+              "ipv6-icmp",
+              "--icmpv6-type",
+              "136",
+              "-m",
+              "hl",
+              "--hl-eq",
+              "255",
+              "-j",
+              "ACCEPT"
+            ]
+          },
+          {
+            "id": "deny-20",
+            "class": "THIS_NETWORK",
+            "args": ["-d", "::/128", "-j", "DROP"]
+          },
+          {
+            "id": "deny-21",
+            "class": "LOOPBACK",
+            "args": ["-d", "::1/128", "-j", "DROP"]
+          },
+          {
+            "id": "deny-22",
+            "class": "IPV4_MAPPED",
+            "args": ["-d", "::ffff:0:0/96", "-j", "DROP"]
+          },
+          {
+            "id": "deny-23",
+            "class": "TRANSLATION",
+            "args": ["-d", "64:ff9b::/96", "-j", "DROP"]
+          },
+          {
+            "id": "deny-24",
+            "class": "TRANSLATION",
+            "args": ["-d", "64:ff9b:1::/48", "-j", "DROP"]
+          },
+          {
+            "id": "deny-25",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "100::/64", "-j", "DROP"]
+          },
+          {
+            "id": "deny-26",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "100:0:0:1::/64", "-j", "DROP"]
+          },
+          {
+            "id": "deny-27",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "2001::/23", "-j", "DROP"]
+          },
+          {
+            "id": "deny-28",
+            "class": "DOCUMENTATION",
+            "args": ["-d", "2001:db8::/32", "-j", "DROP"]
+          },
+          {
+            "id": "deny-29",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "2002::/16", "-j", "DROP"]
+          },
+          {
+            "id": "deny-30",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "2620:4f:8000::/48", "-j", "DROP"]
+          },
+          {
+            "id": "deny-31",
+            "class": "RESERVED",
+            "args": ["-d", "3ffe::/16", "-j", "DROP"]
+          },
+          {
+            "id": "deny-32",
+            "class": "DOCUMENTATION",
+            "args": ["-d", "3fff::/20", "-j", "DROP"]
+          },
+          {
+            "id": "deny-33",
+            "class": "SPECIAL_PURPOSE",
+            "args": ["-d", "5f00::/16", "-j", "DROP"]
+          },
+          {
+            "id": "deny-34",
+            "class": "UNIQUE_LOCAL",
+            "args": ["-d", "fc00::/7", "-j", "DROP"]
+          },
+          {
+            "id": "deny-35",
+            "class": "LINK_LOCAL",
+            "args": ["-d", "fe80::/10", "-j", "DROP"]
+          },
+          {
+            "id": "deny-36",
+            "class": "MULTICAST",
+            "args": ["-d", "ff00::/8", "-j", "DROP"]
+          },
+          {
+            "id": "deny-rest",
+            "args": ["-j", "DROP"]
+          }
+        ]
+      }
+    ]
+  },
+  "status": "NOT_YET_RUN"
+}

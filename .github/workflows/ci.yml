@@ -79,6 +79,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
       - run: node --test scripts/ubuntu-host-policy.test.mjs
+      - run: python3 -m unittest discover -s scripts/b1_harness/tests -v
+      - run: pnpm exec eslint "deploy/b1-harness/fixture/*.mjs"
       - run: pnpm exec eslint scripts/ubuntu-host-policy.mjs scripts/ubuntu-host-policy.test.mjs scripts/verify-ubuntu-host.mjs
       - run: pnpm exec eslint "deploy/compose/*.mjs"
       - run: pnpm exec eslint scripts/verify-scanner-lifecycle.mjs scripts/scanner-pressure-probes.mjs

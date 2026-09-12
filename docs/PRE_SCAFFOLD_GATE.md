@@ -107,6 +107,15 @@ Gate A closure evidence:
 `PostgreSQL data-access ADR-0017 Gate A impact: NONE`
 `GuestScan internal execution boundary: POSTGRESQL IDEMPOTENCY/ABUSE/LEASE-CAS/CANCELLATION/RESULT-COMMIT/REJECTION-EVENT/RESULT-READ/RETENTION + BULLMQ/HEARTBEAT EVIDENCE PASS; production worker/scheduling/exported telemetry/routes pending`
 `Gate B1: IN PROGRESS`
+
+`B1 Runtime Preparation: PASS (configuration-only; prior SSH observations plus owner-supplied administrative evidence)`
+
+`B1 Isolation & Egress Evidence: NOT YET RUN (repository harness only)`
+
+See [runtime preparation audit](audit-2026-09-13.md). This is not Gate B1 PASS:
+target isolation, egress, cancellation/reconciliation and remaining Guest acceptance
+evidence are still required.
+
 `Gate B2: NOT STARTED`
 `Gate C: NOT STARTED`
 

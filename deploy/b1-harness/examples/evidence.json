@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "b1-evidence-v1",
+  "run": "20cffa2b-9233-48b2-8a7d-8fa6723b4856",
+  "status": "NOT_YET_RUN",
+  "scope": "synthetic-namespace-harness-only",
+  "gateB1": "IN PROGRESS",
+  "image": null,
+  "policyVersion": "outscan-special-use-v1",
+  "manifestSha256": "11eeaafa6f8e7c7bc5c73a002177a80487b494cc4a8de5160100bc3a6dfc67c4",
+  "cleanup": "NOT_YET_RUN",
+  "cases": []
+}

@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "b1-harness-v1",
+  "policyVersion": "outscan-special-use-v1",
+  "image": null,
+  "internalCidrs": ["100.100.1.1/32"]
+}

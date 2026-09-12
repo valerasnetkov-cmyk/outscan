@@ -55,7 +55,29 @@ Ubuntu release, Docker/Compose versions, server/network inventory, permitted DNS
 resolvers, test hostname and secret/Ops backends must be pinned in deployment
 configuration before live verification. They are not inferred from this decision.
 
+## Accepted staging runtime preparation — 2026-09-13
+
+B1 Runtime Preparation: PASS, configuration-only. Ubuntu 24.04 LTS (observed
+24.04.5), amd64, cgroup v2/systemd; exact held packages:
+
+- docker-ce and docker-ce-cli: `5:29.8.0-1~ubuntu.24.04~noble`.
+- containerd.io: `2.3.5-1~ubuntu.24.04~noble`.
+- docker-compose-plugin: `5.4.0-1~ubuntu.24.04~noble`.
+
+Prior direct SSH observations and owner-supplied Docker/UFW/DOCKER-USER output
+form the accepted evidence; Docker policy was evaluated locally, without host
+Node.js or a new privileged SSH check. See [audit](audit-2026-09-13.md).
+Empty DOCKER-USER proves chain existence only, not enforced egress. Resolver
+198.18.18.18 is not an approved scan target; any future DNS control-plane exception
+must remain separate from target policy. Live isolation, resource enforcement,
+egress, cancellation/reconciliation and full Gate B1 remain pending.
+
 ## Local API container baseline
+
+The [B1 isolation/egress harness](B1_ISOLATION_EGRESS_HARNESS.md) is implemented
+separately for repository/offline review. Its netns-anchor laboratory is not a
+production network adapter and has not been run on staging. Image review/digest
+and separately approved execution are still required.
 
 `deploy/compose/compose.yaml` is an explicit opt-in `baseline` profile, not the
 production service topology. It currently starts only the trusted API with no
