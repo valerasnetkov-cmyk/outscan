@@ -10,7 +10,7 @@ from .config import DATA, names, read_json, run_id, validate
 from .evidence import report, result
 from .policy import DESTINATIONS, rules
 from .runtime import ENTRY, arm_watchdog, launch, verify_image
-from .scenarios import control, fixture_service, network_cases, resource_cases
+from .scenarios import control, expected_case_ids, fixture_service, network_cases, resource_cases
 from .state import BASE, Journal, reconcile, trusted
 from .topology import install_policy, make_network
 
@@ -33,7 +33,7 @@ def baseline(execute):
             info["CgroupDriver"] != "systemd" or info["Warnings"] not in (None, []) or
             info["KernelVersion"] != os.uname().release or info["Containers"] != 0):
         raise RuntimeError("RUNTIME_BASELINE")
-    for field in ("MemoryLimit", "SwapLimit", "CpuCfsPeriod", "CpuCfsQuota", "PidsLimit"):
+    for field in ("MemoryLimit", "SwapLimit", "CPUCfsPeriod", "CPUCfsQuota", "PidsLimit"):
         if info.get(field) is not True:
             raise RuntimeError("RESOURCE_SUPPORT")
     if "name=seccomp,profile=builtin" not in info["SecurityOptions"]:
@@ -47,6 +47,8 @@ def snapshot(execute):
     def stable_rules(tool):
         return "\n".join(line for line in execute(tool, []).splitlines() if line and not line.startswith("#"))
     return {"ipv4": stable_rules("iptables-save"), "ipv6": stable_rules("ip6tables-save"),
+            "nft": execute("nft", ["-j", "list", "ruleset"]),
+            "addresses": execute("ip", ["-j", "addr", "show"]),
             "routes": execute("ip", ["-j", "route", "show", "table", "all"]),
             "routes6": execute("ip", ["-j", "-6", "route", "show", "table", "all"]),
             "links": execute("ip", ["-j", "link", "show"]),
@@ -112,7 +114,8 @@ def execute_run(manifest, execute, fault=False):
             journal.data["watchdog"]["status"] = "DISARMED_AFTER_CLEANUP"
         except Exception:
             journal.data["cleanup"] = "INCOMPLETE"
-        evidence = report(run, manifest, journal.data["results"], journal.data.get("cleanup", "INCOMPLETE"))
+        evidence = report(run, manifest, journal.data["results"], journal.data.get("cleanup", "INCOMPLETE"),
+                          required_cases=expected_case_ids())
         journal.data["report"] = evidence
         journal.save()
         journal.close()
@@ -129,18 +132,25 @@ def watchdog(run, execute):
     boot = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
     if data.get("run") != run or data.get("bootId") != boot or time.monotonic() < data["deadline"]:
         raise RuntimeError("WATCHDOG_DEADLINE")
-    status = path / "watchdog-status.json"
-    # Independent status survives controller lock/failure.
-    fd = os.open(status, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
-    with os.fdopen(fd, "w") as handle:
-        handle.write('{"status":"FIRED"}\n')
     unit = data["controllerUnit"]
     if unit != "outscan-b1-controller.service":
         raise RuntimeError("CONTROLLER_UNIT_IDENTITY")
     properties = execute("systemctl", ["show", unit, "--property=LoadState,InvocationID"])
+    if "LoadState=not-found" not in properties and "InvocationID=" + data["controllerInvocation"] not in properties:
+        raise RuntimeError("CONTROLLER_INVOCATION_CHANGED")
+    status = path / "watchdog-status.json"
+    temporary = path / ("watchdog-status." + str(os.getpid()) + ".new")
+    fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    try:
+        with os.fdopen(fd, "w") as handle:
+            handle.write('{"status":"FIRED"}\n')
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, status)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
     if "LoadState=not-found" not in properties:
-        if "InvocationID=" + data["controllerInvocation"] not in properties:
-            raise RuntimeError("CONTROLLER_INVOCATION_CHANGED")
         # Stops the whole cgroup, including a blocked Docker/ip child, not just Python.
         execute("systemctl", ["stop", unit])
     journal = Journal(run)
