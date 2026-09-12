@@ -22,8 +22,14 @@ def classify(address, internal):
     return "UNCLASSIFIED"  # Never automatic target authorization.
 
 
+def policy_cidrs(manifest):
+    return ([(c, "internal") for c in manifest["internalCidrs"]] +
+            [(r["cidr"], r["class"]) for r in REGISTRY["ranges"]])
+
+
 def rules(manifest):
     result = []
+    cidrs = policy_cidrs(manifest)
     for family in (4, 6):
         # Applied inside anchor namespace; OUTPUT covers loopback and Docker DNS.
         # Only privileged controller sockets may use SO_MARK=179 for positive
@@ -39,8 +45,6 @@ def rules(manifest):
                     "--dport", "53", "-j", "ACCEPT"]})
         # No broad ESTABLISHED bypass: privileged positive-control connections
         # must not create reusable conntrack exceptions for unprivileged probes.
-        cidrs = [(c, "internal") for c in manifest["internalCidrs"]]
-        cidrs += [(r["cidr"], r["class"]) for r in REGISTRY["ranges"]]
         for index, (cidr, reason) in enumerate(cidrs):
             if ipaddress.ip_network(cidr).version == family:
                 rows.append({"id": "deny-" + str(index), "class": reason,
@@ -50,9 +54,40 @@ def rules(manifest):
     return {"version": REGISTRY["version"], "scope": "namespace-local-only", "tables": result}
 
 
+def expected_deny_keys(address, manifest):
+    """Return only rule counters allowed to prove denial for this destination."""
+    ip = ipaddress.ip_address(address)
+    cidrs = policy_cidrs(manifest)
+
+    def key_for(target):
+        for index, (cidr, _) in enumerate(cidrs):
+            network = ipaddress.ip_network(cidr)
+            if network.version == target.version and target in network:
+                return f"{target.version}:b1:deny-{index}"
+        return f"{target.version}:b1:deny-rest"
+
+    keys = [key_for(ip)]
+    # IPv4-mapped sockets may be accounted by either the IPv6 mapped rule or by
+    # the underlying IPv4 path depending on kernel/socket behavior. Both are
+    # destination-specific; unrelated deny counters never satisfy the case.
+    if ip.version == 6 and ip.ipv4_mapped is not None:
+        keys.append(key_for(ip.ipv4_mapped))
+    return tuple(dict.fromkeys(keys))
+
+
 def deny_result(before, after, receipts_before, receipts_after, attempted, controls):
     if not attempted or not all(controls):
         return "INCONCLUSIVE"
     if receipts_after != receipts_before:
         return "FAIL"
     return "PASS" if after > before else "INCONCLUSIVE"
+
+
+def deny_counter_result(before, after, keys, receipts_before, receipts_after, attempted, controls):
+    if not attempted or not all(controls):
+        return "INCONCLUSIVE"
+    if receipts_after != receipts_before:
+        return "FAIL"
+    if any(after.get(key, 0) > before.get(key, 0) for key in keys):
+        return "PASS"
+    return "INCONCLUSIVE"
