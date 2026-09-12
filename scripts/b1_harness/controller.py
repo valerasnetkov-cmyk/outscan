@@ -43,11 +43,21 @@ def baseline(execute):
     return {k: info[k] for k in ("ServerVersion", "KernelVersion", "CgroupVersion", "CgroupDriver")}
 
 
+def stable_nft(value):
+    if isinstance(value, dict):
+        return {key: stable_nft(item) for key, item in sorted(value.items())
+                if key not in ("handle", "packets", "bytes")}
+    if isinstance(value, list):
+        return [stable_nft(item) for item in value]
+    return value
+
+
 def snapshot(execute):
     def stable_rules(tool):
         return "\n".join(line for line in execute(tool, []).splitlines() if line and not line.startswith("#"))
+    nft = stable_nft(json.loads(execute("nft", ["-j", "list", "ruleset"])))
     return {"ipv4": stable_rules("iptables-save"), "ipv6": stable_rules("ip6tables-save"),
-            "nft": execute("nft", ["-j", "list", "ruleset"]),
+            "nft": json.dumps(nft, sort_keys=True, separators=(",", ":")),
             "addresses": execute("ip", ["-j", "addr", "show"]),
             "routes": execute("ip", ["-j", "route", "show", "table", "all"]),
             "routes6": execute("ip", ["-j", "-6", "route", "show", "table", "all"]),
