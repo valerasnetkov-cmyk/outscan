@@ -5,11 +5,27 @@ from pathlib import Path
 from .commands import BIN, docker
 from .config import names
 from .evidence import result
-from .policy import DESTINATIONS, DNS, deny_result
+from .policy import DESTINATIONS, DNS, deny_counter_result, expected_deny_keys
 from .runtime import ENTRY, launch
 from .topology import anchor_exec, deny_counters
 
 LISTENER = str(Path(ENTRY).with_name("listener.py"))
+RESOURCE_CASES = ("boundary", "memory", "cpu", "pids", "term", "ignore-term")
+
+
+def network_case_definitions():
+    cases = [(ip, 18080, "tcp") for ip in DESTINATIONS]
+    cases += [(ip, 18080, "tcp") for ip in ["127.0.0.1", "::1", "::ffff:127.0.0.1",
+              "::ffff:10.1.2.3", "::ffff:169.254.169.254"]]
+    cases += [("10.1.2.3", port, "tcp") for port in (5432, 6379, 8443)]
+    cases += [(ip, port, protocol) for ip in (DNS, "198.18.18.19")
+              for port in (53, 853, 443) for protocol in ("tcp", "udp")]
+    return tuple(cases)
+
+
+def expected_case_ids():
+    network = [f"network/{address}/{port}/{protocol}" for address, port, protocol in network_case_definitions()]
+    return tuple([*network, *RESOURCE_CASES, "live-controller-crash-reconciliation", "host-unchanged"])
 
 
 def fixture_service(journal, execute, pid, role):
@@ -75,12 +91,7 @@ def probe(journal, execute, image, anchor, mode, parameters=(), cancellation=Fal
 
 
 def network_cases(journal, execute, image, anchor, pid, paths, precontrols):
-    cases = [(ip, 18080, "tcp") for ip in DESTINATIONS]
-    cases += [(ip, 18080, "tcp") for ip in ["127.0.0.1", "::1", "::ffff:127.0.0.1",
-              "::ffff:10.1.2.3", "::ffff:169.254.169.254"]]
-    cases += [("10.1.2.3", port, "tcp") for port in (5432, 6379, 8443)]
-    cases += [(ip, port, protocol) for ip in (DNS, "198.18.18.19")
-              for port in (53, 853, 443) for protocol in ("tcp", "udp")]
+    cases = network_case_definitions()
     ipv6_working = precontrols.get("fc00::123", False)
     for address, port, protocol in cases:
         journal.phase("POLICY_VERIFIED")
@@ -105,15 +116,17 @@ def network_cases(journal, execute, image, anchor, pid, paths, precontrols):
         controls = [precontrols.get(base_address, False), before_control, after_control]
         if ":" in address and not address.startswith("::ffff:"):
             controls.append(ipv6_working)
+        expected_keys = expected_deny_keys(address, journal.data["manifest"])
         if address == DNS and port == 53:
             status = "PASS" if attempt and attempt["outcome"] == "RECEIVED" and all(controls) else "INCONCLUSIVE"
         else:
-            status = deny_result(sum(before.values()), sum(after.values()), receipts_before,
-                                 receipts_after, bool(attempt), controls)
+            status = deny_counter_result(before, after, expected_keys, receipts_before,
+                                         receipts_after, bool(attempt), controls)
             if attempt and attempt["outcome"] in ("RECEIVED", "INVALID_RESPONSE"):
                 status = "FAIL"
         journal.data["results"].append(result(f"network/{address}/{port}/{protocol}", status,
-            {"attempt": attempt, "countersBefore": before, "countersAfter": after,
+            {"attempt": attempt, "expectedDenyCounters": list(expected_keys),
+             "countersBefore": before, "countersAfter": after,
              "receiptsBefore": receipts_before, "receiptsAfter": receipts_after, "controls": controls}))
         journal.save()
 
@@ -132,7 +145,7 @@ def resource_verdict(mode, value):
 
 
 def resource_cases(journal, execute, image, anchor):
-    for mode in ("boundary", "memory", "cpu", "pids", "term", "ignore-term"):
+    for mode in RESOURCE_CASES:
         journal.phase("POLICY_VERIFIED")
         value = probe(journal, execute, image, anchor, mode, cancellation=mode in ("term", "ignore-term"))
         state, logs = value["state"], value["logs"]
