@@ -12,6 +12,7 @@
     "policyVersion",
     "manifestSha256",
     "cleanup",
+    "profile",
     "cases"
   ],
   "properties": {
@@ -51,6 +52,18 @@
     },
     "cleanup": {
       "enum": ["PASS", "INCOMPLETE", "NOT_YET_RUN"]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "complete", "missingCases", "duplicateCases", "unexpectedCases"],
+      "properties": {
+        "name": {"const": "b1-isolation-v1"},
+        "complete": {"type": "boolean"},
+        "missingCases": {"type": "array", "items": {"type": "string"}, "maxItems": 256},
+        "duplicateCases": {"type": "array", "items": {"type": "string"}, "maxItems": 256},
+        "unexpectedCases": {"type": "array", "items": {"type": "string"}, "maxItems": 256}
+      }
     },
     "cases": {
       "type": "array",
