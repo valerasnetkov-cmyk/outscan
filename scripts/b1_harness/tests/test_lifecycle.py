@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 from scripts.b1_harness.commands import Executor
 from scripts.b1_harness.config import names
+from scripts.b1_harness.controller import baseline
 from scripts.b1_harness.runtime import create_args, inspect_hardening, launch, arm_watchdog, verify_image
 from scripts.b1_harness.state import owned_container, reconcile
 from scripts.b1_harness.scenarios import resource_verdict
@@ -15,6 +16,7 @@ IMAGE = "registry.invalid/b1@sha256:" + "a" * 64  # Test-only identity, never ru
 
 def container(role):
     return {"Id": ("a" if role == "anchor" else "b") * 64, "Name": "/" + names(RUN)[role],
+            "AppArmorProfile": "docker-default",
             "Config": {"User": "1000:1000", "Labels": {"outscan.verification.owner": "b1-harness",
                         "outscan.verification.run": RUN}}, "Mounts": [],
             "HostConfig": {"NetworkMode": "none", "ReadonlyRootfs": True, "Privileged": False,
@@ -27,12 +29,35 @@ def container(role):
 class FakeJournal:
     run = RUN
     def __init__(self):
-        self.data = {"phase": "ALLOCATED", "containers": {}, "namespaces": {}, "units": [], "pending": []}
+        self.data = {"phase": "ALLOCATED", "containers": {}, "namespaces": {}, "units": [],
+                     "pending": [], "pendingContainers": []}
     def save(self):
         pass
 
 
 class LifecycleTests(unittest.TestCase):
+    def test_runtime_baseline_uses_docker_29_cpu_field_names(self):
+        info = {"ServerVersion": "29.8.0", "CgroupVersion": "2", "CgroupDriver": "systemd",
+                "Warnings": None, "KernelVersion": __import__("os").uname().release, "Containers": 0,
+                "MemoryLimit": True, "SwapLimit": True, "CPUCfsPeriod": True,
+                "CPUCfsQuota": True, "PidsLimit": True,
+                "SecurityOptions": ["name=seccomp,profile=builtin"]}
+        def execute(op, argv):
+            args = argv[2:]
+            if args[:2] == ["info", "--format"]:
+                return json.dumps(info)
+            if args[:3] == ["compose", "version", "--short"]:
+                return "5.4.0"
+            raise AssertionError(args)
+        self.assertEqual(baseline(execute)["ServerVersion"], "29.8.0")
+        changed = dict(info)
+        changed.pop("CPUCfsPeriod")
+        def missing(op, argv):
+            args = argv[2:]
+            return json.dumps(changed) if args[:2] == ["info", "--format"] else "5.4.0"
+        with self.assertRaisesRegex(RuntimeError, "RESOURCE_SUPPORT"):
+            baseline(missing)
+
     def test_image_rejects_implicit_volumes_before_creation(self):
         record = {"RepoDigests": [IMAGE], "Id": "sha256:" + "a"*64, "Os": "linux", "Architecture": "amd64",
                   "Config": {"User": "1000:1000", "WorkingDir": "/fixture",
@@ -95,6 +120,10 @@ class LifecycleTests(unittest.TestCase):
             changed["HostConfig"][field] = value
             with self.subTest(field=field), self.assertRaises(RuntimeError):
                 inspect_hardening(changed, "none")
+        changed = container("anchor")
+        changed["AppArmorProfile"] = ""
+        with self.assertRaisesRegex(RuntimeError, "CONTAINER_BOUNDARY"):
+            inspect_hardening(changed, "none")
 
     def test_ownership_requires_run_owner_and_name(self):
         for field in ("outscan.verification.owner", "outscan.verification.run"):
@@ -125,6 +154,18 @@ class LifecycleTests(unittest.TestCase):
         self.assertEqual(removed, ["b"*64, "a"*64])
         self.assertEqual(journal.data["cleanup"], "PASS")
         reconcile(journal, execute)  # Idempotent acknowledgement.
+
+    def test_reconcile_pending_create_without_object_is_incomplete(self):
+        journal = FakeJournal()
+        journal.data["pendingContainers"] = ["anchor"]
+        def execute(op, argv):
+            args = argv[2:]
+            if args[0] == "ps":
+                return ""
+            raise AssertionError(args)
+        with self.assertRaisesRegex(RuntimeError, "UNACKNOWLEDGED_CONTAINER_CREATE"):
+            reconcile(journal, execute)
+        self.assertNotIn("cleanup", journal.data)
 
     def test_reconcile_foreign_label_conflict_deletes_nothing(self):
         changed = container("anchor")
