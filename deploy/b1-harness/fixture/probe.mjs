@@ -15,6 +15,8 @@ async function boundary() {
   assert.match(status, /^CapEff:\s+0+$/m);
   assert.match(status, /^NoNewPrivs:\s+1$/m);
   assert.match(status, /^Seccomp:\s+2$/m);
+  const appArmor = (await readFile("/proc/self/attr/current", "utf8")).trim();
+  assert.match(appArmor, /^docker-default(?:\s+\(enforce\))?$/);
   for (const path of [
     "/var/run/docker.sock",
     "/run/containerd/containerd.sock",
@@ -35,7 +37,7 @@ async function boundary() {
       /POSTGRES|REDIS|SECRET|TOKEN|PASSWORD/i.test(k),
     ),
   );
-  report({ marker: "BOUNDARY_PASS" });
+  report({ marker: "BOUNDARY_PASS", appArmor });
 }
 
 function attempt(address, port, protocol) {
