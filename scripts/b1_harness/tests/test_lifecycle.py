@@ -36,11 +36,13 @@ class FakeJournal:
 
 
 class LifecycleTests(unittest.TestCase):
-    def test_runtime_baseline_uses_docker_29_cpu_field_names(self):
+    @patch("scripts.b1_harness.controller.os.uname")
+    def test_runtime_baseline_accepts_observed_docker_cpu_field_names(self, uname):
+        uname.return_value.release = "6.8.0-139-generic"
         info = {"ServerVersion": "29.8.0", "CgroupVersion": "2", "CgroupDriver": "systemd",
-                "Warnings": None, "KernelVersion": __import__("os").uname().release, "Containers": 0,
-                "MemoryLimit": True, "SwapLimit": True, "CPUCfsPeriod": True,
-                "CPUCfsQuota": True, "PidsLimit": True,
+                "Warnings": None, "KernelVersion": "6.8.0-139-generic", "Containers": 0,
+                "MemoryLimit": True, "SwapLimit": True, "CpuCfsPeriod": True,
+                "CpuCfsQuota": True, "PidsLimit": True,
                 "SecurityOptions": ["name=seccomp,profile=builtin"]}
         def execute(op, argv):
             args = argv[2:]
@@ -50,8 +52,15 @@ class LifecycleTests(unittest.TestCase):
                 return "5.4.0"
             raise AssertionError(args)
         self.assertEqual(baseline(execute)["ServerVersion"], "29.8.0")
+        upper = dict(info)
+        upper["CPUCfsPeriod"] = upper.pop("CpuCfsPeriod")
+        upper["CPUCfsQuota"] = upper.pop("CpuCfsQuota")
+        def uppercase(op, argv):
+            args = argv[2:]
+            return json.dumps(upper) if args[:2] == ["info", "--format"] else "5.4.0"
+        self.assertEqual(baseline(uppercase)["ServerVersion"], "29.8.0")
         changed = dict(info)
-        changed.pop("CPUCfsPeriod")
+        changed.pop("CpuCfsPeriod")
         def missing(op, argv):
             args = argv[2:]
             return json.dumps(changed) if args[:2] == ["info", "--format"] else "5.4.0"
