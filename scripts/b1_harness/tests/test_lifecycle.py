@@ -36,7 +36,7 @@ class FakeJournal:
 
 
 class LifecycleTests(unittest.TestCase):
-    @patch("scripts.b1_harness.controller.os.uname")
+    @patch("scripts.b1_harness.controller.os.uname", create=True)
     def test_runtime_baseline_accepts_observed_docker_cpu_field_names(self, uname):
         uname.return_value.release = "6.8.0-139-generic"
         info = {"ServerVersion": "29.8.0", "CgroupVersion": "2", "CgroupDriver": "systemd",
