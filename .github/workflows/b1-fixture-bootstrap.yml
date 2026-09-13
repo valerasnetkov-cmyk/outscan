@@ -1,0 +1,71 @@
+name: B1 fixture bootstrap (manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: b1-fixture-image-publication
+  cancel-in-progress: false
+
+jobs:
+  fixture:
+    if: ${{ github.repository == 'valerasnetkov-cmyk/outscan' && github.ref == 'refs/heads/main' && github.workflow_ref == 'valerasnetkov-cmyk/outscan/.github/workflows/b1-fixture-bootstrap.yml@refs/heads/main' && github.actor == 'valerasnetkov-cmyk' && github.triggering_actor == 'valerasnetkov-cmyk' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # Pipeline SHA = reviewed immutable execution code.
+      # Fixture SHA = separately fixed inside the reviewed helper:
+      # 929c40ecfe189be5f9aaf41f415bf7a376b7e475.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: bd5afc64bbc5ff4959e8312515f663038583e148
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify reviewed pipeline checkout
+        run: |
+          ACTUAL=$(git rev-parse HEAD)
+          test "$ACTUAL" = \
+            "bd5afc64bbc5ff4959e8312515f663038583e148"
+      - name: Offline pipeline tests
+        run: python3 -m unittest discover -s scripts/b1_image/tests -v
+      - name: Accepted source and runner
+        # BuildKit digest = reviewed linux/amd64 manifest (v0.33.0).
+        # Multi-platform index evidence only; never used as the execution pin:
+        # sha256:6c2fa84a6b61ccd72899dde4239f8d5717f05f9a8ca6f3cad185fb1a95a94de3
+        env:
+          BUILDKIT_IMAGE: moby/buildkit@sha256:a461e7f0ce921972028acfbed628d45663d83e67ac1230722c2b34cf72760a0d
+        run: python3 -I scripts/b1_image/entry.py source
+      - name: Verify base identity
+        run: python3 -I scripts/b1_image/entry.py base
+      - name: Independent builds and image contract
+        run: python3 -I scripts/b1_image/entry.py build
+      - name: Bounded boundary smoke and cleanup
+        timeout-minutes: 2
+        run: python3 -I scripts/b1_image/entry.py smoke-service
+      - name: Gated GHCR publication and immutable verification
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -I scripts/b1_image/entry.py publish
+      - name: Targeted recovery
+        if: always()
+        # always() must not execute unverified helpers after a failed checkout.
+        run: |
+          ACTUAL=$(git rev-parse HEAD)
+          test "$ACTUAL" = \
+            "bd5afc64bbc5ff4959e8312515f663038583e148"
+          python3 -I scripts/b1_image/entry.py cleanup
+      - name: Evidence only (no archives, state or credentials)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: b1-fixture-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/outscan-b1-image/evidence/
+          if-no-files-found: error
+          retention-days: 30
