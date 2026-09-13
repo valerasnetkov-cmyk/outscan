@@ -56,13 +56,41 @@
     "profile": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "complete", "missingCases", "duplicateCases", "unexpectedCases"],
+      "required": [
+        "name",
+        "complete",
+        "missingCases",
+        "duplicateCases",
+        "unexpectedCases"
+      ],
       "properties": {
-        "name": {"const": "b1-isolation-v1"},
-        "complete": {"type": "boolean"},
-        "missingCases": {"type": "array", "items": {"type": "string"}, "maxItems": 256},
-        "duplicateCases": {"type": "array", "items": {"type": "string"}, "maxItems": 256},
-        "unexpectedCases": {"type": "array", "items": {"type": "string"}, "maxItems": 256}
+        "name": {
+          "const": "b1-isolation-v1"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "missingCases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256
+        },
+        "duplicateCases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256
+        },
+        "unexpectedCases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256
+        }
       }
     },
     "cases": {
