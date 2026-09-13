@@ -2,6 +2,8 @@
 
 ## [Unreleased] — consistency closure
 
+- **B1 fixture image workflow**: added a manual-only GHCR pipeline with accepted source binding, required immutable BuildKit input, independent builds, bounded boundary smoke, targeted cleanup and registry-origin identity verification. Repository implementation only; workflow NOT YET RUN, image NOT YET BUILT and full B1 IN PROGRESS.
+
 - **B1 isolation/egress harness foundation**: added repository-only administrative controller, strict schemas, explicit special-use deny data, netns-anchor lifecycle, synthetic fixtures, bounded resource/cancellation probes and independent systemd watchdog/reconciliation. Offline checks do not establish runtime isolation; image remains unbuilt, staging unchanged and B1 Isolation & Egress Evidence NOT YET RUN.
 - **B1 Runtime Preparation (2026-09-13): PASS** for pinned Ubuntu/Docker runtime configuration, based on prior SSH observations and owner-supplied administrative evidence evaluated locally. No containers or scanners launched; full Gate B1 remains IN PROGRESS. See [audit](docs/audit-2026-09-13.md).
 - **Trust documentation (2026-09-12)**: integrated methodology, safe provenance and source freshness; Proof Scan remains a proposed verified-baseline entitlement, demo/accuracy claims are gated, and ADR 0019 is Proposed. No runtime authorization or public surface changed.

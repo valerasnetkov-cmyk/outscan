@@ -150,6 +150,10 @@ image digest has been invented, built, loaded or published.
 
 ## Future build/review and staging commands — not executed
 
+The separate [manual image workflow](B1_FIXTURE_IMAGE_WORKFLOW.md) now implements
+the planned build/identity pipeline in the repository. It is NOT YET RUN and does
+not authorize staging execution or update the approved manifest automatically.
+
 On a separately approved builder, use the fixture directory as the ONLY build
 context, the Dockerfile's immutable Node base and fixed source revision. No RUN
 package installation or network dependency resolution exists in the Dockerfile.
