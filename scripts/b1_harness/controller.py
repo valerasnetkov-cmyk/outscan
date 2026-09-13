@@ -27,15 +27,27 @@ def privileged():
     trusted(BASE, True)
 
 
+def _docker_true(info, *names):
+    """Accept Docker's observed JSON aliases, but fail closed on absence/conflict."""
+    values = [info[name] for name in names if name in info]
+    return bool(values) and all(value is True for value in values)
+
+
 def baseline(execute):
     info = json.loads(docker(execute, "info", "--format", "{{json .}}"))
     if (info["ServerVersion"] != "29.8.0" or info["CgroupVersion"] != "2" or
             info["CgroupDriver"] != "systemd" or info["Warnings"] not in (None, []) or
             info["KernelVersion"] != os.uname().release or info["Containers"] != 0):
         raise RuntimeError("RUNTIME_BASELINE")
-    for field in ("MemoryLimit", "SwapLimit", "CPUCfsPeriod", "CPUCfsQuota", "PidsLimit"):
-        if info.get(field) is not True:
-            raise RuntimeError("RESOURCE_SUPPORT")
+    required = (
+        ("MemoryLimit",),
+        ("SwapLimit",),
+        ("CPUCfsPeriod", "CpuCfsPeriod"),
+        ("CPUCfsQuota", "CpuCfsQuota"),
+        ("PidsLimit",),
+    )
+    if any(not _docker_true(info, *aliases) for aliases in required):
+        raise RuntimeError("RESOURCE_SUPPORT")
     if "name=seccomp,profile=builtin" not in info["SecurityOptions"]:
         raise RuntimeError("SECCOMP_REQUIRED")
     if docker(execute, "compose", "version", "--short").lstrip("v") != "5.4.0":
