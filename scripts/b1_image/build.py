@@ -3,6 +3,7 @@ import io
 import json
 import os
 import platform
+import re
 import tarfile
 import uuid
 from .core import (BASE, EPOCH, FILES, IMAGE, REVISION, buildkit_pin, command,
@@ -17,6 +18,8 @@ def source(ctx):
     require(os_release.get("ID") == "ubuntu" and os_release.get("VERSION_ID") == "24.04", "RUNNER_OS")
     revision = command(["/usr/bin/git", "rev-parse", REVISION + "^{commit}"]).decode().strip()
     require(revision == REVISION, "SOURCE_REVISION")
+    pipeline_revision = command(["/usr/bin/git", "rev-parse", "HEAD"]).decode().strip()
+    require(bool(re.fullmatch(r"[a-f0-9]{40}", pipeline_revision)), "PIPELINE_REVISION")
     epoch = int(command(["/usr/bin/git", "show", "-s", "--format=%ct", REVISION]))
     require(epoch == EPOCH, "SOURCE_EPOCH")
     raw = command(["/usr/bin/git", "archive", REVISION + ":deploy/b1-harness/fixture"])
@@ -34,8 +37,9 @@ def source(ctx):
     require((context / "Dockerfile").read_text().splitlines()[1] == "FROM " + BASE, "BASE_SOURCE")
     ctx.state.update(run=str(uuid.uuid4()), builders=[], source_hashes=hashes,
                      buildkit=buildkit_pin(os.environ.get("BUILDKIT_IMAGE", "")))
-    ctx.record("source.json", {"revision": REVISION, "sourceDateEpoch": EPOCH,
-                               "workflowRevision": os.environ["GITHUB_SHA"], "base": BASE})
+    ctx.record("source.json", {"fixtureRevision": REVISION, "sourceDateEpoch": EPOCH,
+                               "pipelineRevision": pipeline_revision,
+                               "workflowEventSha": os.environ["GITHUB_SHA"], "base": BASE})
     ctx.record("source.sha256", "".join(f"{v[7:]}  {k}\n" for k, v in sorted(hashes.items())).encode())
     ctx.record("runner.json", {"os": os_release, "architecture": platform.machine(),
                                "kernel": platform.release(), "runnerImageVersion": os.environ.get("ImageVersion")})

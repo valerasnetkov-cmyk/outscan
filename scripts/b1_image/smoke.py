@@ -1,6 +1,7 @@
 """Boundary-only smoke with an independent systemd deadline and owned cleanup."""
 import json
 import os
+import re
 from pathlib import Path
 import time
 from .core import OWNER, command, docker, image_contract, inspect, require
@@ -18,6 +19,8 @@ def cleanup(ctx, watchdog=False):
     if not ctx.state.get("run"):
         return
     run = ctx.state["run"]
+    if not watchdog:
+        ctx.status("cleanup", "INCOMPLETE")
     filters = ["--filter", "label=outscan.verification.owner=" + OWNER,
                "--filter", "label=outscan.verification.run=" + run]
     found = docker("ps", "--all", "--quiet", "--no-trunc", *filters).decode().split()
@@ -35,8 +38,11 @@ def cleanup(ctx, watchdog=False):
     previous = ctx.evidence / record
     if previous.exists():
         removed = sorted(set(removed + json.loads(previous.read_text())["removed"]))
-    ctx.record(record,
-               {"result": "PASS", "removed": removed, "remaining": []})
+    pending = bool(ctx.state.get("pendingSmokeCreate"))
+    ctx.record(record, {"result": "INCOMPLETE" if pending else "PASS", "removed": removed,
+                        "remaining": [], "pendingSmokeCreate": pending,
+                        "code": "UNACKNOWLEDGED_SMOKE_CREATE" if pending else None})
+    require(not pending, "UNACKNOWLEDGED_SMOKE_CREATE")
     if not watchdog:
         ctx.mark("cleanup")
 
@@ -72,14 +78,26 @@ def smoke_args(ctx):
             ctx.state["image_id"], "boundary"]
 
 
+def create_smoke(ctx):
+    require(not ctx.state.get("pendingSmokeCreate"), "UNACKNOWLEDGED_SMOKE_CREATE")
+    ctx.state["pendingSmokeCreate"] = True
+    ctx.status("cleanup", "INCOMPLETE")
+    ident = docker(*smoke_args(ctx), timeout=10).decode().strip()
+    require(bool(re.fullmatch(r"[a-f0-9]{64}", ident)), "SMOKE_ID")
+    info = json.loads(docker("container", "inspect", ident, timeout=5))[0]
+    require(info.get("Id") == ident and owned(info, ctx.state["run"]), "SMOKE_OWNERSHIP")
+    ctx.state["smokeContainerId"] = ident
+    ctx.state["pendingSmokeCreate"] = False
+    ctx.save()
+    return ident, info
+
+
 def smoke(ctx):
     require(ctx.state.get("contract") == "PASS", "CONTRACT_REQUIRED")
     require(image_contract(inspect(ctx.state["image_id"])) == ctx.state["identity"], "IMAGE_DRIFT")
     deadline = time.monotonic() + 25
     try:
-        ident = docker(*smoke_args(ctx), timeout=10).decode().strip()
-        info = json.loads(docker("container", "inspect", ident, timeout=5))[0]
-        require(owned(info, ctx.state["run"]), "SMOKE_OWNERSHIP")
+        ident, info = create_smoke(ctx)
         inspect_hardening(info, "none")
         docker("start", ident, timeout=5)
         code = docker("wait", ident, timeout=max(1, deadline - time.monotonic())).decode().strip()

@@ -142,7 +142,7 @@ class Contracts(unittest.TestCase):
         self.assertFalse(set(args) & {"--mount", "-v", "-p", "--publish", "--privileged"})
 
     def test_cleanup_rejects_foreign_owner_without_removal(self):
-        ctx = SimpleNamespace(state={"run": RUN})
+        ctx = SimpleNamespace(state={"run": RUN}, status=lambda *args: None)
         foreign = {"Id": "container", "Name": "/foreign", "Config": {"Labels": {}}}
         self.assertFalse(owned(foreign, RUN))
         with patch("scripts.b1_image.smoke.docker", side_effect=[b"container\n", json.dumps([foreign]).encode()]) as run:

@@ -58,6 +58,7 @@ def image_contract(info, reference=None):
 
 
 def publication_gate(state):
+    require(not state.get("pendingSmokeCreate"), "UNACKNOWLEDGED_SMOKE_CREATE")
     for stage in ("source", "base", "reproducibility", "contract", "smoke", "cleanup"):
         require(state.get(stage) == "PASS", "PUBLICATION_GATE_" + stage.upper())
 
@@ -87,7 +88,10 @@ class Context:
             path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
     def mark(self, stage):
-        self.state[stage] = "PASS"
+        self.status(stage, "PASS")
+
+    def status(self, stage, value):
+        self.state[stage] = value
         self.save()
         self.record("status.json", {k: self.state.get(k, "NOT YET RUN") for k in
                     ("source", "base", "reproducibility", "contract", "smoke", "cleanup", "publication")})

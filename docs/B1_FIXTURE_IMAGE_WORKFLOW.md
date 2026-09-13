@@ -4,7 +4,8 @@ Status: **PLANNED / NOT YET RUN**. Image identity: **NOT YET BUILT**.
 
 The manual `.github/workflows/b1-fixture-image.yml` workflow implements image
 preparation only. No workflow dispatch, image operation, package creation or
-staging access was performed while implementing it. Existing CI is unchanged.
+staging access was performed while implementing it. Regular PR CI additionally
+runs the b1_image offline unit suite; no image/network operations were added.
 
 ## Inputs and identities
 
@@ -17,11 +18,19 @@ staging access was performed while implementing it. Existing CI is unchanged.
 - Tag: `git-929c40ecfe189be5f9aaf41f415bf7a376b7e475`.
 - Runtime reference: the actual registry response digest, never the tag or image ID.
 
-Workflow/helper revision and fixture source revision are recorded separately.
-Checkout HEAD is never substituted for the accepted fixture source.
+Source evidence contains three distinct origins: fixtureRevision is the fixed
+accepted fixture commit; pipelineRevision is the actual `git rev-parse HEAD`
+of the checked-out pipeline/helpers; workflowEventSha preserves GITHUB_SHA only
+as event evidence. The event SHA is not called the pipeline/helper revision.
+Checkout HEAD is never substituted for the accepted fixture source. A separate
+future bootstrap workflow will bind the final reviewed pipeline commit after
+that commit exists. No future pipeline SHA is preselected or fabricated here.
 The approved manifest and the example with image=null are not modified.
 
 ## Manual runner and BuildKit
+
+BuildKit execution status: **NOT APPROVED / NOT PINNED FOR EXECUTION**.
+Digest validation support is implemented, but no execution digest is selected.
 
 Only workflow_dispatch is enabled, on GitHub-hosted ubuntu-24.04. The helper
 requires Ubuntu 24.04 and x86_64. This is an environment label, not an immutable
@@ -81,6 +90,16 @@ cleanup helper after stopping the controller service. Timer firing prevents
 publication even if cleanup succeeds.
 GitHub runner shutdown/reboot is not covered by the timer; the runner is disposable.
 
+Before Docker create, pendingSmokeCreate=true is atomically journaled. It is
+cleared only after a full returned ID, inspect and ownership/ID validation.
+Timeout/error before acknowledgement remains UNACKNOWLEDGED_SMOKE_CREATE:
+empty label enumeration cannot establish cleanup PASS. Even after a discovered
+owned late container is verified and removed, pending intent remains INCOMPLETE;
+later empty enumeration never silently clears it. Publication independently
+rejects pending intent even if other status fields incorrectly retain PASS.
+Recovery requires explicit investigation/disposal of the failed runner/run;
+there is no automatic journal override or retry-create in that run.
+
 Cleanup enumerates only the exact owner/run labels, verifies UUID-derived name
 and full container ID, saves inspect/logs and removes only owned containers.
 Absence is checked through a successful Docker query. Daemon errors and ownership
@@ -91,9 +110,13 @@ disposal and does not count as successful cleanup evidence.
 
 ## Permissions, collision and evidence
 
-Permissions are contents: read and packages: write. Checkout does not persist
-credentials. GITHUB_TOKEN is provided only to the publication step, then used
-through stdin/HTTPS auth; child build/smoke environments do not inherit it.
+Permissions are contents: read and packages: write. The GHCR_TOKEN environment
+variable is passed only to the publication step; the publication Python helper
+does not receive that variable before this step. The pinned actions/checkout
+also uses github.token during checkout. Its persist-credentials=false setting
+prevents persisting that credential in the checkout after the operation; it does
+not mean GITHUB_TOKEN is globally unavailable to other actions. Publication uses
+stdin/HTTPS auth, and sanitized child build/smoke environments omit GHCR_TOKEN.
 No PAT, id-token, attestations, actions-write or contents-write permission exists.
 Checkout and upload-artifact are pinned to verified release commit SHAs.
 

@@ -3,12 +3,15 @@
 ## B1 fixture image preparation
 
 - [x] Repository implementation of the manual image workflow and offline negative tests.
+- [x] Remediate revision provenance and ambiguous smoke create; include offline image tests in PR CI.
+- [ ] Bind the new reviewed pipeline SHA through a separately reviewed bootstrap workflow.
 - [ ] Review BuildKit digest and publication access, then separately authorize dispatch.
 - [ ] Review build/smoke/cleanup/registry evidence and approve the real image reference.
 - [ ] Update the approved manifest in a separate reviewed commit.
 
 Image NOT YET BUILT; isolation/egress runtime evidence NOT YET RUN; full B1
 IN PROGRESS. See [workflow procedure](docs/B1_FIXTURE_IMAGE_WORKFLOW.md).
+BuildKit remains NOT APPROVED / NOT PINNED FOR EXECUTION; no digest selected.
 
 ## Phase 0 — Baseline
 

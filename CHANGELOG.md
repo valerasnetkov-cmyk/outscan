@@ -2,6 +2,8 @@
 
 ## [Unreleased] — consistency closure
 
+- **B1 image security remediation**: separated fixture, actual pipeline HEAD and event-SHA evidence; journaled ambiguous smoke creation and blocked cleanup/publication on unacknowledged intent. Added offline regressions to PR CI and clarified checkout/token semantics. BuildKit remains NOT APPROVED / NOT PINNED FOR EXECUTION; image and runtime evidence remain unexecuted.
+
 - **B1 fixture image workflow**: added a manual-only GHCR pipeline with accepted source binding, required immutable BuildKit input, independent builds, bounded boundary smoke, targeted cleanup and registry-origin identity verification. Repository implementation only; workflow NOT YET RUN, image NOT YET BUILT and full B1 IN PROGRESS.
 
 - **B1 isolation/egress harness foundation**: added repository-only administrative controller, strict schemas, explicit special-use deny data, netns-anchor lifecycle, synthetic fixtures, bounded resource/cancellation probes and independent systemd watchdog/reconciliation. Offline checks do not establish runtime isolation; image remains unbuilt, staging unchanged and B1 Isolation & Egress Evidence NOT YET RUN.
