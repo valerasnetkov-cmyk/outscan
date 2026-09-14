@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "run",
+    "status",
+    "scope",
+    "gateB1",
+    "image",
+    "policyVersion",
+    "manifestSha256",
+    "cleanup",
+    "profile",
+    "cases"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "b1-evidence-v1"
+    },
+    "run": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "enum": ["PASS", "FAIL", "INCONCLUSIVE", "NOT_YET_RUN"]
+    },
+    "scope": {
+      "const": "synthetic-namespace-harness-only"
+    },
+    "gateB1": {
+      "const": "IN PROGRESS"
+    },
+    "image": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9./_-]{0,180}@sha256:[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "policyVersion": {
+      "const": "outscan-special-use-v1"
+    },
+    "manifestSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "cleanup": {
+      "enum": ["PASS", "INCOMPLETE", "NOT_YET_RUN"]
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "complete",
+        "missingCases",
+        "duplicateCases",
+        "unexpectedCases"
+      ],
+      "properties": {
+        "name": {
+          "const": "b1-isolation-v1"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "missingCases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256
+        },
+        "duplicateCases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256
+        },
+        "unexpectedCases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 256
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "maxItems": 256,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case", "status", "observations"],
+        "properties": {
+          "case": {
+            "type": "string",
+            "maxLength": 160
+          },
+          "status": {
+            "enum": ["PASS", "FAIL", "INCONCLUSIVE", "NOT_YET_RUN"]
+          },
+          "observations": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

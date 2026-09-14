@@ -1,0 +1,59 @@
+name: B1 fixture image (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildkit_image:
+        description: "Reviewed moby/buildkit@sha256:<64 hex>; no tag or default"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: b1-fixture-image-publication
+  cancel-in-progress: false
+
+jobs:
+  fixture:
+    if: github.repository == 'valerasnetkov-cmyk/outscan'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Offline pipeline tests
+        run: python3 -m unittest discover -s scripts/b1_image/tests -v
+      - name: Accepted source and runner
+        env:
+          BUILDKIT_IMAGE: ${{ inputs.buildkit_image }}
+        run: python3 -I scripts/b1_image/entry.py source
+      - name: Verify base identity
+        run: python3 -I scripts/b1_image/entry.py base
+      - name: Independent builds and image contract
+        run: python3 -I scripts/b1_image/entry.py build
+      - name: Bounded boundary smoke and cleanup
+        timeout-minutes: 2
+        run: python3 -I scripts/b1_image/entry.py smoke-service
+      - name: Gated GHCR publication and immutable verification
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -I scripts/b1_image/entry.py publish
+      - name: Targeted recovery
+        if: always()
+        run: python3 -I scripts/b1_image/entry.py cleanup
+      - name: Evidence only (no archives, state or credentials)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: b1-fixture-image-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/outscan-b1-image/evidence/
+          if-no-files-found: error
+          retention-days: 30

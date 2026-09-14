@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "B1 harness manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "policyVersion", "image", "internalCidrs"],
+  "properties": {
+    "schemaVersion": {
+      "const": "b1-harness-v1"
+    },
+    "policyVersion": {
+      "const": "outscan-special-use-v1"
+    },
+    "image": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9./_-]{0,180}@sha256:[a-f0-9]{64}$"
+        }
+      ]
+    },
+    "internalCidrs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "contains": {
+        "const": "100.100.1.1/32"
+      },
+      "items": {
+        "type": "string",
+        "maxLength": 49,
+        "pattern": "^[0-9a-f:.]+/[0-9]{1,3}$"
+      }
+    }
+  },
+  "$comment": "config.validate additionally enforces canonical strict CIDRs; image null is plan-only. A non-null digest must be verified against the local Docker image before any creation."
+}

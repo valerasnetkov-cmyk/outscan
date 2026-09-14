@@ -1,0 +1,151 @@
+{
+  "version": "outscan-special-use-v1",
+  "sourcePolicyVersion": "iana-special-purpose-2025-10-09.v1",
+  "ranges": [
+    {
+      "cidr": "0.0.0.0/8",
+      "class": "THIS_NETWORK"
+    },
+    {
+      "cidr": "10.0.0.0/8",
+      "class": "PRIVATE"
+    },
+    {
+      "cidr": "100.64.0.0/10",
+      "class": "SHARED"
+    },
+    {
+      "cidr": "127.0.0.0/8",
+      "class": "LOOPBACK"
+    },
+    {
+      "cidr": "168.63.129.16/32",
+      "class": "METADATA"
+    },
+    {
+      "cidr": "169.254.0.0/16",
+      "class": "LINK_LOCAL"
+    },
+    {
+      "cidr": "172.16.0.0/12",
+      "class": "PRIVATE"
+    },
+    {
+      "cidr": "192.0.0.0/24",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "192.0.2.0/24",
+      "class": "DOCUMENTATION"
+    },
+    {
+      "cidr": "192.31.196.0/24",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "192.52.193.0/24",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "192.88.99.0/24",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "192.168.0.0/16",
+      "class": "PRIVATE"
+    },
+    {
+      "cidr": "192.175.48.0/24",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "198.18.0.0/15",
+      "class": "BENCHMARK"
+    },
+    {
+      "cidr": "198.51.100.0/24",
+      "class": "DOCUMENTATION"
+    },
+    {
+      "cidr": "203.0.113.0/24",
+      "class": "DOCUMENTATION"
+    },
+    {
+      "cidr": "224.0.0.0/4",
+      "class": "MULTICAST"
+    },
+    {
+      "cidr": "240.0.0.0/4",
+      "class": "RESERVED"
+    },
+    {
+      "cidr": "::/128",
+      "class": "THIS_NETWORK"
+    },
+    {
+      "cidr": "::1/128",
+      "class": "LOOPBACK"
+    },
+    {
+      "cidr": "::ffff:0:0/96",
+      "class": "IPV4_MAPPED"
+    },
+    {
+      "cidr": "64:ff9b::/96",
+      "class": "TRANSLATION"
+    },
+    {
+      "cidr": "64:ff9b:1::/48",
+      "class": "TRANSLATION"
+    },
+    {
+      "cidr": "100::/64",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "100:0:0:1::/64",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "2001::/23",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "2001:db8::/32",
+      "class": "DOCUMENTATION"
+    },
+    {
+      "cidr": "2002::/16",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "2620:4f:8000::/48",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "3ffe::/16",
+      "class": "RESERVED"
+    },
+    {
+      "cidr": "3fff::/20",
+      "class": "DOCUMENTATION"
+    },
+    {
+      "cidr": "5f00::/16",
+      "class": "SPECIAL_PURPOSE"
+    },
+    {
+      "cidr": "fc00::/7",
+      "class": "UNIQUE_LOCAL"
+    },
+    {
+      "cidr": "fe80::/10",
+      "class": "LINK_LOCAL"
+    },
+    {
+      "cidr": "ff00::/8",
+      "class": "MULTICAST"
+    }
+  ],
+  "requiredInternal": ["100.100.1.1/32"]
+}

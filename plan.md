@@ -1,5 +1,18 @@
 # OUTSCAN — plan
 
+## B1 fixture image preparation
+
+- [x] Repository implementation of the manual image workflow and offline negative tests.
+- [x] Remediate revision provenance and ambiguous smoke create; include offline image tests in PR CI.
+- [ ] Bind the new reviewed pipeline SHA through a separately reviewed bootstrap workflow.
+- [ ] Review BuildKit digest and publication access, then separately authorize dispatch.
+- [ ] Review build/smoke/cleanup/registry evidence and approve the real image reference.
+- [ ] Update the approved manifest in a separate reviewed commit.
+
+Image NOT YET BUILT; isolation/egress runtime evidence NOT YET RUN; full B1
+IN PROGRESS. See [workflow procedure](docs/B1_FIXTURE_IMAGE_WORKFLOW.md).
+BuildKit remains NOT APPROVED / NOT PINNED FOR EXECUTION; no digest selected.
+
 ## Phase 0 — Baseline
 
 - [x] Product concept/three layers.
@@ -74,7 +87,10 @@
 - [x] Add a detached, no-network API Compose baseline with pinned multi-stage build, runtime hardening smoke and an Ubuntu CI job; full service topology, isolated scanner launch and target-server evidence remain pending.
 - [x] Add opt-in offline scanner CLI container tests for bounded stdin/IPC, IPv4/IPv6 DNS-unavailable coverage and invalid-input denial; keep the production launch/egress integration pending.
 - [x] Verify offline container failure/TERM-to-KILL/cleanup with run-owned IDs and labels; production supervisor-to-container lifecycle binding remains pending.
-- [x] Add read-only Ubuntu host preflight with explicit version pins, local-daemon/cgroup/resource/seccomp checks and closed errors; real target-host execution remains pending deployment inputs.
+- [x] Add read-only Ubuntu host preflight with explicit version pins, local-daemon/cgroup/resource/seccomp checks and closed errors; target observations evaluated locally with owner-supplied administrative evidence, not a host Node CLI run.
+- [x] B1 Runtime Preparation: PASS (2026-09-13), limited to pinned runtime configuration; see [evidence and provenance](docs/audit-2026-09-13.md). Target isolation/egress/cancellation/reconciliation evidence and full Gate B1 remain pending.
+- [x] Implement repository-only B1 isolation/egress harness with live netns-anchor lifecycle, explicit special-use registry, strict manifest, namespace-local rules, bounded fixture probes, systemd watchdog, conservative reconciliation and offline tests. See [harness](docs/B1_ISOLATION_EGRESS_HARNESS.md).
+- [ ] B1 Isolation & Egress Evidence: NOT YET RUN. Review/build immutable fixture, approve concrete manifest and separately authorize target execution; no staging changes or image build are implied by repository implementation.
 - [x] Verify local PID exhaustion (EAGAIN plus cgroup denial counter and child cleanup) and bounded CPU pressure (throttling counter growth); repeat platform-specific checks on the deployment host.
 - [x] Prove local container memory enforcement with a bounded allocation fixture, exit 137 plus Docker OOMKilled evidence and run-owned cleanup; target-host evidence remains pending.
 - [x] Verify active cgroup-v2 memory/swap/PID/CPU ceilings inside offline containers and reject four deliberately changed resource configurations; target-server enforcement and live-egress evidence remain pending.
