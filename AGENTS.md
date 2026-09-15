@@ -5,6 +5,7 @@
 Read only what the task needs.
 
 Use:
+
 - README for project orientation, setup, or cross-cutting architecture;
 - relevant ADR/docs for the boundary being changed;
 - plan when the task changes roadmap or implementation status;
