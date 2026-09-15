@@ -2,9 +2,19 @@
 
 ## Start
 
-Read README, PRE_SCAFFOLD_GATE, plan, CHANGELOG, relevant ADR/docs and latest audit. Inspect repository state and preserve unrelated user changes.
+Read only what the task needs.
 
-For strategy/Creator/UX work read AI_ERA_PRODUCT_STRATEGY, CREATOR_VIBE_CODING_GTM and PRODUCT_SIMPLICITY_UX. For reporting read REPORTING and AI_HANDOFF_SECURITY; all are documentation, not runtime evidence.
+Use:
+
+- README for project orientation, setup, or cross-cutting architecture;
+- relevant ADR/docs for the boundary being changed;
+- plan when the task changes roadmap or implementation status;
+- CHANGELOG when durable product, architecture, security, data, or operational behavior changes;
+- PRE_SCAFFOLD_GATE and latest audits only for gate, scaffold, audit, or release work.
+
+For strategy/Creator/UX work read AI_ERA_PRODUCT_STRATEGY, CREATOR_VIBE_CODING_GTM and PRODUCT_SIMPLICITY_UX only when they are relevant to the requested work. For reporting read REPORTING and AI_HANDOFF_SECURITY; all are documentation, not runtime evidence.
+
+Inspect the affected repository area and preserve unrelated user changes.
 
 ## Gates
 
@@ -13,6 +23,8 @@ For strategy/Creator/UX work read AI_ERA_PRODUCT_STRATEGY, CREATOR_VIBE_CODING_G
 - B2 PASS before Workspace.
 - C PASS before production.
   Never self-declare PASS without evidence.
+
+Gate rules apply only when the task crosses the corresponding boundary. Do not re-evaluate unrelated gates for local implementation, documentation, or UI-only work.
 
 Strategic priorities and Creator GTM do not reorder gates. Full Change Intelligence remains V1.5. Production Readiness is an evidence profile of Gate C, not another gate.
 
@@ -85,11 +97,16 @@ Telegram chat/user identity cannot replace the ADR-0011 authenticated Guest-sess
 
 ## Files
 
-Authored source <=400 physical lines. Do not game the limit.
+Keep new or materially changed authored source <=400 physical lines.
+Do not refactor an unrelated existing file solely to satisfy the limit.
+Do not game the limit.
 
 ## UI / claims
 
-Follow CLAIM_INVENTORY, UX_ACCEPTANCE and PRODUCT_SIMPLICITY_UX.
+For public claims/copy use CLAIM_INVENTORY.
+For changed user flows or acceptance behavior use UX_ACCEPTANCE.
+For substantive UI/UX work use PRODUCT_SIMPLICITY_UX.
+
 Show state/action before technical taxonomy, with authorized progressive disclosure. Keep coverage, uncertainty and limitations visible; never expose hidden Guest data or dump the Capability Registry as a feature wall.
 No blocked claims/customer logos.
 No decorative globe/radar/glow/shield.
@@ -97,6 +114,13 @@ WCAG 2.2 AA target.
 
 ## Completion
 
-Run relevant tests/lint/typecheck/build/security negative suites/`git diff --check`.
-Update docs/plan/changelog/audit.
+Verify the changed surface with the smallest relevant existing checks.
+Expand verification when risk, failures, integration scope, or release work justifies it.
+
+For security-sensitive changes, run affected negative/security tests.
+Run the production build when the change can affect build/integration behavior or when preparing a release.
+Always run `git diff --check` when practical.
+
+Update durable documentation only when the change affects it.
+Do not stop after the first implementation merely for review if remaining work is safe and clearly implied by the request.
 Never claim a check ran if it did not.
